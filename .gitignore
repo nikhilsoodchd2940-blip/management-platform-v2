@@ -1,0 +1,33 @@
+# Secrets — never committed
+.env
+.env.local
+.env.*.local
+firebase/.firebaserc
+firebase/functions/.env.*
+mobile/lib/core/firebase_options.dart
+*.pem
+*.key
+
+# Node
+node_modules/
+firebase/functions/lib/
+admin-web/.next/
+npm-debug.log*
+
+# Flutter
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/build/
+mobile/android/
+mobile/ios/
+mobile/.pub-cache/
+
+# Firebase
+firebase-debug.log
+firebase-debug.*.log
+ui-debug.log
+.firebase/
+
+# OS
+.DS_Store

@@ -1,0 +1,26 @@
+import { ns } from '../types';
+
+export default ns({
+  title: 'Cities',
+  allCities: 'All cities',
+  none: 'No cities yet — add one on the right.',
+  colName: 'Name',
+  colCountry: 'Country',
+  archive: 'Archive',
+  addTitle: 'Add a city',
+  bulkBefore: 'Lots to add? Use the bulk import on the',
+  bulkLink: 'Countries page',
+  bulkAfter: '— a single file can create countries, cities and kurels together.',
+  countryLabel: 'Country',
+  selectCountry: 'Select a country…',
+  noCountries: 'No countries yet — add one on the Countries page first.',
+  nameLabel: 'Name',
+  namePlaceholder: 'City name',
+  submit: 'Create city',
+  submitting: 'Creating…',
+  chooseCountry: 'Choose a country for this city.',
+  createFailed: 'Could not create',
+  deleteFailed: 'Could not delete this city',
+  confirmArchive: (label: string) => `Archive "${label}"? Its kurels are not archived automatically.`,
+  confirmDelete: (label: string) => `Permanently delete "${label}"? This cannot be undone.`,
+});

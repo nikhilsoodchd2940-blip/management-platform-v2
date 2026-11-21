@@ -1,0 +1,219 @@
+/* Page styles for the planning-evenements screen — scoped under .px-planning-evenements. */
+.px-planning-evenements{--g:#075b3a;--g2:#0b8a5b;--gold:#d4a72c;--blue:#3d79b5;--red:#bd3f4a;--purple:#8054a0;--ink:#202b26;--muted:#68756f;--paper:rgba(255,255,255,.86);--line:rgba(5,82,56,.13);--shadow:0 18px 44px rgba(20,72,50,.11)}
+.px-planning-evenements *{box-sizing:border-box}
+.px-planning-evenements{font-size:16px}
+.px-planning-evenements{margin:0;color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:radial-gradient(circle at 86% 4%,rgba(212,167,44,.24),transparent 24%),radial-gradient(circle at 24% 74%,rgba(11,138,91,.14),transparent 28%),linear-gradient(135deg,#e8f4ed,#fffaf0);line-height:1.45}
+.px-planning-evenements button,.px-planning-evenements input,.px-planning-evenements select,.px-planning-evenements textarea{font:inherit}
+.px-planning-evenements{padding:26px 32px 55px;max-width:1600px;margin:auto}
+.px-planning-evenements .section-head,.px-planning-evenements .panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.px-planning-evenements .section-head{margin-bottom:18px}
+.px-planning-evenements .section-head h1{font-size:1.85rem;margin:0 0 5px}
+.px-planning-evenements .section-head p,.px-planning-evenements .panel-head p{margin:3px 0 0;color:var(--muted);font-size:.8rem}
+.px-planning-evenements .actions{display:flex;gap:8px;flex-wrap:wrap}
+.px-planning-evenements .primary,.px-planning-evenements .secondary{border-radius:11px;padding:10px 14px;font-weight:800;cursor:pointer}
+.px-planning-evenements .primary{border:0;background:var(--g);color:#fff;box-shadow:0 8px 18px rgba(7,91,58,.18)}
+.px-planning-evenements .secondary{border:1px solid var(--line);background:#fff;color:var(--ink)}
+.px-planning-evenements .card{background:var(--paper);border:1px solid rgba(255,255,255,.78);box-shadow:var(--shadow);border-radius:21px;backdrop-filter:blur(16px)}
+.px-planning-evenements .status{display:inline-flex;padding:5px 9px;border-radius:99px;background:#e3f3ea;color:var(--g);font-size:.72rem;font-weight:850;white-space:nowrap}
+.px-planning-evenements .status.gold{background:#fff0c8;color:#80600f}
+.px-planning-evenements .status.red{background:#fdecef;color:#a73a48}
+.px-planning-evenements .status.blue{background:#e8f1fa;color:#356895}
+.px-planning-evenements .status.purple{background:#f0e8f7;color:#714c91}
+.px-planning-evenements .command{padding:21px;background:linear-gradient(120deg,#0b3948,#146d62 58%,#a77f22);color:#fff;position:relative;overflow:hidden}
+.px-planning-evenements .command:after{content:"";position:absolute;width:310px;height:310px;border-radius:50%;border:1px solid rgba(255,213,102,.42);right:-90px;top:-190px}
+.px-planning-evenements .command-head,.px-planning-evenements .stats{position:relative;z-index:1}
+.px-planning-evenements .command-head{display:flex;justify-content:space-between;gap:16px}
+.px-planning-evenements .command h2{margin:0;font-size:1.25rem}
+.px-planning-evenements .command p{margin:5px 0 0;color:rgba(255,255,255,.78)}
+.px-planning-evenements .command-tags{display:flex;gap:7px;flex-wrap:wrap}
+.px-planning-evenements .command-tags span{padding:7px 10px;border-radius:99px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);font-size:.72rem;font-weight:800}
+.px-planning-evenements .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-top:18px}
+.px-planning-evenements .stat{padding:11px;border-radius:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14)}
+.px-planning-evenements .stat span,.px-planning-evenements .stat strong,.px-planning-evenements .stat small{display:block}
+.px-planning-evenements .stat span,.px-planning-evenements .stat small{font-size:.72rem;color:rgba(255,255,255,.74)}
+.px-planning-evenements .stat strong{font-size:1.18rem;margin:3px 0}
+.px-planning-evenements .workflow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:17px 0}
+.px-planning-evenements .phase{padding:15px;display:flex;gap:12px;align-items:center;cursor:pointer}
+.px-planning-evenements .phase.active{outline:2px solid var(--gold);background:#fff9e7}
+.px-planning-evenements .phase .phase-num{flex:0 0 42px;width:42px;height:42px;border-radius:13px;background:var(--g);color:#fff;display:grid;place-items:center;font-size:1.05rem;font-weight:800;line-height:1}
+.px-planning-evenements .phase strong,.px-planning-evenements .phase span{display:block}
+.px-planning-evenements .phase strong{font-size:.86rem}
+.px-planning-evenements .phase span{font-size:.72rem;color:var(--muted)}
+.px-planning-evenements .main-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:17px}
+.px-planning-evenements .panel{padding:18px}
+.px-planning-evenements .panel-head{margin-bottom:13px}
+.px-planning-evenements .panel-head h2{margin:0;font-size:1.05rem}
+.px-planning-evenements .filters{display:flex;gap:7px}
+.px-planning-evenements .filters select,.px-planning-evenements .filters input{padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.px-planning-evenements .event-list{display:grid;gap:8px}
+.px-planning-evenements .event{border:1px solid var(--line);background:rgba(255,255,255,.72);border-radius:14px;padding:12px;display:grid;grid-template-columns:55px 1fr auto;gap:11px;align-items:center;cursor:pointer}
+.px-planning-evenements .event:hover,.px-planning-evenements .event.active{border-color:var(--gold);background:#fff8e7}
+.px-planning-evenements .date{width:55px;height:55px;border-radius:14px;background:#e5f3eb;color:var(--g);display:grid;place-items:center;text-align:center;font-weight:900;line-height:1.05}
+.px-planning-evenements .date small{font-size:.62rem}
+.px-planning-evenements .event strong,.px-planning-evenements .event span,.px-planning-evenements .event small{display:block}
+.px-planning-evenements .event strong{font-size:.8rem}
+.px-planning-evenements .event span,.px-planning-evenements .event small{font-size:.7rem;color:var(--muted)}
+.px-planning-evenements .event>small{text-align:right}
+.px-planning-evenements .detail{padding:0;overflow:hidden}
+.px-planning-evenements .detail-hero{padding:18px 20px;background:linear-gradient(135deg,#fff,#fff7dd);display:flex;justify-content:space-between;gap:12px;align-items:center}
+.px-planning-evenements .detail-title span,.px-planning-evenements .detail-title strong,.px-planning-evenements .detail-title small{display:block}
+.px-planning-evenements .detail-title span{font-size:.7rem;color:var(--muted)}
+.px-planning-evenements .detail-title strong{font-size:1.25rem;margin:3px 0}
+.px-planning-evenements .detail-title small{font-size:.75rem;color:var(--muted)}
+.px-planning-evenements .detail-body{padding:18px}
+.px-planning-evenements .info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.px-planning-evenements .info{padding:10px;border-radius:11px;background:#f0f6f3}
+.px-planning-evenements .info span,.px-planning-evenements .info strong{display:block}
+.px-planning-evenements .info span{font-size:.68rem;color:var(--muted)}
+.px-planning-evenements .info strong{font-size:.78rem;margin-top:3px}
+.px-planning-evenements .section-title{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:15px 0 9px}
+.px-planning-evenements .section-title h3{font-size:.92rem;margin:0}
+.px-planning-evenements .site-list{display:grid;gap:8px}
+.px-planning-evenements .site{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:center;padding:11px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.74)}
+.px-planning-evenements .site strong,.px-planning-evenements .site span,.px-planning-evenements .site small{display:block}
+.px-planning-evenements .site strong{font-size:.78rem}
+.px-planning-evenements .site span,.px-planning-evenements .site small{font-size:.69rem;color:var(--muted)}
+.px-planning-evenements .travel{padding:7px 9px;border-radius:9px;background:#eaf4ef;font-size:.7rem;font-weight:800;color:var(--g)}
+.px-planning-evenements .travel.red{background:#fdecef;color:var(--red)}
+.px-planning-evenements .conflicts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.px-planning-evenements .conflict{padding:11px;border-radius:12px;background:#fdeff1;border:2px solid var(--red)}
+.px-planning-evenements .conflict.ok{background:#eaf6ef;border-color:var(--g2)}
+.px-planning-evenements .conflict strong,.px-planning-evenements .conflict span{display:block}
+.px-planning-evenements .conflict strong{font-size:.77rem}
+.px-planning-evenements .conflict span{font-size:.69rem;color:var(--muted);margin-top:3px}
+.px-planning-evenements .recurring{margin-top:17px;padding:18px}
+.px-planning-evenements .recurring-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.px-planning-evenements .recurring-card{padding:13px;border-radius:14px;background:rgba(255,255,255,.72);border:1px solid var(--line)}
+.px-planning-evenements .recurring-card strong,.px-planning-evenements .recurring-card span,.px-planning-evenements .recurring-card small{display:block}
+.px-planning-evenements .recurring-card strong{font-size:.8rem}
+.px-planning-evenements .recurring-card span,.px-planning-evenements .recurring-card small{font-size:.7rem;color:var(--muted);margin-top:3px}
+.px-planning-evenements .live{margin-top:17px;padding:18px;background:linear-gradient(135deg,rgba(9,55,46,.96),rgba(24,107,85,.92));color:#fff}
+.px-planning-evenements .live .panel-head p{color:rgba(255,255,255,.72)}
+.px-planning-evenements .live-grid{display:grid;grid-template-columns:.65fr 1.35fr;gap:18px}
+.px-planning-evenements .live-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.px-planning-evenements .live-stat{padding:12px;border-radius:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.13)}
+.px-planning-evenements .live-stat span,.px-planning-evenements .live-stat strong{display:block}
+.px-planning-evenements .live-stat span{font-size:.68rem;color:rgba(255,255,255,.72)}
+.px-planning-evenements .live-stat strong{font-size:1rem;margin-top:3px}
+.px-planning-evenements .site-monitor{display:grid;gap:8px}
+.px-planning-evenements .monitor{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.13)}
+.px-planning-evenements .monitor strong,.px-planning-evenements .monitor span{display:block}
+.px-planning-evenements .monitor strong{font-size:.78rem}
+.px-planning-evenements .monitor span{font-size:.68rem;color:rgba(255,255,255,.7)}
+.px-planning-evenements .monitor b{font-size:.7rem;color:#f4ce6c}
+.px-planning-evenements .report-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:17px}
+.px-planning-evenements .report{padding:13px;border-radius:14px;background:rgba(255,255,255,.72);border:1px solid var(--line)}
+.px-planning-evenements .report strong,.px-planning-evenements .report span{display:block}
+.px-planning-evenements .report strong{font-size:.82rem}
+.px-planning-evenements .report span{font-size:.7rem;color:var(--muted);margin-top:4px}
+.px-planning-evenements .report button{margin-top:9px;border:0;background:#e5f2ea;color:var(--g);border-radius:8px;padding:7px 9px;font-size:.7rem;font-weight:850;cursor:pointer}
+.px-planning-evenements .modal{width:min(800px,100%);max-height:92vh;overflow:auto;border-radius:23px;background:linear-gradient(145deg,#fff,#fff9e9);padding:22px;position:relative;box-shadow:0 30px 90px rgba(0,0,0,.3)}
+.px-planning-evenements .modal h2{margin:0}
+.px-planning-evenements .modal>p{margin:4px 0 15px;color:var(--muted)}
+.px-planning-evenements .close{position:absolute;right:14px;top:13px;border:0;background:#e7f3ec;color:var(--g);width:34px;height:34px;border-radius:10px;font-size:1.2rem}
+.px-planning-evenements .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.px-planning-evenements .form-grid label{display:grid;gap:5px;font-size:.78rem;font-weight:800}
+.px-planning-evenements .form-grid input,.px-planning-evenements .form-grid select,.px-planning-evenements .form-grid textarea{padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.px-planning-evenements .form-grid textarea{min-height:82px}
+.px-planning-evenements .full{grid-column:1/-1}
+.px-planning-evenements .form-note{padding:10px;border-radius:10px;background:#fff2ca;color:#735414;font-size:.72rem;margin:12px 0}
+.px-planning-evenements .form-actions{display:flex;justify-content:flex-end;gap:8px}
+.px-planning-evenements .toast{position:fixed;right:22px;bottom:22px;background:#123f30;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 15px 40px rgba(0,0,0,.22);transform:translateY(90px);opacity:0;transition:.25s;z-index:120}
+.px-planning-evenements .toast.show{transform:none;opacity:1}
+@media(max-width:1250px){.px-planning-evenements .stats{grid-template-columns:repeat(3,1fr)}
+.px-planning-evenements .main-grid{grid-template-columns:1fr}
+.px-planning-evenements .recurring-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:780px){.px-planning-evenements{padding:20px 15px 42px}
+.px-planning-evenements .section-head,.px-planning-evenements .command-head,.px-planning-evenements .panel-head,.px-planning-evenements .detail-hero{display:block}
+.px-planning-evenements .actions,.px-planning-evenements .command-tags,.px-planning-evenements .filters{margin-top:12px}
+.px-planning-evenements .stats,.px-planning-evenements .workflow,.px-planning-evenements .info-grid,.px-planning-evenements .conflicts,.px-planning-evenements .recurring-grid,.px-planning-evenements .live-grid,.px-planning-evenements .live-stats,.px-planning-evenements .report-grid,.px-planning-evenements .form-grid{grid-template-columns:1fr}
+.px-planning-evenements .site,.px-planning-evenements .monitor{grid-template-columns:1fr}
+.px-planning-evenements .travel,.px-planning-evenements .monitor b{justify-self:start}
+.px-planning-evenements .full{grid-column:auto}
+.px-planning-evenements .form-actions{flex-direction:column}
+.px-planning-evenements .form-actions button{width:100%}}
+
+.sidebar{
+  isolation:isolate;
+  overflow-x:hidden;
+  overflow-y:auto;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(217,186,89,.45) transparent;
+  background:
+    radial-gradient(circle at 18% 6%,rgba(213,177,73,.13),transparent 25%),
+    linear-gradient(135deg,transparent 0 46%,rgba(213,177,73,.045) 47% 48%,transparent 49% 100%) 0 0/42px 42px,
+    linear-gradient(180deg,#073c30 0%,#052f27 58%,#041f1b 100%)!important;
+  border-right:1px solid rgba(221,185,82,.42);
+  box-shadow:12px 0 34px rgba(3,35,27,.13);
+}
+.px-planning-evenements .audio-context{margin-top:18px;padding:20px;background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(243,250,246,.74));border:1px solid rgba(7,91,58,.12);border-radius:21px;box-shadow:0 18px 44px rgba(20,72,50,.1);color:#202b26}
+.px-planning-evenements .audio-context *{box-sizing:border-box}
+.px-planning-evenements .audio-context-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}
+.px-planning-evenements .audio-context-head h2,.px-planning-evenements .audio-context-head h3{margin:0;font-size:1.04rem}
+.px-planning-evenements .audio-context-head p{margin:4px 0 0;color:#68756f;font-size:.78rem;line-height:1.45}
+.px-planning-evenements .audio-context-actions{display:flex;gap:8px;flex-wrap:wrap}
+.px-planning-evenements .audio-context a,.px-planning-evenements .audio-context button{font:inherit}
+.px-planning-evenements .audio-primary,.px-planning-evenements .audio-secondary{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:39px;padding:9px 13px;border-radius:11px;font-size:.76rem;font-weight:850;text-decoration:none;cursor:pointer}
+.px-planning-evenements .audio-primary{border:0;background:#075b3a;color:#fff;box-shadow:0 8px 18px rgba(7,91,58,.17)}
+.px-planning-evenements .audio-secondary{border:1px solid rgba(7,91,58,.15);background:#fff;color:#202b26}
+.px-planning-evenements .audio-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}
+.px-planning-evenements .audio-metric{padding:12px;border-radius:14px;background:rgba(255,255,255,.76);border:2px solid #0b8a5b}
+.px-planning-evenements .audio-metric:nth-child(2){border-color:#d4a72c}
+.px-planning-evenements .audio-metric:nth-child(3){border-color:#3d82c4}
+.px-planning-evenements .audio-metric:nth-child(4){border-color:#7656a4}
+.px-planning-evenements .audio-metric span,.px-planning-evenements .audio-metric strong,.px-planning-evenements .audio-metric small{display:block}
+.px-planning-evenements .audio-metric span,.px-planning-evenements .audio-metric small{font-size:.75rem;color:#68756f}
+.px-planning-evenements .audio-metric strong{font-size:1.25rem;margin:2px 0}
+.px-planning-evenements .audio-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.px-planning-evenements .audio-item{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px;border-radius:14px;background:rgba(255,255,255,.78);border:1px solid rgba(7,91,58,.1)}
+.px-planning-evenements .audio-play{width:39px;height:39px;border:0;border-radius:50%;background:linear-gradient(145deg,#075b3a,#0b8a5b);color:#fff;cursor:pointer}
+.px-planning-evenements .audio-item strong,.px-planning-evenements .audio-item span,.px-planning-evenements .audio-item small{display:block}
+.px-planning-evenements .audio-item strong{font-size:.79rem}
+.px-planning-evenements .audio-item span,.px-planning-evenements .audio-item small{font-size:.75rem;color:#68756f;margin-top:2px}
+.px-planning-evenements .audio-item small{color:#075b3a;font-weight:750}
+.px-planning-evenements .audio-item-action{display:flex;gap:6px;align-items:center}
+.px-planning-evenements .audio-status{display:inline-flex;padding:5px 8px;border-radius:99px;background:#e3f3ea;color:#075b3a;font-size:.72rem;font-weight:850;white-space:nowrap}
+.px-planning-evenements .audio-status.gold{background:#fff0c8;color:#80600f}
+.px-planning-evenements .audio-status.blue{background:#e8f0fb;color:#315f96}
+.px-planning-evenements .audio-status.red{background:#fdecef;color:#a73a48}
+.px-planning-evenements .audio-progress{grid-column:2/-1;height:6px;border-radius:99px;background:#dce8e2;overflow:hidden}
+.px-planning-evenements .audio-progress i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#0b8a5b,#d4a72c);transition:width .35s}
+.px-planning-evenements .audio-review-list{display:grid;gap:8px}
+.px-planning-evenements .audio-review{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(160px,.7fr) auto;gap:10px;align-items:center;padding:12px;border-radius:14px;background:rgba(255,255,255,.78);border:1px solid rgba(7,91,58,.1)}
+.px-planning-evenements .audio-review strong,.px-planning-evenements .audio-review span,.px-planning-evenements .audio-review small{display:block}
+.px-planning-evenements .audio-review span,.px-planning-evenements .audio-review small{font-size:.75rem;color:#68756f;margin-top:2px}
+.px-planning-evenements .audio-review-controls{display:flex;gap:6px;flex-wrap:wrap}
+.px-planning-evenements .audio-eval{display:grid;grid-template-columns:200px 1fr;gap:15px}
+.px-planning-evenements .audio-player-panel{padding:16px;border-radius:16px;background:linear-gradient(145deg,#123f32,#0b6b4d);color:#fff;text-align:center}
+.px-planning-evenements .audio-disc{width:88px;height:88px;margin:0 auto 10px;border-radius:50%;background:repeating-radial-gradient(circle,#102f28 0 5px,#1c5040 6px 8px);border:7px solid rgba(255,255,255,.1);display:grid;place-items:center}
+.px-planning-evenements .audio-disc:after{content:"♪";width:32px;height:32px;border-radius:50%;background:#d4a72c;color:#26352e;display:grid;place-items:center;font-weight:900}
+.px-planning-evenements .audio-player-panel strong,.px-planning-evenements .audio-player-panel span{display:block}
+.px-planning-evenements .audio-player-panel span{font-size:.75rem;color:rgba(255,255,255,.7);margin-top:3px}
+.px-planning-evenements .audio-feedback{display:grid;gap:8px}
+.px-planning-evenements .audio-feedback textarea{min-height:76px;width:100%;padding:10px;border:1px solid rgba(7,91,58,.14);border-radius:11px;background:#fff;font:inherit;resize:vertical}
+.px-planning-evenements .audio-dashboard{display:grid;grid-template-columns:1.2fr repeat(3,.55fr);gap:10px;align-items:stretch}
+.px-planning-evenements .audio-dashboard-lead{padding:16px;border-radius:16px;color:#fff;background:linear-gradient(125deg,#075b3a,#0b8a5b);position:relative;overflow:hidden}
+.px-planning-evenements .audio-dashboard-lead:after{content:"♪";position:absolute;right:14px;bottom:-15px;font-size:5rem;color:rgba(255,255,255,.1)}
+.px-planning-evenements .audio-dashboard-lead h3{margin:0;font-size:1rem}
+.px-planning-evenements .audio-dashboard-lead p{margin:4px 0 12px;font-size:.72rem;color:rgba(255,255,255,.74);max-width:360px}
+.px-planning-evenements .audio-dashboard-kpi{padding:14px;border-radius:16px;background:rgba(255,255,255,.78);border:2px solid #0b8a5b}
+.px-planning-evenements .audio-dashboard-kpi:nth-child(3){border-color:#d4a72c}
+.px-planning-evenements .audio-dashboard-kpi:nth-child(4){border-color:#3d82c4}
+.px-planning-evenements .audio-dashboard-kpi span,.px-planning-evenements .audio-dashboard-kpi strong,.px-planning-evenements .audio-dashboard-kpi small{display:block}
+.px-planning-evenements .audio-dashboard-kpi span,.px-planning-evenements .audio-dashboard-kpi small{font-size:.75rem;color:#68756f}
+.px-planning-evenements .audio-dashboard-kpi strong{font-size:1.5rem;margin:3px 0}
+.px-planning-evenements .audio-toast{position:fixed;right:22px;bottom:22px;z-index:150;padding:12px 16px;border-radius:12px;background:#123f30;color:#fff;box-shadow:0 15px 40px rgba(0,0,0,.22);transform:translateY(90px);opacity:0;transition:.25s}
+.px-planning-evenements .audio-toast.show{transform:none;opacity:1}
+@media(max-width:1100px){.px-planning-evenements .audio-metrics{grid-template-columns:repeat(2,1fr)}
+.px-planning-evenements .audio-dashboard{grid-template-columns:1fr 1fr}
+.px-planning-evenements .audio-dashboard-lead{grid-column:1/-1}
+.px-planning-evenements .audio-review{grid-template-columns:1fr}
+.px-planning-evenements .audio-review-controls{justify-content:flex-start}}
+@media(max-width:780px){.px-planning-evenements .audio-context{padding:15px}
+.px-planning-evenements .audio-context-head{display:block}
+.px-planning-evenements .audio-context-actions{margin-top:10px}
+.px-planning-evenements .audio-grid,.px-planning-evenements .audio-metrics,.px-planning-evenements .audio-dashboard,.px-planning-evenements .audio-eval{grid-template-columns:1fr}
+.px-planning-evenements .audio-dashboard-lead{grid-column:auto}
+.px-planning-evenements .audio-item{grid-template-columns:40px 1fr}
+.px-planning-evenements .audio-item-action{grid-column:2}
+.px-planning-evenements .audio-progress{grid-column:1/-1}}

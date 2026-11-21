@@ -1,0 +1,13 @@
+/** Country name (English/French/Spanish/Italian, any case/accents) → ISO 3166-1 alpha-2, for flag images. */
+const RAW: Record<string, string> = {
+  senegal: 'sn', sénégal: 'sn', italie: 'it', italy: 'it', italia: 'it', france: 'fr', mali: 'ml', mauritanie: 'mr', mauritania: 'mr', gambie: 'gm', gambia: 'gm', 'the gambia': 'gm',
+  guinee: 'gn', guinea: 'gn', 'guinée': 'gn', "cote d'ivoire": 'ci', "côte d'ivoire": 'ci', 'ivory coast': 'ci', maroc: 'ma', morocco: 'ma', algerie: 'dz', algeria: 'dz', 'algérie': 'dz',
+  tunisie: 'tn', tunisia: 'tn', espagne: 'es', spain: 'es', espana: 'es', 'españa': 'es', espana2: 'es', belgique: 'be', belgium: 'be', allemagne: 'de', germany: 'de', suisse: 'ch', switzerland: 'ch',
+  'royaume-uni': 'gb', 'united kingdom': 'gb', uk: 'gb', 'etats-unis': 'us', 'états-unis': 'us', 'united states': 'us', usa: 'us', canada: 'ca', portugal: 'pt', 'pays-bas': 'nl', netherlands: 'nl',
+  nigeria: 'ng', ghana: 'gh', 'burkina faso': 'bf', niger: 'ne', benin: 'bj', 'bénin': 'bj', togo: 'tg', cameroun: 'cm', cameroon: 'cm', gabon: 'ga', congo: 'cg', 'guinee-bissau': 'gw', 'guinea-bissau': 'gw', 'guinée-bissau': 'gw',
+  'cap-vert': 'cv', 'cape verde': 'cv', tchad: 'td', chad: 'td', egypte: 'eg', egypt: 'eg', 'égypte': 'eg', 'arabie saoudite': 'sa', 'saudi arabia': 'sa', turquie: 'tr', turkey: 'tr', 'emirats arabes unis': 'ae', 'united arab emirates': 'ae', qatar: 'qa', liban: 'lb', lebanon: 'lb',
+  inde: 'in', india: 'in', pakistan: 'pk', bangladesh: 'bd', indonesie: 'id', indonesia: 'id', malaisie: 'my', malaysia: 'my', australie: 'au', australia: 'au', bresil: 'br', brazil: 'br', 'brésil': 'br', mexique: 'mx', mexico: 'mx', 'méxico': 'mx', autriche: 'at', austria: 'at', irlande: 'ie', ireland: 'ie', suede: 'se', sweden: 'se', 'suède': 'se', norvege: 'no', norway: 'no', 'norvège': 'no', danemark: 'dk', denmark: 'dk', grece: 'gr', greece: 'gr', 'grèce': 'gr', pologne: 'pl', poland: 'pl', russie: 'ru', russia: 'ru', chine: 'cn', china: 'cn', japon: 'jp', japan: 'jp', 'afrique du sud': 'za', 'south africa': 'za', kenya: 'ke', tanzanie: 'tz', tanzania: 'tz', ethiopie: 'et', ethiopia: 'et', soudan: 'sd', sudan: 'sd', libye: 'ly', libya: 'ly', jordanie: 'jo', jordan: 'jo', irak: 'iq', iraq: 'iq', iran: 'ir', syrie: 'sy', syria: 'sy', palestine: 'ps', yemen: 'ye', 'yémen': 'ye', oman: 'om', koweit: 'kw', kuwait: 'kw', 'koweït': 'kw', 'bahrein': 'bh', bahrain: 'bh',
+};
+const norm = (s: string) => s.trim().toLowerCase();
+export const flagCode = (name: string): string | undefined => RAW[norm(name)] ?? RAW[norm(name).normalize('NFD').replace(/[̀-ͯ]/g, '')];
+export const flagUrl = (name: string, w = 80): string | undefined => { const c = flagCode(name); return c ? `https://flagcdn.com/w${w}/${c}.png` : undefined; };

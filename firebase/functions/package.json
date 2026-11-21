@@ -1,0 +1,37 @@
+{
+  "name": "functions",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions,firestore,auth,storage",
+    "lint": "eslint src --ext .ts",
+    "test": "mocha -r ts-node/register 'test/**/*.test.ts' --ignore 'test/emulator/**' --timeout 10000",
+    "test:emulator": "mocha -r ts-node/register 'test/emulator/**/*.emulator.test.ts' --timeout 20000",
+    "deploy": "firebase deploy --only functions"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^5.1.1",
+    "stripe": "^16.12.0",
+    "twilio": "^5.3.4"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.19",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^20.14.15",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "chai": "^4.5.0",
+    "eslint": "^8.57.0",
+    "firebase-functions-test": "^3.3.0",
+    "mocha": "^10.7.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}

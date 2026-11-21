@@ -1,0 +1,152 @@
+/* Page styles for the finance screen — scoped under .px-finance. */
+.px-finance{--g:#075b3a;--g2:#0b8a5b;--gold:#d4a72c;--blue:#3d82c4;--red:#c54857;--ink:#202b26;--muted:#68756f;--paper:rgba(255,255,255,.84);--line:rgba(5,82,56,.13);--shadow:0 18px 44px rgba(20,72,50,.11)}
+.px-finance *{box-sizing:border-box}
+.px-finance{font-size:16px}
+.px-finance{margin:0;color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:radial-gradient(circle at 85% 4%,rgba(212,167,44,.22),transparent 23%),radial-gradient(circle at 20% 70%,rgba(11,138,91,.14),transparent 28%),linear-gradient(135deg,#e8f4ed,#fffaf0);line-height:1.45}
+.px-finance button,.px-finance input,.px-finance select{font:inherit}
+.px-finance{padding:26px 32px 55px;max-width:1600px;margin:auto}
+.px-finance .section-head,.px-finance .panel-head,.px-finance .switcher-head,.px-finance .hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.px-finance .section-head{margin-bottom:18px}
+.px-finance .section-head h1{font-size:1.85rem;margin:0 0 5px}
+.px-finance .section-head p,.px-finance .panel-head p,.px-finance .switcher-head p{margin:3px 0 0;color:var(--muted);font-size:.77rem}
+.px-finance .actions{display:flex;gap:8px;flex-wrap:wrap}
+.px-finance .primary,.px-finance .secondary{border-radius:11px;padding:10px 14px;font-weight:800;cursor:pointer}
+.px-finance .primary{border:0;background:var(--g);color:#fff;box-shadow:0 8px 18px rgba(7,91,58,.18)}
+.px-finance .secondary{border:1px solid var(--line);background:#fff;color:var(--ink)}
+.px-finance .card{background:var(--paper);border:1px solid rgba(255,255,255,.78);box-shadow:var(--shadow);border-radius:21px;backdrop-filter:blur(16px)}
+.px-finance .program-switcher,.px-finance .panel,.px-finance .flow-card,.px-finance .ranking,.px-finance .table-card{padding:18px}
+.px-finance .program-switcher{margin-bottom:17px}
+.px-finance .switcher-head,.px-finance .panel-head{margin-bottom:13px}
+.px-finance .switcher-head h2,.px-finance .panel-head h2{margin:0;font-size:1.03rem}
+.px-finance .program-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.px-finance .program-tab{border:1px solid var(--line);background:rgba(255,255,255,.72);padding:13px;border-radius:14px;text-align:left;cursor:pointer}
+.px-finance .program-tab.active{color:#fff;background:linear-gradient(125deg,var(--g),var(--g2));border-color:transparent;box-shadow:0 12px 25px rgba(7,91,58,.22)}
+.px-finance .program-tab strong,.px-finance .program-tab span,.px-finance .program-tab small{display:block}
+.px-finance .program-tab span{font-size:.75rem;color:var(--muted);margin:3px 0 9px}
+.px-finance .program-tab.active span,.px-finance .program-tab.active small{color:rgba(255,255,255,.78)}
+.px-finance .line{height:6px;border-radius:99px;background:#e0e9e4;overflow:hidden}
+.px-finance .line i{display:block;height:100%;width:var(--p);background:linear-gradient(90deg,var(--g2),var(--gold));border-radius:inherit}
+.px-finance .program-tab.active .line{background:rgba(255,255,255,.2)}
+.px-finance .program-tab.active .line i{background:#f1c85b}
+.px-finance .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:99px;font-size:.7rem;font-weight:850;background:#e3f3ea;color:var(--g);white-space:nowrap}
+.px-finance .badge:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.px-finance .badge.light{background:rgba(255,255,255,.14);color:#fff}
+.px-finance .hero{padding:22px;background:linear-gradient(125deg,#123e50,#1f7082);color:#fff;position:relative;overflow:hidden}
+.px-finance .hero:after{content:"";position:absolute;width:270px;height:270px;border:1px solid rgba(241,200,91,.43);border-radius:50%;right:-76px;top:-132px}
+.px-finance .hero-top{position:relative;z-index:1}
+.px-finance .hero h2{font-size:1.3rem;margin:7px 0 5px}
+.px-finance .hero p{margin:0;color:rgba(255,255,255,.78);max-width:780px}
+.px-finance .hero-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:19px;position:relative;z-index:1}
+.px-finance .hero-metrics div{padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14)}
+.px-finance .hero-metrics span,.px-finance .hero-metrics strong,.px-finance .hero-metrics small{display:block}
+.px-finance .hero-metrics span,.px-finance .hero-metrics small{color:rgba(255,255,255,.72);font-size:.72rem}
+.px-finance .hero-metrics strong{font-size:1.12rem;margin:3px 0}
+.px-finance .flow-card{margin:17px 0}
+.px-finance .allocation-flow{display:grid;grid-template-columns:repeat(5,1fr);gap:24px}
+.px-finance .flow-step{padding:14px;border-radius:15px;background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(241,249,244,.75));border:1px solid var(--line);position:relative}
+.px-finance .flow-step:not(:last-child):after{content:"→";position:absolute;right:-19px;top:34%;color:var(--gold);font-size:1.25rem;font-weight:900}
+.px-finance .flow-step b,.px-finance .flow-step strong,.px-finance .flow-step span{display:block}
+.px-finance .flow-step b{width:28px;height:28px;border-radius:9px;background:#e5f3eb;color:var(--g);display:grid;place-items:center;font-size:.72rem;margin-bottom:8px}
+.px-finance .flow-step strong{font-size:.85rem}
+.px-finance .flow-step span{font-size:.7rem;color:var(--muted);margin:3px 0 7px}
+.px-finance .flow-step em{font-style:normal;font-size:.95rem;font-weight:900;color:var(--g)}
+.px-finance .flow-note,.px-finance .privacy{margin-top:13px;padding:10px 12px;border-radius:11px;background:#fff6dc;color:#735414;font-size:.74rem}
+.px-finance .grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(330px,.7fr);gap:17px;margin-bottom:17px}
+.px-finance .donut-layout{display:grid;grid-template-columns:160px 1fr;gap:20px;align-items:center}
+.px-finance .donut{width:150px;height:150px;border-radius:50%;background:conic-gradient(var(--g2) 0 68%,var(--gold) 68% 81%,var(--blue) 81% 89%,#dce5e0 89%);display:grid;place-items:center;position:relative}
+.px-finance .donut:after{content:"";width:98px;height:98px;border-radius:50%;background:#fff;position:absolute}
+.px-finance .donut div{position:relative;z-index:1;text-align:center}
+.px-finance .donut strong,.px-finance .donut span{display:block}
+.px-finance .donut strong{font-size:1.45rem}
+.px-finance .donut span{font-size:.68rem;color:var(--muted)}
+.px-finance .legend{display:grid;gap:9px}
+.px-finance .legend div{display:grid;grid-template-columns:10px 1fr auto;gap:8px;align-items:center}
+.px-finance .legend i{width:9px;height:9px;border-radius:50%;background:var(--g2)}
+.px-finance .legend div:nth-child(2) i{background:var(--gold)}
+.px-finance .legend div:nth-child(3) i{background:var(--blue)}
+.px-finance .legend div:nth-child(4) i{background:#dce5e0}
+.px-finance .legend span{color:var(--muted);font-size:.75rem}
+.px-finance .methods{display:grid;gap:9px}
+.px-finance .method{display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:13px;background:rgba(255,255,255,.68)}
+.px-finance .method-logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:.66rem;font-weight:900;color:#fff;background:#3f8bd4}
+.px-finance .method:nth-child(2) .method-logo{background:#f28b25}
+.px-finance .method:nth-child(3) .method-logo{background:#5f6d66}
+.px-finance .method span,.px-finance .method strong{display:block}
+.px-finance .method span{font-size:.7rem;color:var(--muted)}
+.px-finance .method b{font-size:.75rem;color:var(--g)}
+.px-finance .ranking{margin-bottom:17px}
+.px-finance .bars{display:grid;gap:11px}
+.px-finance .bar-row{display:grid;grid-template-columns:minmax(110px,1fr) 3fr 46px;gap:10px;align-items:center}
+.px-finance .bar-row span{font-size:.75rem}
+.px-finance .bar-track{height:12px;background:#e1ebe6;border-radius:99px;overflow:hidden}
+.px-finance .bar-track i{display:block;height:100%;width:var(--p);background:linear-gradient(90deg,var(--g),#25ad78);border-radius:inherit}
+.px-finance .bar-row:nth-child(3) i,.px-finance .bar-row:nth-child(6) i{background:linear-gradient(90deg,#b98c17,#f1c85b)}
+.px-finance .bar-row b{text-align:right;font-size:.76rem}
+.px-finance .privacy{background:#edf5fb;color:#315f96}
+.px-finance .table-card{margin-bottom:17px}
+.px-finance .filters{display:grid;grid-template-columns:1.5fr repeat(3,.7fr);gap:8px;margin-bottom:11px}
+.px-finance .filters input,.px-finance .filters select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.px-finance .table-wrap{overflow:auto}
+.px-finance table{width:100%;border-collapse:collapse;min-width:930px}
+.px-finance th{text-align:left;font-size:.68rem;text-transform:uppercase;color:var(--muted);padding:9px;border-bottom:1px solid var(--line)}
+.px-finance td{padding:10px 9px;font-size:.75rem;border-bottom:1px solid var(--line)}
+.px-finance td strong,.px-finance td small{display:block}
+.px-finance td small{color:var(--muted)}
+.px-finance .status{display:inline-flex;padding:5px 9px;border-radius:99px;background:#e3f3ea;color:var(--g);font-size:.67rem;font-weight:850}
+.px-finance .status.gold{background:#fff0c8;color:#80600f}
+.px-finance .status.red{background:#fdecef;color:#a73a48}
+.px-finance .private{filter:blur(5px);user-select:none}
+.px-finance .participation{display:grid;grid-template-columns:1fr 1fr;gap:17px}
+.px-finance .members{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.px-finance .member{display:flex;align-items:center;gap:9px;padding:9px;border-radius:12px;background:rgba(255,255,255,.72)}
+.px-finance .member i{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#dff1e7;color:var(--g);font-style:normal;font-weight:900;font-size:.7rem}
+.px-finance .member span,.px-finance .member small{display:block}
+.px-finance .member span{font-size:.75rem;font-weight:800}
+.px-finance .member small{font-size:.67rem;color:var(--muted)}
+.px-finance .audit{display:grid;gap:8px}
+.px-finance .audit div{padding:11px;border:2px solid var(--g);background:rgba(255,255,255,.69);border-radius:10px}
+.px-finance .audit div:last-child{border-color:var(--gold)}
+.px-finance .audit strong,.px-finance .audit span{display:block}
+.px-finance .audit span{font-size:.7rem;color:var(--muted);margin-top:2px}
+.px-finance .modal{width:min(760px,100%);max-height:92vh;overflow:auto;border-radius:23px;background:linear-gradient(145deg,#fff,#fff9e9);padding:22px;position:relative;box-shadow:0 30px 90px rgba(0,0,0,.3)}
+.px-finance .modal h2{margin:0}
+.px-finance .modal>p{margin:4px 0 15px;color:var(--muted)}
+.px-finance .close{position:absolute;right:14px;top:13px;border:0;background:#e7f3ec;color:var(--g);width:34px;height:34px;border-radius:10px;font-size:1.2rem;cursor:pointer}
+.px-finance .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.px-finance .form-grid label{display:grid;gap:5px;font-size:.75rem;font-weight:800}
+.px-finance .form-grid input,.px-finance .form-grid select{padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.px-finance .full{grid-column:1/-1}
+.px-finance .upload{padding:15px!important;border:1px dashed var(--g2)!important;background:#f0f8f3!important}
+.px-finance .form-note{padding:10px;border-radius:10px;background:#fff2ca;color:#735414;font-size:.72rem;margin:12px 0}
+.px-finance .form-actions{display:flex;justify-content:flex-end;gap:8px}
+.px-finance .toast{position:fixed;right:22px;bottom:22px;background:#123f30;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 15px 40px rgba(0,0,0,.22);transform:translateY(90px);opacity:0;transition:.25s;z-index:120}
+.px-finance .toast.show{transform:none;opacity:1}
+@media(max-width:1150px){.px-finance .hero-metrics{grid-template-columns:repeat(3,1fr)}
+.px-finance .allocation-flow{grid-template-columns:1fr}
+.px-finance .flow-step:not(:last-child):after{content:"↓";right:18px;top:auto;bottom:-24px}
+.px-finance .grid,.px-finance .participation{grid-template-columns:1fr}}
+@media(max-width:780px){.px-finance{padding:20px 15px 42px}
+.px-finance .section-head,.px-finance .hero-top,.px-finance .switcher-head{display:block}
+.px-finance .actions{margin-top:12px}
+.px-finance .program-tabs,.px-finance .hero-metrics,.px-finance .members{grid-template-columns:1fr}
+.px-finance .filters,.px-finance .form-grid{grid-template-columns:1fr}
+.px-finance .full{grid-column:auto}
+.px-finance .donut-layout{grid-template-columns:1fr}
+.px-finance .donut{margin:auto}
+.px-finance .bar-row{grid-template-columns:95px 1fr 42px}
+.px-finance .form-actions{flex-direction:column}
+.px-finance .form-actions button{width:100%}}
+
+.sidebar{
+  isolation:isolate;
+  overflow-x:hidden;
+  overflow-y:auto;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(217,186,89,.45) transparent;
+  background:
+    radial-gradient(circle at 18% 6%,rgba(213,177,73,.13),transparent 25%),
+    linear-gradient(135deg,transparent 0 46%,rgba(213,177,73,.045) 47% 48%,transparent 49% 100%) 0 0/42px 42px,
+    linear-gradient(180deg,#073c30 0%,#052f27 58%,#041f1b 100%)!important;
+  border-right:1px solid rgba(221,185,82,.42);
+  box-shadow:12px 0 34px rgba(3,35,27,.13);
+}

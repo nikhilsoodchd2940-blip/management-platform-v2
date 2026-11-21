@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "dev": "your-app-dev",
+    "staging": "your-app-staging",
+    "prod": "your-app-prod"
+  }
+}

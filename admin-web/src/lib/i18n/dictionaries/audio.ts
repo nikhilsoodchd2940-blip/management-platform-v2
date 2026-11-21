@@ -1,0 +1,28 @@
+import { ns } from '../types';
+
+export default ns({
+  title: 'Audio Library',
+  subtitle: 'Recordings of rehearsals, announcements and performances — validated before being shared with members.',
+  categories: { rehearsal: 'Rehearsal', announcement: 'Announcement', performance: 'Performance' },
+  allStatuses: 'All statuses',
+  pendingValidation: 'Pending validation',
+  approved: 'Approved',
+  tracks: 'Tracks',
+  shown: (n: number) => `${n} shown`,
+  empty: 'No tracks yet.',
+  allKurels: 'All kurels',
+  listen: 'Listen',
+  validate: 'Approve',
+  newRecording: 'New recording',
+  titleLabel: 'Title',
+  melodyLabel: 'Melody (optional)',
+  categoryLabel: 'Category',
+  linkedEventLabel: 'Linked event ID',
+  linkedEventPlaceholder: 'From the Events page',
+  audioFile: 'Audio file',
+  upload: 'Upload',
+  uploading: 'Uploading…',
+  titleAndFileRequired: 'A title and an audio file are required.',
+  performanceNeedsEvent: 'A performance recording needs the linked event ID.',
+  uploadFailed: 'Could not upload',
+});

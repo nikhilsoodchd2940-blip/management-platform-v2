@@ -1,0 +1,134 @@
+rules_version = '2';
+
+// Phase 0-3: default deny (nothing needed Storage yet). Phase 4 adds chat
+// media — the only Storage path in the app so far. Profile photos, chat
+// media moderation, and meeting-note attachments beyond this are later
+// hardening/feature items, not oversights.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function hostGroupIds() {
+      return isSignedIn() && ('hostGroupIds' in request.auth.token)
+        ? request.auth.token.hostGroupIds
+        : [];
+    }
+
+    function isHostOfGroup(groupId) {
+      return isSignedIn() && request.auth.token.role == 'host' && groupId in hostGroupIds();
+    }
+
+    // Cross-service read into Firestore — same deterministic membership
+    // doc ID pattern as firestore.rules' isActiveMember(), so the two
+    // authorization surfaces can't drift into checking different things.
+    function isActiveMember(groupId) {
+      return isSignedIn() &&
+        firestore.exists(/databases/(default)/documents/groupMemberships/$(groupId + '_' + request.auth.uid)) &&
+        firestore.get(/databases/(default)/documents/groupMemberships/$(groupId + '_' + request.auth.uid)).data.status == 'active';
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.role == 'admin';
+    }
+
+    // Profile photos: /profilePhotos/{uid}/{fileName}
+    // Mandatory at registration (modules/auth/registration.ts's
+    // submitRegistration only accepts a photoUrl pointing here). Low
+    // sensitivity among signed-in users of the same org (same reasoning
+    // as groups' country/city labels in firestore.rules) — any
+    // signed-in user can view a member's photo (e.g. in a group roster).
+    // Write is normally self-only, but an Admin can also upload/replace
+    // ANY member's photo from the admin panel (e.g. correcting a bad
+    // upload on someone's behalf) — removal is handled server-side by
+    // adminRemoveMemberPhoto (Admin SDK, bypasses these rules) rather
+    // than a client delete, since it also has to flip
+    // registrationStatus back atomically.
+    match /profilePhotos/{uid}/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn()
+                   && (uid == request.auth.uid || isAdmin())
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if false;
+    }
+
+    // Banner/popup images: admin-uploaded home-screen content —
+    // read by any signed-in user (the whole point is showing it to
+    // members), write/delete restricted to Admins only.
+    match /bannerImages/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin()
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if isAdmin();
+    }
+    match /popupImages/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin()
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if isAdmin();
+    }
+
+    // Chat media: /chatMedia/{groupId}/{uid}/{fileName}
+    // Uploader's own uid is part of the path so the rule can verify it
+    // without a second Firestore read — matches the message doc's
+    // senderId requirement in firestore.rules.
+    match /chatMedia/{groupId}/{uid}/{fileName} {
+      allow read: if isAdmin() || isHostOfGroup(groupId) || isActiveMember(groupId);
+      allow write: if (isHostOfGroup(groupId) || isActiveMember(groupId))
+                   && uid == request.auth.uid
+                   && request.resource.size < 10 * 1024 * 1024
+                   && (request.resource.contentType.matches('image/.*')
+                       || request.resource.contentType == 'application/pdf');
+      allow delete: if false; // moderation/deletion is a later hardening item, same as chat messages themselves
+    }
+
+    // Qaçaid editions (Bibliothèque): /qacaidEditions/{fileName}
+    // Admin-uploaded PDFs — read by any signed-in user (browsing the
+    // library), write/delete restricted to Admins. Up to 20MB (a real
+    // scanned édition can run larger than a banner image).
+    match /qacaidEditions/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin()
+                   && request.resource.size < 20 * 1024 * 1024
+                   && request.resource.contentType == 'application/pdf';
+      allow delete: if isAdmin();
+    }
+
+    // Médiathèque audio: /audioTracks/{fileName}
+    // Same admin-uploads/signed-in-reads shape as editions above — the
+    // Firestore doc's own status:'pending'|'approved' (see
+    // firestore.rules' audioTracks match) is what actually gates
+    // whether a non-admin can discover a given track at all; this
+    // Storage rule only gates fetching bytes for a URL someone already
+    // has, same relationship profilePhotos has to its Firestore doc.
+    match /audioTracks/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin()
+                   && request.resource.size < 20 * 1024 * 1024
+                   && request.resource.contentType.matches('audio/.*');
+      allow delete: if isAdmin();
+    }
+
+    // Contribution proof photos (Finance): /contributionProofs/{userId}/{fileName}
+    // Admin uploads on the payer's behalf (see recordContribution —
+    // there's no mobile submission flow yet, same as Resource
+    // Requests). Read limited to Admin + the payer themself, matching
+    // contributions' own Firestore read rule.
+    match /contributionProofs/{userId}/{fileName} {
+      allow read: if isAdmin() || (isSignedIn() && userId == request.auth.uid);
+      allow write: if isAdmin()
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

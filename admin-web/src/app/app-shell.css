@@ -1,0 +1,533 @@
+/* =====================================================================
+   Application shell
+   Sidebar with the
+   institutional brand block, gold active state and nav icons; header bar;
+   page canvas. Class names are prefixed `cs-` so nothing collides with
+   the page-level styles in globals.css.
+   ===================================================================== */
+
+.cs-app {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.cs-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Sidebar ---------- */
+
+.cs-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 24px 18px;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  isolation: isolate;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(217, 186, 89, 0.45) transparent;
+  background:
+    radial-gradient(circle at 18% 6%, rgba(213, 177, 73, 0.13), transparent 25%),
+    linear-gradient(135deg, transparent 0 46%, rgba(213, 177, 73, 0.045) 47% 48%, transparent 49% 100%) 0 0 / 42px 42px,
+    linear-gradient(180deg, #073c30 0%, #052f27 58%, #041f1b 100%);
+  border-right: 1px solid rgba(221, 185, 82, 0.42);
+  box-shadow: 12px 0 34px rgba(3, 35, 27, 0.13);
+}
+
+.cs-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+.cs-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(217, 186, 89, 0.4);
+  border-radius: 99px;
+}
+
+.cs-sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 32%, rgba(0, 0, 0, 0.14));
+}
+
+.cs-brand {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+  margin: 0 2px 17px;
+  padding: 15px 10px 16px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(229, 197, 99, 0.62);
+  border-radius: 18px;
+  background:
+    linear-gradient(45deg, transparent 44%, rgba(236, 207, 117, 0.12) 45% 47%, transparent 48% 100%) 0 0 / 32px 32px,
+    linear-gradient(-45deg, transparent 44%, rgba(236, 207, 117, 0.12) 45% 47%, transparent 48% 100%) 0 0 / 32px 32px,
+    radial-gradient(circle at 50% -12%, rgba(240, 211, 119, 0.22), transparent 54%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.025));
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.cs-brand::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(238, 211, 126, 0.3);
+  border-radius: 13px;
+  pointer-events: none;
+}
+
+.cs-brand::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 25px;
+  height: 25px;
+  background: rgba(239, 209, 113, 0.18);
+  border: 1px solid rgba(239, 209, 113, 0.4);
+  clip-path: polygon(50% 0, 61% 30%, 85% 15%, 70% 39%, 100% 50%, 70% 61%, 85% 85%, 61% 70%, 50% 100%, 39% 70%, 15% 85%, 30% 61%, 0 50%, 30% 39%, 15% 15%, 39% 30%);
+  pointer-events: none;
+}
+
+.cs-brand img,
+.cs-brand-text {
+  position: relative;
+  z-index: 1;
+}
+
+.cs-brand img {
+  width: 92px;
+  height: 92px;
+  padding: 10px;
+  border-radius: 50%;
+  object-fit: contain;
+  border: 3px solid #d9b54f;
+  outline: 1px solid rgba(255, 255, 255, 0.72);
+  outline-offset: 4px;
+  background: linear-gradient(145deg, #fffef8, #eef4ef);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.26), inset 0 0 0 2px rgba(7, 91, 58, 0.14);
+}
+
+.cs-brand-text {
+  color: #f4e3a4;
+  line-height: 1.2;
+}
+
+.cs-brand-text strong {
+  display: block;
+  color: #f7e7ad;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.cs-brand-text span {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.63rem;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.cs-nav-title {
+  padding: 0 12px 9px;
+  color: #d7b959;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.cs-nav-title.tools {
+  margin-top: 16px;
+}
+
+.cs-nav {
+  display: grid;
+  gap: 4px;
+}
+
+.cs-nav a {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 43px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: #eef6f1;
+  text-decoration: none;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.89rem;
+  font-weight: 600;
+  line-height: 1.2;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+}
+
+.cs-nav a:hover {
+  color: #fff;
+  border-color: rgba(218, 182, 76, 0.2);
+  background: rgba(255, 255, 255, 0.075);
+  transform: translateX(2px);
+}
+
+.cs-nav a.active {
+  color: #17382d;
+  border-color: #f0d47c;
+  background: linear-gradient(100deg, #e9ca69 0%, #cfa33b 54%, #f1d57e 100%);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.2), inset 0 1px rgba(255, 255, 255, 0.55);
+}
+
+.cs-ico {
+  flex: 0 0 31px;
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: rgba(218, 182, 76, 0.11);
+  border: 1px solid rgba(218, 182, 76, 0.13);
+  color: #e4c45f;
+}
+
+.cs-ico::before {
+  content: '';
+  width: 19px;
+  height: 19px;
+  background: currentColor;
+  -webkit-mask: var(--nav-icon) center / contain no-repeat;
+  mask: var(--nav-icon) center / contain no-repeat;
+}
+
+.cs-nav a.active .cs-ico {
+  color: #17382d;
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(23, 56, 45, 0.12);
+}
+
+.cs-sidebar-bottom {
+  margin-top: auto;
+  padding: 14px 10px 5px;
+  border-top: 1px solid rgba(218, 182, 76, 0.3);
+  color: #dce9e2;
+  font-size: 0.69rem;
+  text-align: center;
+}
+
+.cs-sidebar-bottom::before {
+  content: 'ILM  ·  TARBIYAH  ·  IKHLAS';
+  display: block;
+  margin-bottom: 9px;
+  color: #d9ba59;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.cs-sidebar-bottom::after {
+  content: 'A community serving the Quran';
+  display: block;
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.56);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.63rem;
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.cs-live-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.cs-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d9ba59;
+  box-shadow: 0 0 0 4px rgba(217, 186, 89, 0.13);
+}
+
+.cs-sidebar-close,
+.cs-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  border: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.cs-menu-btn {
+  background: #e5f2ea;
+  color: var(--accent);
+}
+
+.cs-sidebar-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.cs-overlay {
+  display: none;
+}
+
+/* ---------- Header bar (live screens) ---------- */
+
+.cs-topbar {
+  min-height: 82px;
+  padding: 12px 32px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.cs-top-left,
+.cs-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.cs-top-logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.cs-brand-title {
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--accent);
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.cs-page-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.cs-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.cs-profile strong,
+.cs-profile span {
+  display: block;
+}
+
+.cs-profile strong {
+  font-size: 0.95rem;
+}
+
+.cs-profile span {
+  font-size: 0.73rem;
+  color: var(--ink-soft);
+}
+
+.cs-content {
+  flex: 1;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 26px 32px 55px;
+  min-width: 0;
+  outline: none;
+}
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 900px) {
+  .cs-app {
+    display: block;
+  }
+  .cs-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 290px;
+    max-width: 86vw;
+    z-index: 60;
+    transform: translateX(-102%);
+    transition: transform 0.2s ease;
+  }
+  .cs-sidebar.open {
+    transform: none;
+  }
+  .cs-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(8, 28, 20, 0.5);
+  }
+  .cs-menu-btn,
+  .cs-sidebar-close {
+    display: inline-flex;
+  }
+  .cs-topbar {
+    padding: 10px 15px;
+    min-height: 66px;
+  }
+  .cs-profile > div {
+    display: none;
+  }
+  .cs-content {
+    padding: 20px 15px 42px;
+  }
+}
+
+@media (max-width: 1250px) {
+  .cs-brand img {
+    width: 78px;
+    height: 78px;
+  }
+  .cs-brand {
+    padding: 12px 8px 13px;
+    margin-bottom: 12px;
+  }
+  .cs-nav a {
+    min-height: 39px;
+    font-size: 0.82rem;
+    padding: 5px 8px;
+  }
+  .cs-ico {
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
+  }
+}
+
+.cs-signout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: #eef6f1;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cs-signout:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cs-notice {
+  max-width: 560px;
+  margin: 6vh auto 0;
+  text-align: center;
+}
+
+.cs-notice h1 {
+  font-size: 1.3rem;
+  margin: 0.6rem 0 0.4rem;
+}
+
+.cs-notice p {
+  color: var(--ink-soft);
+  margin: 0 0 1.1rem;
+}
+
+/* ---------- Header: who is signed in + Log out ---------- */
+.cs-who { min-width: 0; }
+.cs-who strong { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-profile span.cs-role {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: var(--gold-soft);
+  color: var(--warn);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.cs-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cs-logout:hover { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+@media (max-width: 640px) {
+  .cs-logout span, .cs-who { display: none; }
+  .cs-logout { padding: 9px; }
+}
+
+/* Grouped side menu */
+.cs-grp{display:grid;gap:3px}
+.cs-grp-h{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:11px;min-height:43px;width:100%;padding:7px 10px;border:1px solid transparent;border-radius:9px;color:#eef6f1;font-family:Georgia,'Times New Roman',serif;font-size:.89rem;font-weight:700;transition:background .18s ease,border-color .18s ease}
+.cs-grp-h:hover{background:rgba(255,255,255,.075);border-color:rgba(218,182,76,.2)}
+.cs-grp-h:focus-visible{outline:2px solid #e4c45f;outline-offset:2px}
+.cs-grp-t{flex:1;min-width:0}
+.cs-grp-h em{font-style:normal;font-family:inherit;font-size:.7rem;font-weight:800;background:rgba(218,182,76,.18);color:#e4c45f;border-radius:999px;padding:1px 8px}
+.cs-grp-h svg{flex:none;color:#e4c45f;transition:transform .2s ease}
+.cs-grp.open .cs-grp-h svg{transform:rotate(180deg)}
+.cs-grp.open>.cs-grp-h{background:rgba(255,255,255,.06);border-color:rgba(218,182,76,.25)}
+.cs-grp.has-active:not(.open)>.cs-grp-h{border-color:#e3c46e}
+.cs-grp-b{display:grid;gap:2px;margin:2px 0 6px 21px;padding-left:10px;border-left:2px solid rgba(218,182,76,.3)}
+.cs-grp-b a{min-height:36px!important;padding:5px 10px!important;font-size:.84rem!important;gap:0!important}
+.cs-grp-b a .cs-ico{display:none}

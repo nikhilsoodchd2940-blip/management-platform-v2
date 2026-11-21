@@ -1,0 +1,31 @@
+import { ns } from '../types';
+
+export default ns({
+  title: 'Banners',
+  intro:
+    "Shown as a carousel on the mobile app's home screen. Tapping one opens its link, if it has one.",
+  allBanners: 'All banners',
+  none: 'No banners yet — add one on the right.',
+  orderTitle: "Display order — #1 is shown first in the mobile app's carousel",
+  shownFirst: 'shown first',
+  noLink: 'No link',
+  on: 'On',
+  off: 'Off',
+  editLink: 'Edit link',
+  deactivate: 'Deactivate',
+  activate: 'Activate',
+  delete: 'Delete',
+  addTitle: 'Add a banner',
+  imageLabel: 'Image',
+  linkLabel: 'Link (optional)',
+  submit: 'Add banner',
+  uploading: 'Uploading…',
+  chooseImage: 'Choose an image first',
+  addFailed: 'Could not add the banner',
+  updateFailed: 'Could not update the banner',
+  reorderFailed: 'Could not reorder',
+  linkPrompt: 'Link URL (leave empty to remove)',
+  updateLinkFailed: 'Could not update the link',
+  confirmDelete: 'Delete this banner? This cannot be undone.',
+  deleteFailed: 'Could not delete the banner',
+});

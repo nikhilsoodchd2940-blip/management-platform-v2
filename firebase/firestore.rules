@@ -1,0 +1,397 @@
+rules_version = '2';
+
+// Rules grow phase by phase alongside firebase/functions — see
+// docs/PHASE0_COMPLETION.md through docs/PHASE4_COMPLETION.md for what
+// each block below corresponds to. Never widen a rule just to unblock a
+// UI; fix the query or add the right helper function instead.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helpers ----------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return isSignedIn() ? request.auth.token.role : null;
+    }
+
+    function isAdmin() {
+      return role() == 'admin';
+    }
+
+    function isHost() {
+      return role() == 'host';
+    }
+
+    function hostGroupIds() {
+      return isSignedIn() && ('hostGroupIds' in request.auth.token)
+        ? request.auth.token.hostGroupIds
+        : [];
+    }
+
+    function isHostOfGroup(groupId) {
+      return isHost() && groupId in hostGroupIds();
+    }
+
+    function isSelf(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // groupMemberships doc IDs are deterministic (`${groupId}_${uid}`, see
+    // docs/DATA_MODEL.md), so membership can be checked with a direct
+    // exists() lookup instead of a query — cheap enough to call from rules.
+    function isActiveMember(groupId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/groupMemberships/$(groupId + '_' + request.auth.uid)) &&
+        get(/databases/$(database)/documents/groupMemberships/$(groupId + '_' + request.auth.uid)).data.status == 'active';
+    }
+
+    // A Host is "of" an event if any of the event's Sub Groups is one
+    // they're assigned to (hostGroupIds claim) — this is what narrows
+    // eventAttendees/attendance visibility below instead of "any Host can
+    // read any event's data", which was a deliberate Phase 0/1 placeholder.
+    function isHostOfEvent(eventId) {
+      return isHost() &&
+        exists(/databases/$(database)/documents/events/$(eventId)) &&
+        get(/databases/$(database)/documents/events/$(eventId)).data.subGroupIds.hasAny(hostGroupIds());
+    }
+
+    // ---------- users ----------
+    // One profile per person. Self can read/update own non-privileged fields.
+    // Admin can read/manage all. No client ever sets role/claims here —
+    // that only happens via a Cloud Function (Admin SDK, bypasses rules).
+    match /users/{userId} {
+      // Was isAdmin() || isSelf() || isHost() — meaning a Host could
+      // already read ANY user's profile doc platform-wide (not scoped
+      // to their own group), so "any authenticated member can read
+      // basic profile info of another member" is an extension of an
+      // access level the app already granted to one role, not a new
+      // category of exposure. Needed so a member's group chat can show
+      // fellow members' display names and so the Members roster can
+      // resolve who's who — Firestore rules can't restrict this to
+      // "just displayName" (no field-level read rules), so email/phone
+      // on this doc become readable by any signed-in member too. If
+      // that turns out to matter, the real fix is moving anything
+      // sensitive off this doc into a separate users/{uid}/private
+      // subcollection with its own isSelf()-only rule.
+      allow read: if isAdmin() || isSelf(userId) || isHost() || isSignedIn();
+      allow create: if false; // created only by onCreate auth trigger / Function
+      allow update: if isSelf(userId)
+                    && !request.resource.data.diff(resource.data)
+                         .affectedKeys()
+                         // primaryGroupId added: the spec requires it to
+                         // always be one of the groups the member
+                         // actually belongs to — a rule can't verify
+                         // that invariant on a self-edit (it would need
+                         // to cross-check groupMemberships), so like
+                         // role/status this is Admin/Function-only. Set
+                         // via the admin panel's member editor.
+                         .hasAny(['status', 'role', 'authUid', 'memberId', 'registrationStatus', 'rejectionReason', 'primaryGroupId']);
+      allow delete: if false; // soft-delete via status field only, Admin-triggered Function
+    }
+
+    // ---------- memberIdIndex (uniqueness lock for users.memberId) ----------
+    // Purely an internal constraint doc, same reasoning as reminders/
+    // rateLimits below — no client ever needs to read or write this
+    // directly. Only findOrCreateUserByMemberId (Admin SDK, inside a
+    // transaction) touches it.
+    match /memberIdIndex/{memberId} {
+      allow read, write: if false;
+    }
+
+    // ---------- orgSettings (support contact shown on the mobile registration mismatch screen) ----------
+    // Deliberately readable with NO auth check at all — the whole point
+    // is surfacing a "Contact Admin" option to someone who hasn't signed
+    // in yet (their Member ID + phone didn't match, so they can't get an
+    // OTP-backed session). Nothing sensitive lives here, only a support
+    // email/phone the org already wants members to have. Only
+    // modules/settings/orgSettings.ts's updateOrgSettings (Admin SDK,
+    // permission-checked) ever writes it.
+    match /orgSettings/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ---------- phoneUpdateRequests (self-service, submitted pre-auth) ----------
+    // Write is Cloud-Function-only — requestPhoneUpdate has to be
+    // callable without a session at all, since the whole problem is the
+    // member can't get one (their phone doesn't match their Member ID
+    // yet — see modules/members/phoneUpdateRequests.ts). Read is
+    // Admin-only, direct from the admin panel's review queue, same
+    // pattern as groupMemberships.
+    match /phoneUpdateRequests/{requestId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // ---------- banners & popups (Admin-managed home-screen content) ----------
+    // Any signed-in user can read (the whole point is to show them to
+    // members); write is Cloud-Function-only (createBanner/updatePopup/
+    // etc., all permission-checked via requireAdminPermission).
+    match /banners/{bannerId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+    match /popups/{popupId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // ---------- groups (4-level tree: Main Group -> Country -> City -> leaf Group) ----------
+    // Main/Country/City are purely organizational labels (org name,
+    // "USA", "Houston") — low-sensitivity, readable by any signed-in
+    // user, same reasoning as Main Group before this tree existed. Only
+    // the LEAF 'group' type is where actual membership attaches, so
+    // that's the only type gated to Admin/assigned-Host/active-member —
+    // leaf group membership can be sensitive (e.g. which specific group
+    // someone belongs to), the country/city it sits under is not.
+    match /groups/{groupId} {
+      allow read: if isAdmin()
+                  || resource.data.type != 'group'
+                  || isHostOfGroup(groupId)
+                  || isActiveMember(groupId);
+      allow write: if isAdmin();
+    }
+
+    // ---------- groupMemberships ----------
+    match /groupMemberships/{membershipId} {
+      // isActiveMember() (an active membership on the SAME groupId, not
+      // any group) was added for the "who's in this group" roster/count
+      // feature — a plain member can now see fellow members of a group
+      // they themselves are active in, but still can't see membership
+      // docs for any group they don't belong to.
+      allow read: if isAdmin()
+                  || isHostOfGroup(resource.data.groupId)
+                  || isSelf(resource.data.userId)
+                  || isActiveMember(resource.data.groupId);
+      allow write: if isAdmin(); // membership changes are an Admin (or Function) action only
+    }
+
+    // ---------- events ----------
+    match /events/{eventId} {
+      allow read: if isSignedIn(); // fine-grained "is this member invited" check happens via eventAttendees
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ---------- eventAttendees (the eligibility list) ----------
+    match /eventAttendees/{docId} {
+      allow read: if isAdmin()
+                  || isSelf(resource.data.userId)
+                  || isHostOfEvent(resource.data.eventId);
+      allow write: if isAdmin(); // attendee list is Admin-managed (createEvent/publishEvent Functions use Admin SDK, which bypasses rules — this line is defense-in-depth against a direct client write)
+    }
+
+    // ---------- attendance ----------
+    // NEVER writable by any client. Only the checkIn Cloud Function (Admin
+    // SDK) writes this collection. This is the second, independent layer
+    // described in docs/QR_DATAFLOW.md — a Function bug still can't be
+    // bypassed by a client that simply writes the collection directly.
+    match /attendance/{attendanceId} {
+      allow read: if isAdmin()
+                  || isSelf(resource.data.userId)
+                  || isHostOfEvent(resource.data.eventId);
+      allow write: if false;
+    }
+
+    // ---------- notifications ----------
+    // Phase 1 ships the read-side shell only — nothing writes here yet
+    // (reminders/announcements are Phase 4). A user only ever sees their
+    // own notifications; Admin can read all for support/debugging.
+    match /notifications/{notificationId} {
+      allow read: if isAdmin() || isSelf(resource.data.userId);
+      allow write: if false; // Function-only once Phase 4 introduces senders
+    }
+
+    // ---------- absenceRequests ----------
+    // Doc ID is `${eventId}_${userId}` (docs/DATA_MODEL.md). Written only
+    // by submitAbsenceRequest/reviewAbsenceRequest (Admin SDK) — a client
+    // can't self-approve by writing directly.
+    match /absenceRequests/{docId} {
+      allow read: if isAdmin()
+                  || isSelf(resource.data.userId)
+                  || isHostOfEvent(resource.data.eventId);
+      allow write: if false;
+    }
+
+    // ---------- eventRequests (member-proposed, Admin-reviewed) ----------
+    match /eventRequests/{docId} {
+      allow read: if isAdmin()
+                  || isSelf(resource.data.requestedBy)
+                  || isHostOfGroup(resource.data.groupId);
+      allow write: if false; // submitEventRequest/reviewEventRequest only
+    }
+
+    // ---------- Group, Event & Approval Management module ----------
+    // resourceRequests: Member/Host -> Admin -> Zone Manager -> Top
+    // Management (see the ResourceRequestDoc/LogisticsTaskDoc doc
+    // comments in functions/src/types/models.ts). Written only by
+    // createResourceRequest/reviewResourceRequest (Admin SDK) — a
+    // client can't self-approve, or skip a stage, by writing directly.
+    // The requester can read their own; no mobile UI exists yet to
+    // exercise that, but the rule is correct/forward-compatible either
+    // way, same reasoning as eventRequests above.
+    match /resourceRequests/{docId} {
+      allow read: if isAdmin() || isSelf(resource.data.requestedBy);
+      allow write: if false;
+    }
+    // logisticsTasks: auto-created by reviewResourceRequest on final
+    // approval, updated only by updateLogisticsTask. Admin-only read —
+    // there's no mobile-side concept of "my logistics task" the way
+    // there is for a request.
+    match /logisticsTasks/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // ---------- Finance (Programmes financiers) ----------
+    // Programs and the aggregate/comparative view are visible to any
+    // signed-in member (matches the prototype's "everyone can compare
+    // zone/kurel progress"); individual Contributions (amounts, proof
+    // photos) stay limited to the payer and Admin, same privacy split
+    // the prototype itself describes. Written only by
+    // recordContribution/reviewContribution.
+    match /financialPrograms/{docId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+    match /contributions/{docId} {
+      allow read: if isAdmin() || isSelf(resource.data.userId);
+      allow write: if false;
+    }
+
+    // ---------- Conseil de discipline ----------
+    // A member can read their own case (to see the accusation and any
+    // resolution, per the prototype's "member can consult the
+    // accusation") — nobody else's. Function-only writes.
+    match /disciplinaryCases/{docId} {
+      allow read: if isAdmin() || isSelf(resource.data.memberId);
+      allow write: if false;
+    }
+
+    // ---------- Comité pédagogique + Bibliothèque des Qaçaid ----------
+    // Repertoire, allocations and progress are organization-wide
+    // reference data (like groups' country/city labels) — readable by
+    // any signed-in user, not just Admin. Editions/shares the same,
+    // except a pending (unapproved) audio track, handled below.
+    match /qacaid/{docId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+    match /qacaidAllocations/{docId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+    match /progressReports/{docId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+    match /qacaidEditions/{docId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+    match /libraryShares/{docId} {
+      allow read: if isAdmin() || (resource.data.scopeType == 'user' && isSelf(resource.data.scopeId));
+      allow write: if false;
+    }
+
+    // ---------- Médiathèque audio ----------
+    // A pending (unreviewed) track is visible only to Admin — matches
+    // the prototype's "members listen to validated versions only".
+    match /audioTracks/{docId} {
+      allow read: if isAdmin() || resource.data.status == 'approved';
+      allow write: if false;
+    }
+
+    // ---------- conflicts (system-detected, never user-submitted) ----------
+    match /conflicts/{docId} {
+      allow read: if isAdmin() || isSelf(resource.data.userId);
+      allow write: if false; // written only by the onEventAttendeeCreated trigger
+    }
+
+    // ---------- chatRooms + messages (one room per Sub Group) ----------
+    // Room docs are Admin/Function-created only (alongside createGroup).
+    // Messages ARE directly client-writable — unlike every other
+    // collection in this file, chat has no fraud/authorization stakes
+    // worth a Cloud Function round-trip, so real active members/Hosts
+    // write directly, with the rule itself enforcing sender identity,
+    // room membership, and a length cap.
+    match /chatRooms/{groupId} {
+      allow read: if isAdmin() || isHostOfGroup(groupId) || isActiveMember(groupId);
+      allow write: if isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isAdmin() || isHostOfGroup(groupId) || isActiveMember(groupId);
+        // A message carries text and/or a media attachment (Phase 4) —
+        // never neither. Media validation (type/size) happens at the
+        // Storage layer (firebase/storage.rules) when the file itself is
+        // uploaded; this rule only checks the message doc's shape.
+        allow create: if (isHostOfGroup(groupId) || isActiveMember(groupId))
+                      && request.resource.data.senderId == request.auth.uid
+                      && request.resource.data.roomId == groupId
+                      && request.resource.data.sentAt == request.time
+                      && (
+                        (request.resource.data.text is string
+                          && request.resource.data.text.size() > 0
+                          && request.resource.data.text.size() <= 2000)
+                        || request.resource.data.mediaUrl is string
+                      );
+        allow update, delete: if false; // messages are immutable — moderation/deletion is a later hardening item
+      }
+    }
+
+    // ---------- reminders (dedupe marker for sendEventReminders) ----------
+    // Purely an internal dedupe record — no client ever needs to read or
+    // write this; the scheduled Function (Admin SDK) is the only actor.
+    match /reminders/{docId} {
+      allow read, write: if false;
+    }
+
+    // ---------- rateLimits (Phase 5 abuse-prevention counters) ----------
+    // Purely internal — same reasoning as reminders above. If a client
+    // could read these, it would learn exactly how close it is to being
+    // rate-limited, which is itself useful information to an attacker.
+    match /rateLimits/{docId} {
+      allow read, write: if false;
+    }
+
+    // ---------- adminRoles (granular, ADDITIVE admin permission scoping) ----------
+    // Every Admin already has full access via the role claim — this only
+    // narrows the web UI for admins who've been explicitly scoped. Any
+    // Admin can read any adminRoles doc (not sensitive among admins
+    // themselves); only setAdminPermissions (super-admin-gated, Admin SDK)
+    // writes it.
+    match /adminRoles/{userId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // ---------- donations ----------
+    // status is written ONLY by the stripeWebhook Function (signature-
+    // verified, Admin SDK) — never by the client, not even the creator.
+    // See docs/INTEGRATIONS.md.
+    match /donations/{donationId} {
+      allow read: if isAdmin() || isSelf(resource.data.userId);
+      allow write: if false;
+    }
+
+    // ---------- Third-party integration credentials (Twilio/Stripe/Maps) ----------
+    // Set and read ONLY via the getIntegrationStatus/updateIntegrationSettings
+    // Cloud Functions (Admin SDK, bypasses these rules) — see
+    // functions/src/modules/integrations/integrations.ts. No client, admin
+    // included, ever reads or writes this doc directly; this rule is already
+    // covered by the default-deny catch-all below, stated explicitly here
+    // since this doc holds raw secrets and that shouldn't be left implicit.
+    match /config/integrations {
+      allow read, write: if false;
+    }
+
+    // ---------- Phase 0 placeholder: everything else default-deny ----------
+    // media, auditLogs are added with their own scoped rules in the phase
+    // that introduces them. Until then, default-deny is correct and safe.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

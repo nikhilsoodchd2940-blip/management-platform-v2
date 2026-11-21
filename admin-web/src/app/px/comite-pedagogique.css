@@ -1,0 +1,225 @@
+/* Page styles for the comite-pedagogique screen — scoped under .px-comite-pedagogique. */
+.px-comite-pedagogique{--g:#075b3a;--g2:#0b8a5b;--gold:#d4a72c;--blue:#3d79b5;--red:#bd3f4a;--purple:#8054a0;--ink:#202b26;--muted:#68756f;--paper:rgba(255,255,255,.86);--line:rgba(5,82,56,.13);--shadow:0 18px 44px rgba(20,72,50,.11)}
+.px-comite-pedagogique *{box-sizing:border-box}
+.px-comite-pedagogique{font-size:16px}
+.px-comite-pedagogique{margin:0;color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:radial-gradient(circle at 88% 5%,rgba(212,167,44,.24),transparent 24%),radial-gradient(circle at 18% 72%,rgba(11,138,91,.14),transparent 28%),linear-gradient(135deg,#e8f4ed,#fffaf0);line-height:1.45}
+.px-comite-pedagogique button,.px-comite-pedagogique input,.px-comite-pedagogique select,.px-comite-pedagogique textarea{font:inherit}
+.px-comite-pedagogique{padding:26px 32px 55px;max-width:1600px;margin:auto}
+.px-comite-pedagogique .section-head,.px-comite-pedagogique .panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.px-comite-pedagogique .section-head{margin-bottom:18px}
+.px-comite-pedagogique .section-head h1{font-size:1.85rem;margin:0 0 5px}
+.px-comite-pedagogique .section-head p,.px-comite-pedagogique .panel-head p{margin:3px 0 0;color:var(--muted);font-size:.8rem}
+.px-comite-pedagogique .actions{display:flex;gap:8px;flex-wrap:wrap}
+.px-comite-pedagogique .primary,.px-comite-pedagogique .secondary{border-radius:11px;padding:10px 14px;font-weight:800;cursor:pointer}
+.px-comite-pedagogique .primary{border:0;background:var(--g);color:#fff;box-shadow:0 8px 18px rgba(7,91,58,.18)}
+.px-comite-pedagogique .secondary{border:1px solid var(--line);background:#fff;color:var(--ink)}
+.px-comite-pedagogique .card{background:var(--paper);border:1px solid rgba(255,255,255,.78);box-shadow:var(--shadow);border-radius:21px;backdrop-filter:blur(16px)}
+.px-comite-pedagogique .status{display:inline-flex;padding:5px 9px;border-radius:99px;background:#e3f3ea;color:var(--g);font-size:.72rem;font-weight:850;white-space:nowrap}
+.px-comite-pedagogique .status.gold{background:#fff0c8;color:#80600f}
+.px-comite-pedagogique .status.red{background:#fdecef;color:#a73a48}
+.px-comite-pedagogique .status.blue{background:#e8f1fa;color:#356895}
+.px-comite-pedagogique .status.purple{background:#f0e8f7;color:#714c91}
+.px-comite-pedagogique .command{padding:21px;background:linear-gradient(125deg,#243d4a,#176b5a 58%,#a57d20);color:#fff;position:relative;overflow:hidden}
+.px-comite-pedagogique .command:after{content:"ق";position:absolute;right:35px;top:-55px;font-family:serif;font-size:14rem;color:rgba(255,255,255,.06);line-height:1}
+.px-comite-pedagogique .command-head,.px-comite-pedagogique .stats{position:relative;z-index:1}
+.px-comite-pedagogique .command-head{display:flex;justify-content:space-between;gap:16px}
+.px-comite-pedagogique .command h2{margin:0;font-size:1.25rem}
+.px-comite-pedagogique .command p{margin:5px 0 0;color:rgba(255,255,255,.78)}
+.px-comite-pedagogique .command-tags{display:flex;gap:7px;flex-wrap:wrap}
+.px-comite-pedagogique .command-tags span{padding:7px 10px;border-radius:99px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);font-size:.72rem;font-weight:800}
+.px-comite-pedagogique .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-top:18px}
+.px-comite-pedagogique .stat{padding:11px;border-radius:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14)}
+.px-comite-pedagogique .stat span,.px-comite-pedagogique .stat strong,.px-comite-pedagogique .stat small{display:block}
+.px-comite-pedagogique .stat span,.px-comite-pedagogique .stat small{font-size:.72rem;color:rgba(255,255,255,.74)}
+.px-comite-pedagogique .stat strong{font-size:1.18rem;margin:3px 0}
+.px-comite-pedagogique .toolbar{margin:17px 0;padding:11px;display:flex;gap:8px;align-items:center;overflow:auto}
+.px-comite-pedagogique .tab{border:0;background:transparent;color:var(--muted);padding:9px 12px;border-radius:10px;font-weight:800;white-space:nowrap;cursor:pointer}
+.px-comite-pedagogique .tab.active{background:var(--g);color:#fff}
+.px-comite-pedagogique .dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:17px}
+.px-comite-pedagogique .panel{padding:18px}
+.px-comite-pedagogique .panel-head{margin-bottom:13px}
+.px-comite-pedagogique .panel-head h2{margin:0;font-size:1.05rem}
+.px-comite-pedagogique .periods{display:flex;gap:5px}
+.px-comite-pedagogique .periods button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 8px;font-size:.7rem;font-weight:800;cursor:pointer}
+.px-comite-pedagogique .periods button.active{background:#e4f3eb;color:var(--g)}
+.px-comite-pedagogique .progress-layout{display:grid;grid-template-columns:170px 1fr;gap:20px;align-items:center}
+.px-comite-pedagogique .score-ring{width:156px;height:156px;border-radius:50%;background:conic-gradient(var(--g2) 0 86%,#e2ebe6 86%);display:grid;place-items:center;position:relative}
+.px-comite-pedagogique .score-ring:after{content:"";width:106px;height:106px;background:#fff;border-radius:50%}
+.px-comite-pedagogique .score-ring div{position:absolute;z-index:1;text-align:center}
+.px-comite-pedagogique .score-ring strong,.px-comite-pedagogique .score-ring span{display:block}
+.px-comite-pedagogique .score-ring strong{font-size:1.55rem;color:var(--g)}
+.px-comite-pedagogique .score-ring span{font-size:.7rem;color:var(--muted)}
+.px-comite-pedagogique .progress-bars{display:grid;gap:10px}
+.px-comite-pedagogique .bar-head{display:flex;justify-content:space-between;font-size:.78rem;font-weight:800}
+.px-comite-pedagogique .bar{height:9px;border-radius:99px;background:#e5ede9;overflow:hidden}
+.px-comite-pedagogique .bar i{display:block;width:var(--p);height:100%;background:linear-gradient(90deg,var(--g),var(--gold))}
+.px-comite-pedagogique .level-chart{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.px-comite-pedagogique .level{padding:13px;border-radius:14px;background:linear-gradient(145deg,#f2f8f5,#fff);border:1px solid var(--line)}
+.px-comite-pedagogique .level strong,.px-comite-pedagogique .level span,.px-comite-pedagogique .level small{display:block}
+.px-comite-pedagogique .level strong{font-size:1.3rem;color:var(--g)}
+.px-comite-pedagogique .level span{font-size:.78rem;font-weight:800}
+.px-comite-pedagogique .level small{font-size:.7rem;color:var(--muted);margin-top:3px}
+.px-comite-pedagogique .lower-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:17px;margin-top:17px}
+.px-comite-pedagogique .database,.px-comite-pedagogique .allocations,.px-comite-pedagogique .programs,.px-comite-pedagogique .live{padding:18px}
+.px-comite-pedagogique .searchline{display:flex;gap:8px}
+.px-comite-pedagogique .searchline input{min-width:240px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.px-comite-pedagogique .table-wrap{overflow:auto}
+.px-comite-pedagogique .data-table{width:100%;border-collapse:collapse;min-width:690px}
+.px-comite-pedagogique .data-table th,.px-comite-pedagogique .data-table td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);font-size:.75rem}
+.px-comite-pedagogique .data-table th{color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.04em}
+.px-comite-pedagogique .data-table td strong,.px-comite-pedagogique .data-table td span{display:block}
+.px-comite-pedagogique .data-table td span{font-size:.68rem;color:var(--muted)}
+.px-comite-pedagogique .allocation-list,.px-comite-pedagogique .program-list{display:grid;gap:9px}
+.px-comite-pedagogique .allocation,.px-comite-pedagogique .program{padding:12px;border-radius:13px;background:rgba(255,255,255,.72);border:1px solid var(--line)}
+.px-comite-pedagogique .allocation-head,.px-comite-pedagogique .program-head{display:flex;justify-content:space-between;gap:10px}
+.px-comite-pedagogique .allocation strong,.px-comite-pedagogique .allocation span,.px-comite-pedagogique .allocation small,.px-comite-pedagogique .program strong,.px-comite-pedagogique .program span,.px-comite-pedagogique .program small{display:block}
+.px-comite-pedagogique .allocation strong,.px-comite-pedagogique .program strong{font-size:.79rem}
+.px-comite-pedagogique .allocation span,.px-comite-pedagogique .allocation small,.px-comite-pedagogique .program span,.px-comite-pedagogique .program small{font-size:.7rem;color:var(--muted);margin-top:3px}
+.px-comite-pedagogique .mini-progress{height:7px;border-radius:99px;background:#e4ece8;overflow:hidden;margin-top:9px}
+.px-comite-pedagogique .mini-progress i{height:100%;width:var(--p);display:block;background:linear-gradient(90deg,var(--g),var(--gold))}
+.px-comite-pedagogique .program-actions{display:flex;gap:6px;margin-top:9px}
+.px-comite-pedagogique .program-actions button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 8px;font-size:.68rem;font-weight:800;cursor:pointer}
+.px-comite-pedagogique .live{margin-top:17px;background:linear-gradient(135deg,rgba(12,56,48,.96),rgba(22,105,86,.92));color:#fff}
+.px-comite-pedagogique .live .panel-head p{color:rgba(255,255,255,.72)}
+.px-comite-pedagogique .live-grid{display:grid;grid-template-columns:.65fr 1.35fr;gap:18px}
+.px-comite-pedagogique .live-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.px-comite-pedagogique .live-metric{padding:12px;border-radius:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.13)}
+.px-comite-pedagogique .live-metric span,.px-comite-pedagogique .live-metric strong{display:block}
+.px-comite-pedagogique .live-metric span{font-size:.68rem;color:rgba(255,255,255,.72)}
+.px-comite-pedagogique .live-metric strong{font-size:1rem;margin-top:3px}
+.px-comite-pedagogique .timeline{display:grid;gap:8px}
+.px-comite-pedagogique .slot{display:grid;grid-template-columns:75px 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.13)}
+.px-comite-pedagogique .slot time{font-weight:850;color:#f2cc68}
+.px-comite-pedagogique .slot strong,.px-comite-pedagogique .slot span{display:block}
+.px-comite-pedagogique .slot strong{font-size:.78rem}
+.px-comite-pedagogique .slot span{font-size:.68rem;color:rgba(255,255,255,.68)}
+.px-comite-pedagogique .slot b{font-size:.7rem;padding:5px 8px;border-radius:99px;background:rgba(255,255,255,.12)}
+.px-comite-pedagogique .slot b.late{background:#8d4b39;color:#ffe8df}
+.px-comite-pedagogique .feedback{margin-top:10px;padding:11px;border-radius:12px;background:rgba(255,255,255,.11);font-size:.72rem}
+.px-comite-pedagogique .feedback button{float:right;border:0;background:var(--gold);color:#352900;border-radius:8px;padding:7px 9px;font-weight:850;cursor:pointer}
+.px-comite-pedagogique .modal{width:min(760px,100%);max-height:92vh;overflow:auto;border-radius:23px;background:linear-gradient(145deg,#fff,#fff9e9);padding:22px;position:relative;box-shadow:0 30px 90px rgba(0,0,0,.3)}
+.px-comite-pedagogique .modal h2{margin:0}
+.px-comite-pedagogique .modal>p{margin:4px 0 15px;color:var(--muted)}
+.px-comite-pedagogique .close{position:absolute;right:14px;top:13px;border:0;background:#e7f3ec;color:var(--g);width:34px;height:34px;border-radius:10px;font-size:1.2rem}
+.px-comite-pedagogique .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.px-comite-pedagogique .form-grid label{display:grid;gap:5px;font-size:.78rem;font-weight:800}
+.px-comite-pedagogique .form-grid input,.px-comite-pedagogique .form-grid select,.px-comite-pedagogique .form-grid textarea{padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.px-comite-pedagogique .form-grid textarea{min-height:85px}
+.px-comite-pedagogique .full{grid-column:1/-1}
+.px-comite-pedagogique .form-note{padding:10px;border-radius:10px;background:#fff2ca;color:#735414;font-size:.72rem;margin:12px 0}
+.px-comite-pedagogique .form-actions{display:flex;justify-content:flex-end;gap:8px}
+.px-comite-pedagogique .toast{position:fixed;right:22px;bottom:22px;background:#123f30;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 15px 40px rgba(0,0,0,.22);transform:translateY(90px);opacity:0;transition:.25s;z-index:120}
+.px-comite-pedagogique .toast.show{transform:none;opacity:1}
+@media(max-width:1250px){.px-comite-pedagogique .stats{grid-template-columns:repeat(3,1fr)}
+.px-comite-pedagogique .dashboard-grid,.px-comite-pedagogique .lower-grid{grid-template-columns:1fr}
+.px-comite-pedagogique .live-grid{grid-template-columns:1fr}}
+@media(max-width:780px){.px-comite-pedagogique{padding:20px 15px 42px}
+.px-comite-pedagogique .section-head,.px-comite-pedagogique .command-head,.px-comite-pedagogique .panel-head{display:block}
+.px-comite-pedagogique .actions,.px-comite-pedagogique .command-tags,.px-comite-pedagogique .periods,.px-comite-pedagogique .searchline{margin-top:12px}
+.px-comite-pedagogique .stats,.px-comite-pedagogique .progress-layout,.px-comite-pedagogique .level-chart,.px-comite-pedagogique .live-summary,.px-comite-pedagogique .form-grid{grid-template-columns:1fr}
+.px-comite-pedagogique .score-ring{margin:auto}
+.px-comite-pedagogique .searchline{display:grid}
+.px-comite-pedagogique .searchline input{min-width:0;width:100%}
+.px-comite-pedagogique .full{grid-column:auto}
+.px-comite-pedagogique .form-actions{flex-direction:column}
+.px-comite-pedagogique .form-actions button{width:100%}
+.px-comite-pedagogique .slot{grid-template-columns:62px 1fr}
+.px-comite-pedagogique .slot b{grid-column:2}}
+
+.sidebar{
+  isolation:isolate;
+  overflow-x:hidden;
+  overflow-y:auto;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(217,186,89,.45) transparent;
+  background:
+    radial-gradient(circle at 18% 6%,rgba(213,177,73,.13),transparent 25%),
+    linear-gradient(135deg,transparent 0 46%,rgba(213,177,73,.045) 47% 48%,transparent 49% 100%) 0 0/42px 42px,
+    linear-gradient(180deg,#073c30 0%,#052f27 58%,#041f1b 100%)!important;
+  border-right:1px solid rgba(221,185,82,.42);
+  box-shadow:12px 0 34px rgba(3,35,27,.13);
+}
+.px-comite-pedagogique .audio-context{margin-top:18px;padding:20px;background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(243,250,246,.74));border:1px solid rgba(7,91,58,.12);border-radius:21px;box-shadow:0 18px 44px rgba(20,72,50,.1);color:#202b26}
+.px-comite-pedagogique .audio-context *{box-sizing:border-box}
+.px-comite-pedagogique .audio-context-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}
+.px-comite-pedagogique .audio-context-head h2,.px-comite-pedagogique .audio-context-head h3{margin:0;font-size:1.04rem}
+.px-comite-pedagogique .audio-context-head p{margin:4px 0 0;color:#68756f;font-size:.78rem;line-height:1.45}
+.px-comite-pedagogique .audio-context-actions{display:flex;gap:8px;flex-wrap:wrap}
+.px-comite-pedagogique .audio-context a,.px-comite-pedagogique .audio-context button{font:inherit}
+.px-comite-pedagogique .audio-primary,.px-comite-pedagogique .audio-secondary{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:39px;padding:9px 13px;border-radius:11px;font-size:.76rem;font-weight:850;text-decoration:none;cursor:pointer}
+.px-comite-pedagogique .audio-primary{border:0;background:#075b3a;color:#fff;box-shadow:0 8px 18px rgba(7,91,58,.17)}
+.px-comite-pedagogique .audio-secondary{border:1px solid rgba(7,91,58,.15);background:#fff;color:#202b26}
+.px-comite-pedagogique .audio-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}
+.px-comite-pedagogique .audio-metric{padding:12px;border-radius:14px;background:rgba(255,255,255,.76);border:2px solid #0b8a5b}
+.px-comite-pedagogique .audio-metric:nth-child(2){border-color:#d4a72c}
+.px-comite-pedagogique .audio-metric:nth-child(3){border-color:#3d82c4}
+.px-comite-pedagogique .audio-metric:nth-child(4){border-color:#7656a4}
+.px-comite-pedagogique .audio-metric span,.px-comite-pedagogique .audio-metric strong,.px-comite-pedagogique .audio-metric small{display:block}
+.px-comite-pedagogique .audio-metric span,.px-comite-pedagogique .audio-metric small{font-size:.75rem;color:#68756f}
+.px-comite-pedagogique .audio-metric strong{font-size:1.25rem;margin:2px 0}
+.px-comite-pedagogique .audio-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.px-comite-pedagogique .audio-item{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px;border-radius:14px;background:rgba(255,255,255,.78);border:1px solid rgba(7,91,58,.1)}
+.px-comite-pedagogique .audio-play{width:39px;height:39px;border:0;border-radius:50%;background:linear-gradient(145deg,#075b3a,#0b8a5b);color:#fff;cursor:pointer}
+.px-comite-pedagogique .audio-item strong,.px-comite-pedagogique .audio-item span,.px-comite-pedagogique .audio-item small{display:block}
+.px-comite-pedagogique .audio-item strong{font-size:.79rem}
+.px-comite-pedagogique .audio-item span,.px-comite-pedagogique .audio-item small{font-size:.75rem;color:#68756f;margin-top:2px}
+.px-comite-pedagogique .audio-item small{color:#075b3a;font-weight:750}
+.px-comite-pedagogique .audio-item-action{display:flex;gap:6px;align-items:center}
+.px-comite-pedagogique .audio-status{display:inline-flex;padding:5px 8px;border-radius:99px;background:#e3f3ea;color:#075b3a;font-size:.72rem;font-weight:850;white-space:nowrap}
+.px-comite-pedagogique .audio-status.gold{background:#fff0c8;color:#80600f}
+.px-comite-pedagogique .audio-status.blue{background:#e8f0fb;color:#315f96}
+.px-comite-pedagogique .audio-status.red{background:#fdecef;color:#a73a48}
+.px-comite-pedagogique .audio-progress{grid-column:2/-1;height:6px;border-radius:99px;background:#dce8e2;overflow:hidden}
+.px-comite-pedagogique .audio-progress i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#0b8a5b,#d4a72c);transition:width .35s}
+.px-comite-pedagogique .audio-review-list{display:grid;gap:8px}
+.px-comite-pedagogique .audio-review{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(160px,.7fr) auto;gap:10px;align-items:center;padding:12px;border-radius:14px;background:rgba(255,255,255,.78);border:1px solid rgba(7,91,58,.1)}
+.px-comite-pedagogique .audio-review strong,.px-comite-pedagogique .audio-review span,.px-comite-pedagogique .audio-review small{display:block}
+.px-comite-pedagogique .audio-review span,.px-comite-pedagogique .audio-review small{font-size:.75rem;color:#68756f;margin-top:2px}
+.px-comite-pedagogique .audio-review-controls{display:flex;gap:6px;flex-wrap:wrap}
+.px-comite-pedagogique .audio-eval{display:grid;grid-template-columns:200px 1fr;gap:15px}
+.px-comite-pedagogique .audio-player-panel{padding:16px;border-radius:16px;background:linear-gradient(145deg,#123f32,#0b6b4d);color:#fff;text-align:center}
+.px-comite-pedagogique .audio-disc{width:88px;height:88px;margin:0 auto 10px;border-radius:50%;background:repeating-radial-gradient(circle,#102f28 0 5px,#1c5040 6px 8px);border:7px solid rgba(255,255,255,.1);display:grid;place-items:center}
+.px-comite-pedagogique .audio-disc:after{content:"♪";width:32px;height:32px;border-radius:50%;background:#d4a72c;color:#26352e;display:grid;place-items:center;font-weight:900}
+.px-comite-pedagogique .audio-player-panel strong,.px-comite-pedagogique .audio-player-panel span{display:block}
+.px-comite-pedagogique .audio-player-panel span{font-size:.75rem;color:rgba(255,255,255,.7);margin-top:3px}
+.px-comite-pedagogique .audio-feedback{display:grid;gap:8px}
+.px-comite-pedagogique .audio-feedback textarea{min-height:76px;width:100%;padding:10px;border:1px solid rgba(7,91,58,.14);border-radius:11px;background:#fff;font:inherit;resize:vertical}
+.px-comite-pedagogique .audio-dashboard{display:grid;grid-template-columns:1.2fr repeat(3,.55fr);gap:10px;align-items:stretch}
+.px-comite-pedagogique .audio-dashboard-lead{padding:16px;border-radius:16px;color:#fff;background:linear-gradient(125deg,#075b3a,#0b8a5b);position:relative;overflow:hidden}
+.px-comite-pedagogique .audio-dashboard-lead:after{content:"♪";position:absolute;right:14px;bottom:-15px;font-size:5rem;color:rgba(255,255,255,.1)}
+.px-comite-pedagogique .audio-dashboard-lead h3{margin:0;font-size:1rem}
+.px-comite-pedagogique .audio-dashboard-lead p{margin:4px 0 12px;font-size:.72rem;color:rgba(255,255,255,.74);max-width:360px}
+.px-comite-pedagogique .audio-dashboard-kpi{padding:14px;border-radius:16px;background:rgba(255,255,255,.78);border:2px solid #0b8a5b}
+.px-comite-pedagogique .audio-dashboard-kpi:nth-child(3){border-color:#d4a72c}
+.px-comite-pedagogique .audio-dashboard-kpi:nth-child(4){border-color:#3d82c4}
+.px-comite-pedagogique .audio-dashboard-kpi span,.px-comite-pedagogique .audio-dashboard-kpi strong,.px-comite-pedagogique .audio-dashboard-kpi small{display:block}
+.px-comite-pedagogique .audio-dashboard-kpi span,.px-comite-pedagogique .audio-dashboard-kpi small{font-size:.75rem;color:#68756f}
+.px-comite-pedagogique .audio-dashboard-kpi strong{font-size:1.5rem;margin:3px 0}
+.px-comite-pedagogique .audio-toast{position:fixed;right:22px;bottom:22px;z-index:150;padding:12px 16px;border-radius:12px;background:#123f30;color:#fff;box-shadow:0 15px 40px rgba(0,0,0,.22);transform:translateY(90px);opacity:0;transition:.25s}
+.px-comite-pedagogique .audio-toast.show{transform:none;opacity:1}
+@media(max-width:1100px){.px-comite-pedagogique .audio-metrics{grid-template-columns:repeat(2,1fr)}
+.px-comite-pedagogique .audio-dashboard{grid-template-columns:1fr 1fr}
+.px-comite-pedagogique .audio-dashboard-lead{grid-column:1/-1}
+.px-comite-pedagogique .audio-review{grid-template-columns:1fr}
+.px-comite-pedagogique .audio-review-controls{justify-content:flex-start}}
+@media(max-width:780px){.px-comite-pedagogique .audio-context{padding:15px}
+.px-comite-pedagogique .audio-context-head{display:block}
+.px-comite-pedagogique .audio-context-actions{margin-top:10px}
+.px-comite-pedagogique .audio-grid,.px-comite-pedagogique .audio-metrics,.px-comite-pedagogique .audio-dashboard,.px-comite-pedagogique .audio-eval{grid-template-columns:1fr}
+.px-comite-pedagogique .audio-dashboard-lead{grid-column:auto}
+.px-comite-pedagogique .audio-item{grid-template-columns:40px 1fr}
+.px-comite-pedagogique .audio-item-action{grid-column:2}
+.px-comite-pedagogique .audio-progress{grid-column:1/-1}}
+.px-comite-pedagogique .library-entry{margin-top:18px;padding:18px;border-radius:20px;background:linear-gradient(125deg,rgba(87,60,14,.96),rgba(181,133,30,.9));color:#fff;box-shadow:0 18px 44px rgba(91,64,16,.14);display:flex;justify-content:space-between;gap:16px;align-items:center}
+.px-comite-pedagogique .library-entry h2{margin:0;font-size:1rem}
+.px-comite-pedagogique .library-entry p{margin:4px 0 0;color:rgba(255,255,255,.76);font-size:.78rem}
+.px-comite-pedagogique .library-entry-stats{display:flex;gap:16px;margin-top:9px}
+.px-comite-pedagogique .library-entry-stats span{font-size:.75rem}
+.px-comite-pedagogique .library-entry-stats b{font-size:1rem}
+.px-comite-pedagogique .library-entry-actions{display:flex;gap:8px;flex-wrap:wrap}
+.px-comite-pedagogique .library-entry a{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:9px 13px;border-radius:11px;text-decoration:none;font-size:.78rem;font-weight:850}
+.px-comite-pedagogique .library-entry-primary{background:#fff;color:#684c10}
+.px-comite-pedagogique .library-entry-secondary{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff}
+@media(max-width:760px){.px-comite-pedagogique .library-entry{display:block}
+.px-comite-pedagogique .library-entry-actions{margin-top:12px}
+.px-comite-pedagogique .library-entry a{width:100%}}
