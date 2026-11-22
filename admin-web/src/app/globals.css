@@ -10274,3 +10274,47 @@ a.lnk,.lnk a{color:inherit;text-decoration:none}a.lnk:hover{color:#0b5b3f;text-d
 
 /* ui151 Messaging + Logistics */
 .cc-sel{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:8px 10px;border:1px solid #e6e2d3;border-radius:8px;font-size:.82rem;color:#5b6b63}.cc-sel b{color:#12372a}
+
+/* ui153 Dashboard: Action Items / Groups / Members by Country, as in the client mock-up */
+.px-index .dx-grid:not(.dk-row) .dx-card{height:548px;border-radius:20px;border:2px solid #d9a21b;border-top-color:#0b4a33;box-shadow:0 8px 20px rgba(8,54,42,.14);background:#fff}
+.px-index .dx-grid:not(.dk-row) .dx-card>header{padding:14px 18px;min-height:78px}
+.px-index .dx-grid:not(.dk-row) .dx-card>header h2{font-size:1.55rem;line-height:1.1}
+.px-index .dx-grid:not(.dk-row) .dx-card>header p{font-size:.82rem}
+.px-index .dx-grid:not(.dk-row) .dx-hi{width:auto;height:auto;background:none}.px-index .dx-hi svg{width:32px;height:32px;stroke-width:2;color:#f1c24b}
+.px-index .dx-grid:not(.dk-row) .dx-card:first-child>header::after{width:46%;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 80' preserveAspectRatio='xMaxYMax meet'><g fill='%2394c98a' fill-opacity='.42'><rect x='40' y='30' width='7' height='50'/><path d='M60 80V50q0-8 6-8h26q6 0 6 8v30z'/><path d='M82 42q0-26 20-26t20 26z'/><rect x='101' y='6' width='2' height='12'/><path d='M126 80V44q0-8 6-8h26q6 0 6 8v36z'/><path d='M138 36q6-18 14-18t14 18z'/><rect x='172' y='26' width='7' height='54'/></g></svg>") right bottom/contain no-repeat}
+.px-index .dx-grid:not(.dk-row) .dx-badge,.px-index .dx-grid:not(.dk-row) .dx-badge:not(.hot){background:#e0392b;color:#fff;min-width:42px;height:42px;display:grid;place-items:center;border-radius:50%;padding:0;font-size:1.25rem;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.px-index .dx-grid:not(.dk-row) .dx-badge:not(.hot){background:#1f9d63}
+.px-index .dx-grid:not(.dk-row) .dx-card>header+*{margin-top:12px}
+/* Action items: 7 rows fit without scrolling */
+.px-index .dx-grid:not(.dk-row) .dx-queue{display:flex;flex-direction:column;gap:6px;overflow:hidden;padding:0 0 12px;flex:1;min-height:0}
+.px-index .dx-grid:not(.dk-row) .dx-queue li{flex:1;min-height:0}
+.px-index .dx-grid:not(.dk-row) .dx-queue button{padding:6px 12px;gap:12px;border-radius:12px;align-items:center}
+.px-index .dx-grid:not(.dk-row) .dx-qi{width:40px;height:40px;border-radius:12px;background:#e3f6ec;color:#0b7a4a}.px-index .dx-qi svg{fill:currentColor;fill-opacity:.2;stroke-width:2}
+.px-index .dx-grid:not(.dk-row) .dx-queue b{font-size:1rem;line-height:1.15;display:block}.px-index .dx-grid:not(.dk-row) .dx-queue small{font-size:.78rem;color:#4a5c53;display:block}
+.px-index .dx-grid:not(.dk-row) .dx-queue em{width:34px;height:34px;border-radius:10px;background:#e3f6ec;color:#1f9d63}
+.px-index .dx-grid:not(.dk-row) .dx-queue button.on em{width:34px;height:34px;border-radius:50%;font-size:1rem}
+.px-index .dx-grid:not(.dk-row) .dx-queue button.soft.on{background:linear-gradient(90deg,#fff3cc,#fde9a6);border:1px solid #efca78}
+/* Groups + country lists: compact, no inner boxes, no visible scrollbar */
+.px-index .dx-grid:not(.dk-row) .dx-bars{display:block;overflow-y:auto;scrollbar-width:none;padding:0 0 4px;flex:1;min-height:0}
+.px-index .dx-grid:not(.dk-row) .dx-bars::-webkit-scrollbar{display:none}
+.px-index .dx-grid:not(.dk-row) .dx-card .dx-bars li{display:grid;grid-template-columns:minmax(0,38%) minmax(0,1fr) auto;gap:12px;align-items:center;background:none;border:0;border-bottom:1px solid #edf1ee;border-radius:0;box-shadow:none;margin:0;padding:8px 2px;height:36px;box-sizing:border-box}
+.px-index .dx-grid:not(.dk-row) .dx-card .dx-bars li>span{font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;letter-spacing:.01em}
+.px-index .dx-grid:not(.dk-row) .dx-bars u{height:12px}
+.px-index .dx-grid:not(.dk-row) .dx-bars .full{background:#e0392b}.px-index .dx-grid:not(.dk-row) .dx-bars .warn{background:#e2a80f}
+.px-index .dx-grid:not(.dk-row) .dx-bars em{font-size:.84rem;min-width:52px;display:flex;align-items:center;justify-content:flex-end;gap:6px}
+.px-index .dx-grid:not(.dk-row) .dx-stack{height:14px;margin-top:12px}
+.px-index .dx-grid:not(.dk-row) .dx-legend{gap:8px;margin-top:10px}
+.px-index .dx-grid:not(.dk-row) .dx-legend span{padding:8px 4px;border-radius:12px;font-size:.78rem;gap:0;justify-items:center}.px-index .dx-grid:not(.dk-row) .dx-legend b{font-size:1.5rem;line-height:1.1}
+/* Members by Country */
+.px-index .dx-ct .dx-tabs{display:flex;width:auto;margin:12px 16px 8px;padding:4px;border-radius:999px;background:#eef4f0;gap:6px;flex-wrap:nowrap}
+.px-index .dx-ct .dx-tabs button{flex:1;justify-content:center;white-space:nowrap;padding:8px 14px;font-weight:800;border-radius:999px;background:transparent;color:#13241b}
+.px-index .dx-ct .dx-tabs button.on{background:linear-gradient(180deg,#12643f,#0b4a33);color:#fff}
+.px-index .dx-ct .dx-tabs button em{background:#dff0e6;color:#0b4a33;border-radius:999px;padding:1px 10px}
+.px-index .dx-ct .dx-bars li{grid-template-columns:minmax(0,40%) minmax(0,1fr) auto;height:46px!important;padding:5px 2px!important}
+.px-index .dx-ct .dx-cn .cfn{font-size:.95rem;font-weight:800;gap:10px;text-transform:none;letter-spacing:0}
+.px-index .dx-ct .dx-cn .cf{width:36px!important;height:26px!important;border-radius:4px!important;background-size:cover;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.px-index .dx-ct .dx-cn small{padding-left:46px;margin-top:-1px;font-size:.78rem;text-transform:none}
+.px-index .dx-ct .dx-bars li>span.dx-cn{text-transform:none;font-size:.95rem}
+.px-index .dx-grid:not(.dk-row) .dx-card>footer{padding:12px 18px;border-top:3px solid #d9a21b}
+.px-index .dx-grid:not(.dk-row) .dx-card>footer span{display:flex;align-items:center;gap:8px}.px-index .dx-card>footer svg{color:#f1c24b}
+.px-index .dx-ct>footer span:first-child{padding-right:18px;border-right:1px solid rgba(255,255,255,.35)}

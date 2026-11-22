@@ -245,7 +245,7 @@ export default function DashboardPage() {
             <div className="dx-tabs" role="tablist" aria-label={tx("View")}>
               <button type="button" role="tab" aria-selected={cTab === 'country'} className={cTab === 'country' ? 'on' : ''} onClick={() => setCTab('country')}><Users size={16} />{tx("By Country")}</button>
               <button type="button" role="tab" aria-selected={cTab === 'group'} className={cTab === 'group' ? 'on' : ''} onClick={() => setCTab('group')}><Users size={16} />{tx("By Group")}<em>{kurels.total}</em></button>
-              <button type="button" role="tab" aria-selected={cTab === 'multi'} className={cTab === 'multi' ? 'on' : ''} onClick={() => setCTab('multi')}>{tx("In several groups")}<em>{multi.length}</em></button>
+              {cTab === 'multi' && <button type="button" role="tab" aria-selected className="on" onClick={() => setCTab('multi')}>{tx("In several groups")}<em>{multi.length}</em></button>}
             </div>
             {cTab === 'group' ? (
               <ul className="dx-bars">
