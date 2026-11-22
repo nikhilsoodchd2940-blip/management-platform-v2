@@ -1,13 +1,23 @@
 import { tx } from '@/lib/i18n/tr';
-/** Marks for the three ways of paying. Wave and Orange Money use the official logos in /public; Cash is drawn. */
+/** Marks for the three ways of paying. All three marks are drawn inline, so no image files are needed. */
 export default function PayIcon({ kind, size = 44 }: { kind: 'wave' | 'orange_money' | 'cash'; size?: number }) {
   if (kind === 'wave') {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src="/pay-wave.png" width={size} height={size} alt={tx("Wave")} style={{ borderRadius: size * 0.24, display: 'block', objectFit: 'cover' }} />;
+    return (
+      <svg width={size} height={size} viewBox="0 0 48 48" role="img" aria-label={tx("Wave")}>
+        <rect width="48" height="48" rx="12" fill="#1DA1F2" />
+        <path d="M9 22c3-4 6-4 9 0s6 4 9 0 6-4 9 0" fill="none" stroke="#fff" strokeWidth="3.200" strokeLinecap="round" />
+        <path d="M9 31c3-4 6-4 9 0s6 4 9 0 6-4 9 0" fill="none" stroke="#fff" strokeWidth="3.200" strokeLinecap="round" opacity=".75" />
+      </svg>
+    );
   }
   if (kind === 'orange_money') {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src="/pay-orange.png" width={size} height={size} alt={tx("Orange Money")} style={{ borderRadius: size * 0.24, display: 'block', objectFit: 'cover', border: '1px solid #e3e8e5', boxSizing: 'border-box' }} />;
+    return (
+      <svg width={size} height={size} viewBox="0 0 48 48" role="img" aria-label={tx("Orange Money")}>
+        <rect width="48" height="48" rx="12" fill="#FF7900" />
+        <rect x="9" y="9" width="30" height="30" rx="6" fill="#fff" opacity=".18" />
+        <text x="24" y="30" textAnchor="middle" fontSize="17" fontWeight="800" fontFamily="Arial, sans-serif" fill="#fff">OM</text>
+      </svg>
+    );
   }
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" role="img" aria-label={tx("Cash")}>
