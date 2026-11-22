@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation';
 import { Boxes, Building2, CalendarDays, CheckCircle2, ChevronRight, ClipboardList, History, MapPin, Package, Plus, Search, Truck, Users, AlertTriangle, BarChart3, Layers } from 'lucide-react';
 import { where } from 'firebase/firestore';
 import { useCollection } from '@/lib/useCollection';
+import { useZones } from '@/lib/useZones';
 import Dropdown from '@/components/Dropdown';
 import { CxBar, CxCard, CxPill, CxStats, CxTabs } from '@/components/Cx';
 import { tx, dateLocale } from '@/lib/i18n/tr';
@@ -152,22 +153,31 @@ export default function LogisticsPage() {
   const [reqTab, setReqTab] = useState('pending');
   const [fCountry, setFCountry] = useState('');
   const [fCity, setFCity] = useState('');
+  const [fZone, setFZone] = useState('');
+  const [fLocal, setFLocal] = useState('');
   const [fCat, setFCat] = useState('');
   const [fState, setFState] = useState('');
   const [fSearch, setFSearch] = useState('');
   const [roomSel, setRoomSel] = useState('');
   const { cities, locationOf } = useGroupHierarchy();
+  const zonesRaw = useZones();
+  const localZones = useCollection<{ name: string; cityId: string }>('localZones', []);
   const tasks = useCollection<{ status: string; itemsDescription?: string; groupId?: string; assignedToName?: string }>('logisticsTasks', []);
   const rehearsals = useCollection<{ title: string; startAt: Timestamp; endAt: Timestamp; status: string; location?: { address?: string }; subGroupIds?: string[] }>('events', [where('kind', '==', 'rehearsal')], 'rh');
   const countryOpts = countries.map((c) => ({ value: c.id, label: c.name }));
-  const cityOpts = cities.filter((c) => !fCountry || c.parentGroupId === fCountry).map((c) => ({ value: c.id, label: c.name }));
+  const cityOpts = cities.filter((c) => (!fCountry || c.parentGroupId === fCountry) && (!fZone || c.zoneId === fZone)).map((c) => ({ value: c.id, label: c.name }));
+  const zoneOpts = (zonesRaw ?? []).filter((z) => !fCountry || z.countryId === fCountry).map((z) => ({ value: z.id, label: z.name }));
+  const localOpts = (localZones ?? []).filter((z) => (!fCity || z.cityId === fCity) && (!fCountry || cities.find((c) => c.id === z.cityId)?.parentGroupId === fCountry) && (!fZone || cities.find((c) => c.id === z.cityId)?.zoneId === fZone)).map((z) => ({ value: z.id, label: z.name }));
+  const cityInScope = (cityId?: string) => {
+    const c = cities.find((x) => x.id === cityId);
+    if (!c) return !fCountry && !fCity && !fZone;
+    return (!fCity || c.id === fCity) && (!fCountry || c.parentGroupId === fCountry) && (!fZone || c.zoneId === fZone);
+  };
   const inScope = (groupId: string) => {
-    if (!fCountry && !fCity) return true;
+    if (!fCountry && !fCity && !fZone && !fLocal) return true;
     const g = byId[groupId]; if (!g) return false;
-    const loc = locationOf(groupId) as { country?: { id: string }; city?: { id: string } } | undefined;
-    if (fCity && loc?.city?.id !== fCity) return false;
-    if (fCountry && loc?.country?.id !== fCountry) return false;
-    return true;
+    if (fLocal && g.localZoneId !== fLocal) return false;
+    return cityInScope(locationOf(groupId).city?.id);
   };
   const scopedReq = requests.filter((r) => inScope(r.groupId));
   const totalQty = items.filter((i) => i.status === 'active').reduce((a, i) => a + (i.quantity ?? 0), 0);
@@ -176,8 +186,10 @@ export default function LogisticsPage() {
   const returned = (tasks ?? []).filter((t) => t.status === 'completed');
   const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
   const dayEnd = dayStart.getTime() + 864e5;
-  const roomNames = [...new Set((rehearsals ?? []).map((r) => r.location?.address?.trim()).filter(Boolean) as string[])].slice(0, 12);
-  const todayBy = (room: string) => (rehearsals ?? []).find((r) => r.location?.address?.trim() === room && r.status !== 'cancelled' && r.startAt.toMillis() < dayEnd && r.endAt.toMillis() >= dayStart.getTime());
+  const roomsAll = (localZones ?? []).filter((z) => (!fLocal || z.id === fLocal) && cityInScope(z.cityId));
+  const roomNames = roomsAll.map((z) => z.id);
+  const roomName = (id: string) => roomsAll.find((z) => z.id === id)?.name ?? '';
+  const todayBy = (room: string) => (rehearsals ?? []).find((r) => r.status !== 'cancelled' && r.startAt.toMillis() < dayEnd && r.endAt.toMillis() >= dayStart.getTime() && (r.subGroupIds ?? []).some((g) => byId[g]?.localZoneId === room));
   const booked = roomNames.filter((n) => todayBy(n)).length;
   const hm = (t: Timestamp) => new Date(t.toMillis()).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
   const catRows = (Object.keys(CATEGORY) as Category[]).map((c) => {
@@ -216,23 +228,25 @@ export default function LogisticsPage() {
             { value: 'history', label: tx("History"), icon: <History size={14} /> },
           ]} />
           <CxStats items={[
-            { label: tx("Sites tracked"), value: countries.length + cities.length, sub: `${countries.length} ${tx("countries")} · ${cities.length} ${tx("cities")}`, icon: <MapPin size={18} />, tone: 'green', onClick: () => router.push('/dashboard/locations') },
+            { label: tx("Sites tracked"), value: (localZones ?? []).length, sub: `${countries.length} ${tx("countries")} · ${cities.length} ${tx("cities")} · ${(zonesRaw ?? []).length} ${tx("zones")}`, icon: <MapPin size={18} />, tone: 'green', onClick: () => router.push('/dashboard/locations') },
             { label: tx("Total inventory items"), value: fmt(totalQty), sub: tx("Across all sites"), icon: <Package size={18} />, tone: 'amber', onClick: () => router.push('/dashboard/equipment') },
-            { label: tx("Open requests"), value: fmt(pending.length), sub: tx("Awaiting approval or delivery"), icon: <ClipboardList size={18} />, tone: 'violet', onClick: () => router.push('/dashboard/resource-requests') },
-            { label: tx("Rooms available today"), value: `${Math.max(roomNames.length - booked, 0)} / ${roomNames.length}`, sub: tx("Rehearsal rooms"), icon: <CalendarDays size={18} />, tone: 'blue', onClick: () => router.push('/dashboard/rehearsals') },
+            { label: tx("Open requests"), value: fmt(scopedReq.filter((r) => r.stage.endsWith("_review")).length), sub: tx("Awaiting approval or delivery"), icon: <ClipboardList size={18} />, tone: 'violet', onClick: () => router.push('/dashboard/resource-requests') },
+            { label: tx("Rooms available today"), value: `${Math.max(roomNames.length - booked, 0)} / ${roomNames.length}`, sub: tx("Local zones with no rehearsal today"), icon: <CalendarDays size={18} />, tone: 'blue', onClick: () => router.push('/dashboard/rehearsals') },
             { label: tx("Active assignments"), value: fmt(activeAssign.length), sub: tx("Items currently in use"), icon: <Users size={18} />, tone: 'teal', onClick: () => setManageSignal((n) => n + 1) },
           ]} />
 
           <div className="cx-filters lg-filters">
             <div className="lg-loc"><MapPin size={20} /><div><b>{tx("Location")}</b><small>{tx("view requests by place")}</small></div></div>
-            <Dropdown label={tx("Country")} value={fCountry} onChange={(v) => { setFCountry(v); setFCity(''); }} allLabel={tx("All countries")} options={countryOpts} />
-            <Dropdown label={tx("City")} value={fCity} onChange={setFCity} allLabel={tx("All cities")} options={cityOpts} />
+            <Dropdown label={tx("Country")} value={fCountry} onChange={(v) => { setFCountry(v); setFZone(''); setFCity(''); setFLocal(''); }} allLabel={tx("All countries")} options={countryOpts} />
+            <Dropdown label={tx("City")} value={fCity} onChange={(v) => { setFCity(v); setFLocal(''); }} allLabel={tx("All cities")} options={cityOpts} />
+            <Dropdown label={tx("Zone")} value={fZone} onChange={(v) => { setFZone(v); setFCity(''); setFLocal(''); }} allLabel={tx("All zones")} options={zoneOpts} />
+            <Dropdown label={tx("Local zone / Site")} value={fLocal} onChange={setFLocal} allLabel={tx("All sites")} options={localOpts} />
             <Dropdown label={tx("Category")} value={fCat} onChange={setFCat} allLabel={tx("All categories")} options={(Object.keys(CATEGORY) as Category[]).map((c) => ({ value: c, label: tx(CATEGORY[c]) }))} />
             <Dropdown label={tx("Availability status")} value={state} onChange={setState} allLabel={tx("All statuses")} options={[{ value: 'active', label: tx("Available") }, { value: 'low', label: tx("Low stock") }, { value: 'retired', label: tx("Retired") }]} />
             <label className="cx-search"><Search size={16} /><input type="search" placeholder={tx("Search item, room, group...")} value={search} onChange={(e) => setSearch(e.target.value)} /></label>
           </div>
 
-          <CxCard icon={<Layers size={18} />} title={tx("Inventory by category")} sub={fCity ? cities.find((c) => c.id === fCity)?.name : fCountry ? countries.find((c) => c.id === fCountry)?.name : tx("Whole world")} right={<button type="button" className="cx-btn sm ghost" onClick={() => router.push('/dashboard/equipment')}>{tx("View full inventory")} <ChevronRight size={14} /></button>}>
+          <CxCard icon={<Layers size={18} />} title={tx("Inventory by category")} sub={fLocal ? localOpts.find((o) => o.value === fLocal)?.label : fCity ? cities.find((c) => c.id === fCity)?.name : fZone ? zoneOpts.find((o) => o.value === fZone)?.label : fCountry ? countries.find((c) => c.id === fCountry)?.name : tx("Whole world")} right={<button type="button" className="cx-btn sm ghost" onClick={() => router.push('/dashboard/equipment')}>{tx("View full inventory")} <ChevronRight size={14} /></button>}>
             <div className="lg-cats">
               {catRows.length === 0 && <p className="cx-empty">{tx("No equipment yet.")}</p>}
               {catRows.map((r) => (
@@ -290,10 +304,10 @@ export default function LogisticsPage() {
               <table className="cx-table lg-rooms">
                 <thead><tr><th>{tx("Room")}</th><th>{tx("Today's schedule")}</th><th>{tx("Status")}</th></tr></thead>
                 <tbody>
-                  {roomNames.length === 0 && <tr><td colSpan={3} className="cx-empty">{tx("No rehearsal rooms yet.")}</td></tr>}
-                  {roomNames.slice(0, 4).map((n) => { const b = todayBy(n); return (
+                  {roomNames.length === 0 && <tr><td colSpan={3} className="cx-empty">{tx("No local zone yet. Create one in Local zones.")}</td></tr>}
+                  {roomNames.slice(0, 6).map((n) => { const b = todayBy(n); return (
                     <tr key={n} className={roomSel === n ? 'sel' : ''} onClick={() => { setRoomSel(n); router.push('/dashboard/rehearsals'); }}>
-                      <td><Users size={14} /> <b>{n}</b></td>
+                      <td><Users size={14} /> <b>{roomName(n)}</b></td>
                       <td>{b ? `${hm(b.startAt)} – ${hm(b.endAt)} · ${b.title}` : <span className="lg-free">{tx("Available")}</span>}</td>
                       <td>{b ? <CxPill tone="red">{tx("Booked")}</CxPill> : <CxPill tone="green">{tx("Available")}</CxPill>}</td>
                     </tr>); })}
