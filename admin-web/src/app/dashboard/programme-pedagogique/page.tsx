@@ -17,6 +17,7 @@ import ManageToggle from '../../px/ManageToggle';
 import CurriculumManage from './Manage';
 import Dropdown from '@/components/Dropdown';
 import { EbBar, EbPanel, EbPill, EbSearch, EbTable, EB_COLS, EB_SOFT, type EbCol } from '@/components/Eb';
+import Link from 'next/link';
 import { tx } from '@/lib/i18n/tr';
 import { CxBanner, CxBar, CxCard, CxDonut, CxInitials, CxLine, CxPill, CxStats, CxTabs } from '@/components/Cx';
 import { useZones } from '@/lib/useZones';
@@ -246,9 +247,9 @@ export default function PedagogicalCommitteePage() {
               const lv = g.levelId ? levelById[g.levelId] : undefined;
               return (
                 <tr key={g.id}>
-                  <td><span className="pd-g"><CxInitials name={g.name} size={38} /><strong>{g.name}</strong></span></td>
-                  <td>{lv ? <span className="pd-lv">{lv.name}</span> : <span className="cx-pill grey">{tx("No level")}</span>}</td>
-                  <td>{first ? <span className="pd-prog"><BookOpen size={15} />{first.title}{first.melody && <><Music2 size={15} />{first.melody}</>}{mats.length > 1 && <em>+{mats.length - 1}</em>}</span> : <span className="cx-note-i">—</span>}</td>
+                  <td><Link href="/dashboard/groups" className="pd-g lnk"><CxInitials name={g.name} size={38} /><strong>{g.name}</strong></Link></td>
+                  <td>{lv ? <Link href="/dashboard/levels" className="pd-lv">{lv.name}</Link> : <span className="cx-pill grey">{tx("No level")}</span>}</td>
+                  <td>{first ? <Link href="/dashboard/library" className="pd-prog lnk"><BookOpen size={15} />{first.title}{first.melody && <><Music2 size={15} />{first.melody}</>}{mats.length > 1 && <em>+{mats.length - 1}</em>}</Link> : <span className="cx-note-i">—</span>}</td>
                   <td>{mats.length}</td>
                   <td>{dur ? mmss(dur) : '—'}</td>
                   <td>{mats.length ? <CxPill tone="green">{tx("Assigned")}</CxPill> : <CxPill tone="amber">{tx("Pending")}</CxPill>}</td>

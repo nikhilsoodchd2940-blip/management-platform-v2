@@ -69,7 +69,7 @@ export default function FinancePage() {
   const [method, setMethod] = useState('');
   const [status, setStatus] = useState('');
   const [stripeTotal, setStripeTotal] = useState<number | null>(null);
-  const [manageSignal] = useState(0);
+  const [manageSignal, setManageSignal] = useState(0);
   const [dialog, setDialog] = useState<null | 'allocate' | 'shares' | 'create' | 'edit'>(null);
   const [flowStep, setFlowStep] = useState<0 | 1 | 2 | 3 | 4>(0);
   const [groupBy, setGroupBy] = useState<'kurel' | 'city' | 'country'>('kurel');
@@ -221,6 +221,7 @@ export default function FinancePage() {
             <div className="fn-ph-a">
               <button type="button" className="cx-btn" onClick={() => document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' })}><BarChart3 size={15} />{tx("Detailed report")}</button>
               <Link href="/dashboard/donations/collection" className="cx-btn"><FileText size={15} />{tx("Collection plan")}</Link>
+              <button type="button" className="cx-btn" onClick={() => setManageSignal((n) => n + 1)}><Coins size={15} />{tx("Record a contribution")}</button>
               <button type="button" className="cx-btn green" onClick={() => setDialog('create')}><Plus size={15} />{tx("Create a program")}</button>
             </div>
           </div>

@@ -7,7 +7,13 @@ import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { useGroupHierarchy } from '@/lib/useGroupHierarchy';
 import { updateLogisticsTask as updateLogisticsTaskFn, type LogisticsStatus } from '@/lib/functions';
+import { tx } from '@/lib/i18n/tr';
 import { useLocale } from '@/lib/i18n/LocaleContext';
+import Link from 'next/link';
+import { Check, ChevronDown, MapPin, Package, Truck, User } from 'lucide-react';
+import Dropdown from '@/components/Dropdown';
+import { PersonLink } from '@/components/MemberProfile';
+import { CxPill, CxStats } from '@/components/Cx';
 
 interface HistoryEntry {
   status: LogisticsStatus;
@@ -106,143 +112,77 @@ export default function LogisticsManage() {
   const visible = tasks.filter((t) => !statusFilter || t.status === statusFilter);
   const countBy = (s: LogisticsStatus) => tasks.filter((t) => t.status === s).length;
 
+  const TONE: Record<string, 'green' | 'amber' | 'blue'> = { pending: 'amber', assigned: 'blue', preparing: 'blue', dispatched: 'blue', delivered: 'green', completed: 'green' };
   return (
-    <div>
-      <div className="section-head">
-        <div>
-          <h1>{l18.title}</h1>
-          <p>{l18.subtitle}</p>
-        </div>
+    <div className="cx-page lm">
+      <CxStats items={PIPELINE.map((s, i) => ({
+        label: STATUS_LABELS[s], value: countBy(s), sub: l18.tasksUnit,
+        icon: i === 0 ? <Package size={18} /> : i < 4 ? <Truck size={18} /> : <Check size={18} />,
+        tone: (['amber', 'blue', 'violet', 'teal', 'green', 'green'] as const)[i],
+        onClick: () => setStatusFilter(statusFilter === s ? '' : s),
+      }))} cols={6} />
+
+      <div className="lm-bar">
+        <Dropdown label={l18.allStatuses} value={statusFilter} onChange={setStatusFilter} allLabel={l18.allStatuses} options={PIPELINE.map((s) => ({ value: s, label: STATUS_LABELS[s] }))} />
+        <span className="lm-count">{l18.shown(visible.length)}</span>
+        <Link href="/dashboard/resource-requests" className="cx-btn sm">{tx("All requests")}</Link>
+        <Link href="/dashboard/equipment" className="cx-btn sm">{tx("Equipment catalog")}</Link>
       </div>
-
-      <section className="card command">
-        <div className="command-stats cols-6" style={{ marginTop: 0 }}>
-          {PIPELINE.map((s) => (
-            <div key={s}>
-              <span>{STATUS_LABELS[s]}</span>
-              <strong>{countBy(s)}</strong>
-              <small>{l18.tasksUnit}</small>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="card filters" style={{ gridTemplateColumns: '1fr' }}>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="">{l18.allStatuses}</option>
-          {PIPELINE.map((s) => (
-            <option key={s} value={s}>
-              {STATUS_LABELS[s]}
-            </option>
-          ))}
-        </select>
-      </section>
 
       {error && <p className="error-text">{error}</p>}
 
-      <section className="card panel">
-        <div className="panel-head">
-          <div>
-            <h2>{l18.panelTitle}</h2>
-            <p>{l18.shown(visible.length)}</p>
-          </div>
-        </div>
-        {loading ? (
-          <p>{tr.common.loading}</p>
-        ) : visible.length === 0 ? (
-          <p className="empty" style={{ display: 'block' }}>
-            {l18.empty}
-          </p>
-        ) : (
-          <div className="members">
-            {visible.map((t) => {
-              const open = openId === t.id;
-              const { city, country } = locationOf(t.groupId);
-              const nextStatus = PIPELINE[PIPELINE.indexOf(t.status) + 1] as LogisticsStatus | undefined;
-              return (
-                <div key={t.id} className="kurel" style={{ padding: 0 }}>
-                  <button
-                    type="button"
-                    className="member-row"
-                    style={{ gridTemplateColumns: '1fr auto', border: 0, background: 'transparent' }}
-                    onClick={() => setOpenId(open ? null : t.id)}
-                  >
-                    <div>
-                      <strong>
-                        {t.itemsDescription}
-                        {t.quantity !== undefined ? ` × ${t.quantity}` : ''}
-                      </strong>
-                      <span>
-                        {byId[t.groupId]?.name ?? '—'} · {city?.name ?? '—'} · {country?.name ?? '—'}
-                      </span>
-                      <span>
-                        {l18.delivery} {t.deliveryLocation || '—'} · {fmt(t.deliveryAt)} · {l18.assignedTo} {t.assignedToName || l18.nobodyYet}
-                      </span>
-                    </div>
-                    {statusPill(t.status, STATUS_LABELS[t.status])}
-                  </button>
+      <div className="lm-list">
+        {loading && <p className="cx-empty">{tr.common.loading}</p>}
+        {!loading && visible.length === 0 && <p className="cx-empty">{l18.empty}</p>}
+        {visible.map((t) => {
+          const open = openId === t.id;
+          const { city, country } = locationOf(t.groupId);
+          const nextStatus = PIPELINE[PIPELINE.indexOf(t.status) + 1] as LogisticsStatus | undefined;
+          const step = PIPELINE.indexOf(t.status);
+          return (
+            <article key={t.id} className={`lm-task${open ? ' open' : ''}`}>
+              <div className="lm-row" role="button" tabIndex={0} onClick={() => setOpenId(open ? null : t.id)} onKeyDown={(e) => { if (e.key === 'Enter') setOpenId(open ? null : t.id); }}>
+                <span className="lm-ico"><Package size={20} /></span>
+                <div className="lm-main">
+                  <b>{t.itemsDescription}{t.quantity !== undefined ? ` × ${t.quantity}` : ''}</b>
+                  <small onClick={(e) => e.stopPropagation()}><Link href="/dashboard/groups">{byId[t.groupId]?.name ?? '—'}</Link> · {city?.name ?? '—'} · {country?.name ?? '—'}</small>
+                  <small><MapPin size={12} /> {t.deliveryLocation || '—'} · {fmt(t.deliveryAt)}</small>
+                </div>
+                <div className="lm-who" onClick={(e) => e.stopPropagation()}><User size={14} />{t.assignedToUserId ? <PersonLink userId={t.assignedToUserId}>{t.assignedToName || t.assignedToUserId}</PersonLink> : <em>{l18.nobodyYet}</em>}</div>
+                <CxPill tone={TONE[t.status] ?? 'blue'}>{STATUS_LABELS[t.status]}</CxPill>
+                <ChevronDown size={18} className="lm-chev" />
+              </div>
+              <div className="lm-steps" aria-hidden>{PIPELINE.map((s, i) => <i key={s} className={i <= step ? 'on' : ''} title={STATUS_LABELS[s]} />)}</div>
 
-                  {open && (
-                    <div style={{ padding: '0 0.75rem 0.85rem' }}>
-                      <div className="section-title">
-                        <h3>{l18.history}</h3>
+              {open && (
+                <div className="lm-body">
+                  <div className="lm-hist">
+                    <h4>{l18.history}</h4>
+                    {t.history.map((h, i) => (
+                      <div key={i} className="lm-h"><i /><div><b>{STATUS_LABELS[h.status]}</b><small>{fmt(h.at)} · {l18.by} {h.actorName}</small>{h.comment && <p>“{h.comment}”</p>}</div></div>
+                    ))}
+                  </div>
+                  {t.status !== 'completed' && (
+                    <div className="lm-act">
+                      <input placeholder={l18.commentPlaceholder} value={comments[t.id] ?? ''} onChange={(e) => setComments((prev) => ({ ...prev, [t.id]: e.target.value }))} />
+                      <div className="lm-as">
+                        <input placeholder={l18.assignPlaceholder} value={assigneeIds[t.id] ?? ''} onChange={(e) => setAssigneeIds((prev) => ({ ...prev, [t.id]: e.target.value }))} />
+                        <button type="button" className="cx-btn sm" disabled={busyId === t.id} onClick={() => handleAssign(t, assigneeIds[t.id] ?? '')}>{l18.assign}</button>
+                        <button type="button" className="cx-btn sm" disabled={busyId === t.id} onClick={() => handleAssignToMe(t)}>{l18.assignToMe}</button>
                       </div>
-                      <div style={{ display: 'grid', gap: '0.4rem', marginBottom: '0.75rem' }}>
-                        {t.history.map((h, i) => (
-                          <div key={i} className="activity">
-                            <div className="activity-head">
-                              <strong>{STATUS_LABELS[h.status]}</strong>
-                              <small>{fmt(h.at)}</small>
-                            </div>
-                            <span>{l18.by} {h.actorName}</span>
-                            {h.comment && <span>“{h.comment}”</span>}
-                          </div>
-                        ))}
-                      </div>
-
-                      {t.status !== 'completed' && (
-                        <>
-                          <input
-                            placeholder={l18.commentPlaceholder}
-                            value={comments[t.id] ?? ''}
-                            onChange={(e) => setComments((prev) => ({ ...prev, [t.id]: e.target.value }))}
-                            style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--line)', borderRadius: 10, marginBottom: '0.5rem' }}
-                          />
-                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
-                            <input
-                              placeholder={l18.assignPlaceholder}
-                              value={assigneeIds[t.id] ?? ''}
-                              onChange={(e) => setAssigneeIds((prev) => ({ ...prev, [t.id]: e.target.value }))}
-                              style={{ flex: 1, minWidth: 180, padding: '0.5rem', border: '1px solid var(--line)', borderRadius: 10 }}
-                            />
-                            <button type="button" className="secondary" disabled={busyId === t.id} onClick={() => handleAssign(t, assigneeIds[t.id] ?? '')}>
-                              {l18.assign}
-                            </button>
-                            <button type="button" className="secondary" disabled={busyId === t.id} onClick={() => handleAssignToMe(t)}>
-                              {l18.assignToMe}
-                            </button>
-                          </div>
-                          {nextStatus && nextStatus !== 'assigned' && (
-                            <button
-                              type="button"
-                              className="primary"
-                              disabled={busyId === t.id || t.status === 'pending'}
-                              title={t.status === 'pending' ? l18.assignFirst : undefined}
-                              onClick={() => run(t, { taskId: t.id, status: nextStatus })}
-                            >
-                              {busyId === t.id ? '…' : l18.markAs(STATUS_LABELS[nextStatus])}
-                            </button>
-                          )}
-                        </>
+                      {nextStatus && nextStatus !== 'assigned' && (
+                        <button type="button" className="cx-btn green" disabled={busyId === t.id || t.status === 'pending'} title={t.status === 'pending' ? l18.assignFirst : undefined} onClick={() => run(t, { taskId: t.id, status: nextStatus })}>
+                          {busyId === t.id ? '…' : l18.markAs(STATUS_LABELS[nextStatus])}
+                        </button>
                       )}
                     </div>
                   )}
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
+              )}
+            </article>
+          );
+        })}
+      </div>
     </div>
   );
 }

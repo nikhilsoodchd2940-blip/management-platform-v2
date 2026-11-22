@@ -14,6 +14,8 @@ import { notify } from '@/lib/notify';
 import { useGroupHierarchy } from '@/lib/useGroupHierarchy';
 import { useUserProfiles } from '@/lib/useUserNames';
 import { Avatar } from '@/components/MemberPicker';
+import { PersonLink } from '@/components/MemberProfile';
+import Link from 'next/link';
 import { tx, dateLocale } from '@/lib/i18n/tr';
 import Dropdown from '@/components/Dropdown';
 import { CxBanner, CxCard, CxStats } from '@/components/Cx';
@@ -215,11 +217,11 @@ export default function WelfarePage() {
                 {rows.map((r) => (
                   <tr key={r.key}>
                     <td><code className="so-ref">{r.id.slice(0, 8).toUpperCase()}</code></td>
-                    <td><span className="who-cell"><Avatar name={names[r.userId] || '?'} photoUrl={profiles[r.userId]?.photoUrl} size={30} /><strong>{names[r.userId] || '…'}</strong></span></td>
+                    <td><span className="who-cell"><Avatar name={names[r.userId] || '?'} photoUrl={profiles[r.userId]?.photoUrl} size={30} /><PersonLink userId={r.userId}><strong>{names[r.userId] || '…'}</strong></PersonLink></span></td>
                     <td>{r.category}<br /><small>{r.detail}</small>
                       {r.welfare?.categoryKey === 'financial_assistance' && <><br /><small>{tx("Collected")} {((r.welfare.collectedCents ?? 0) / 100).toFixed(2)} {tx("· spent")} {((r.welfare.spentCents ?? 0) / 100).toFixed(2)} {tx("· balance")} {(((r.welfare.collectedCents ?? 0) - (r.welfare.spentCents ?? 0)) / 100).toFixed(2)}{r.welfare.beneficiary ? ` · for ${r.welfare.beneficiary}` : ''}</small></>}
                       {(r.welfare?.report ?? []).slice(-3).map((e) => <small key={e.id} style={{ display: 'block' }}>• {ENTRY_KIND[e.kind] ?? e.kind}: {e.text} ({e.actorName})</small>)}</td>
-                    <td>{r.groupId ? byId[r.groupId]?.name ?? '—' : '—'}</td>
+                    <td>{r.groupId ? <Link href="/dashboard/groups" className="lnk">{byId[r.groupId]?.name ?? '—'}</Link> : '—'}</td>
                     <td>{r.whenMs ? new Date(r.whenMs).toLocaleString(dateLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : tx("Not specified")}</td>
                     <td><span className={`so-st${r.kind === 'welfare' ? (r.welfare?.status === 'escalated' ? ' red' : r.welfare?.status === 'closed' ? '' : ' amber') : r.status === 'pending' ? ' amber' : r.status === 'rejected' ? ' red' : ''}`}>{r.kind === 'welfare' ? WSTATUS[r.welfare!.status] : STATUS_LABEL[r.status]}</span></td>
                     <td>

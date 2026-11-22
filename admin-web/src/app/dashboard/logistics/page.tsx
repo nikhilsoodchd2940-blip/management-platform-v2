@@ -13,6 +13,7 @@ import { useLevels } from '@/lib/useLevels';
 import ManageToggle from '../../px/ManageToggle';
 import LogisticsManage from './Manage';
 import { CxBanner } from '@/components/Cx';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Boxes, Building2, CalendarDays, CheckCircle2, ChevronRight, ClipboardList, History, MapPin, Package, Plus, Search, Truck, Users, AlertTriangle, BarChart3, Layers } from 'lucide-react';
 import { where } from 'firebase/firestore';
@@ -206,6 +207,7 @@ export default function LogisticsPage() {
           <CxBanner icon={<Truck size={26} />} kicker={tx("Logistics")} title={tx("Logistics management")} sub={tx("Inventory, room booking, requests, assignments and delivery follow-up.")}>
             <button type="button" className="cx-btn gold" onClick={() => setManageSignal((n) => n + 1)}><Plus size={16} />{tx("Request equipment")}</button>
             <button type="button" className="cx-btn ghost-light" onClick={() => router.push('/dashboard/rehearsals')}><CalendarDays size={16} />{tx("Book a room")}</button>
+            <button type="button" className="cx-btn ghost-light" onClick={() => setManageSignal((n) => n + 1)}><Truck size={16} />{tx("Delivery tasks")}</button>
           </CxBanner>
           <CxTabs value={tab} onChange={(v) => { setTab(v); if (v === 'requests') setReqTab('pending'); document.getElementById('lg-' + v)?.scrollIntoView({ behavior: 'smooth' }); }} items={[
             { value: 'inventory', label: tx("Inventory"), icon: <Package size={14} /> },
@@ -214,11 +216,11 @@ export default function LogisticsPage() {
             { value: 'history', label: tx("History"), icon: <History size={14} /> },
           ]} />
           <CxStats items={[
-            { label: tx("Sites tracked"), value: countries.length + cities.length, sub: `${countries.length} ${tx("countries")} · ${cities.length} ${tx("cities")}`, icon: <MapPin size={18} />, tone: 'green' },
-            { label: tx("Total inventory items"), value: fmt(totalQty), sub: tx("Across all sites"), icon: <Package size={18} />, tone: 'amber' },
-            { label: tx("Open requests"), value: fmt(pending.length), sub: tx("Awaiting approval or delivery"), icon: <ClipboardList size={18} />, tone: 'violet' },
-            { label: tx("Rooms available today"), value: `${Math.max(roomNames.length - booked, 0)} / ${roomNames.length}`, sub: tx("Rehearsal rooms"), icon: <CalendarDays size={18} />, tone: 'blue' },
-            { label: tx("Active assignments"), value: fmt(activeAssign.length), sub: tx("Items currently in use"), icon: <Users size={18} />, tone: 'teal' },
+            { label: tx("Sites tracked"), value: countries.length + cities.length, sub: `${countries.length} ${tx("countries")} · ${cities.length} ${tx("cities")}`, icon: <MapPin size={18} />, tone: 'green', onClick: () => router.push('/dashboard/locations') },
+            { label: tx("Total inventory items"), value: fmt(totalQty), sub: tx("Across all sites"), icon: <Package size={18} />, tone: 'amber', onClick: () => router.push('/dashboard/equipment') },
+            { label: tx("Open requests"), value: fmt(pending.length), sub: tx("Awaiting approval or delivery"), icon: <ClipboardList size={18} />, tone: 'violet', onClick: () => router.push('/dashboard/resource-requests') },
+            { label: tx("Rooms available today"), value: `${Math.max(roomNames.length - booked, 0)} / ${roomNames.length}`, sub: tx("Rehearsal rooms"), icon: <CalendarDays size={18} />, tone: 'blue', onClick: () => router.push('/dashboard/rehearsals') },
+            { label: tx("Active assignments"), value: fmt(activeAssign.length), sub: tx("Items currently in use"), icon: <Users size={18} />, tone: 'teal', onClick: () => setManageSignal((n) => n + 1) },
           ]} />
 
           <div className="cx-filters lg-filters">
@@ -250,11 +252,11 @@ export default function LogisticsPage() {
                   {invRows.length === 0 && <tr><td colSpan={6} className="cx-empty">{tx("No equipment yet.")}</td></tr>}
                   {invRows.slice(0, 12).map((i) => (
                     <tr key={i.id}>
-                      <td><span className="lg-ico"><Package size={15} /></span><b>{i.name}</b></td>
-                      <td>{tx(CATEGORY[i.category] ?? i.category)}</td>
-                      <td>{i.quantity ?? '—'}</td>
-                      <td>{i.levelId && levelById[i.levelId] ? <span className="lg-chip">{levelById[i.levelId].name}</span> : <span className="lg-chip">{tx("No level")}</span>}</td>
-                      <td>{stateOf(i) === 'retired' ? <CxPill tone="red" dot>{tx("Retired")}</CxPill> : stateOf(i) === 'low' ? <CxPill tone="amber" dot>{tx("Low stock")}</CxPill> : <CxPill tone="green" dot>{tx("Available")}</CxPill>}</td>
+                      <td className="lg-lnk" onClick={() => router.push('/dashboard/equipment')}><span className="lg-ico"><Package size={15} /></span><b>{i.name}</b></td>
+                      <td className="lg-lnk" onClick={() => setFCat(i.category)}>{tx(CATEGORY[i.category] ?? i.category)}</td>
+                      <td className="lg-lnk" onClick={() => router.push('/dashboard/equipment')}>{i.quantity ?? '—'}</td>
+                      <td className="lg-lnk" onClick={() => router.push('/dashboard/levels')}>{i.levelId && levelById[i.levelId] ? <span className="lg-chip">{levelById[i.levelId].name}</span> : <span className="lg-chip">{tx("No level")}</span>}</td>
+                      <td className="lg-lnk" onClick={() => setState(stateOf(i) === 'retired' ? 'retired' : stateOf(i) === 'low' ? 'low' : 'active')}>{stateOf(i) === 'retired' ? <CxPill tone="red" dot>{tx("Retired")}</CxPill> : stateOf(i) === 'low' ? <CxPill tone="amber" dot>{tx("Low stock")}</CxPill> : <CxPill tone="green" dot>{tx("Available")}</CxPill>}</td>
                       <td><button type="button" className="cx-btn sm" onClick={() => setManageSignal((n) => n + 1)}>{tx("Assign")}</button></td>
                     </tr>
                   ))}
@@ -273,13 +275,13 @@ export default function LogisticsPage() {
               <div className="lg-reqs">
                 {reqShown.length === 0 && <p className="cx-empty">{tx("No requests yet.")}</p>}
                 {reqShown.slice(0, 4).map((r) => (
-                  <div className="lg-req" key={r.id}>
+                  <div className="lg-req lg-lnk" key={r.id} onClick={() => router.push('/dashboard/resource-requests')}>
                     <span className="lg-ico lg">{abbr(r.items)}</span>
-                    <div><b>{tx("Request for")} {r.items}</b><small>{byId[r.groupId]?.name ?? r.groupId}</small>
+                    <div><b>{tx("Request for")} {r.items}</b><small><Link href="/dashboard/groups" onClick={(e) => e.stopPropagation()}>{byId[r.groupId]?.name ?? r.groupId}</Link></small>
                       <small><MapPin size={11} /> {(() => { const l = locationOf(r.groupId) as { country?: { name: string }; city?: { name: string } } | undefined; return [l?.country?.name, l?.city?.name].filter(Boolean).join(' – ') || '—'; })()} <CalendarDays size={11} /> {tx("Needed")}: {fmtD(r.neededMs)}</small></div>
                     <div className="lg-req-r">
                       <CxPill tone={r.stage === 'approved' ? 'green' : r.stage === 'rejected' ? 'red' : 'amber'}>{tx(STAGE[r.stage] ?? r.stage)}</CxPill>
-                      {r.stage.endsWith('_review') && <span className="lg-act"><button type="button" className="cx-btn sm ok" disabled={busy} onClick={() => decide(r.id, 'approve')}>{tx("Approve")}</button><button type="button" className="cx-btn sm red" disabled={busy} onClick={() => decide(r.id, 'reject')}>{tx("Reject")}</button></span>}
+                      {r.stage.endsWith('_review') && <span className="lg-act" onClick={(e) => e.stopPropagation()}><button type="button" className="cx-btn sm ok" disabled={busy} onClick={() => decide(r.id, 'approve')}>{tx("Approve")}</button><button type="button" className="cx-btn sm red" disabled={busy} onClick={() => decide(r.id, 'reject')}>{tx("Reject")}</button></span>}
                     </div>
                   </div>
                 ))}
@@ -290,7 +292,7 @@ export default function LogisticsPage() {
                 <tbody>
                   {roomNames.length === 0 && <tr><td colSpan={3} className="cx-empty">{tx("No rehearsal rooms yet.")}</td></tr>}
                   {roomNames.slice(0, 4).map((n) => { const b = todayBy(n); return (
-                    <tr key={n} className={roomSel === n ? 'sel' : ''} onClick={() => setRoomSel(n)}>
+                    <tr key={n} className={roomSel === n ? 'sel' : ''} onClick={() => { setRoomSel(n); router.push('/dashboard/rehearsals'); }}>
                       <td><Users size={14} /> <b>{n}</b></td>
                       <td>{b ? `${hm(b.startAt)} – ${hm(b.endAt)} · ${b.title}` : <span className="lg-free">{tx("Available")}</span>}</td>
                       <td>{b ? <CxPill tone="red">{tx("Booked")}</CxPill> : <CxPill tone="green">{tx("Available")}</CxPill>}</td>
@@ -308,23 +310,23 @@ export default function LogisticsPage() {
                 <tbody>
                   {(tasks ?? []).length === 0 && <tr><td colSpan={4} className="cx-empty">{tx("No allocations yet.")}</td></tr>}
                   {(tasks ?? []).slice(0, 5).map((t) => { const l = t.groupId ? (locationOf(t.groupId) as { city?: { name: string } } | undefined) : undefined; return (
-                    <tr key={t.id}><td><b>{t.itemsDescription || '—'}</b></td><td>{t.groupId ? byId[t.groupId]?.name ?? '—' : '—'}</td><td>{l?.city?.name ?? '—'}</td>
+                    <tr key={t.id} className="lg-lnk" onClick={() => setManageSignal((n) => n + 1)}><td><b>{t.itemsDescription || '—'}</b></td><td onClick={(e) => { e.stopPropagation(); router.push('/dashboard/groups'); }}>{t.groupId ? byId[t.groupId]?.name ?? '—' : '—'}</td><td onClick={(e) => { e.stopPropagation(); router.push('/dashboard/locations'); }}>{l?.city?.name ?? '—'}</td>
                       <td><CxPill tone={t.status === 'completed' || t.status === 'delivered' ? 'green' : t.status === 'pending' ? 'amber' : 'blue'}>{tx(t.status)}</CxPill></td></tr>); })}
                 </tbody>
               </table>
             </CxCard>
             <CxCard icon={<AlertTriangle size={18} />} title={tx("Priority alerts")} sub={tx("Items, rooms or tasks needing attention.")}>
               <div className="lg-alerts">
-                <div><i><Package size={16} /></i><span><b>{tx("Low stock items")}</b><small>{low.length} {tx("items below threshold")}</small></span><em className="r">{low.length}</em></div>
-                <div><i><ClipboardList size={16} /></i><span><b>{tx("Requests awaiting a decision")}</b><small>{tx("Admin, zone lead or leadership")}</small></span><em className="r">{pending.length}</em></div>
-                <div><i><CalendarDays size={16} /></i><span><b>{tx("Rooms booked today")}</b><small>{booked} / {roomNames.length} {tx("rooms")}</small></span><em className="r">{booked}</em></div>
-                <div><i><Truck size={16} /></i><span><b>{tx("Pending delivery tasks")}</b><small>{(tasks ?? []).filter((t) => t.status === 'pending').length} {tx("awaiting delivery")}</small></span><em className="r">{(tasks ?? []).filter((t) => t.status === 'pending').length}</em></div>
+                <div className="lg-lnk" onClick={() => { setState('low'); document.getElementById('lg-inventory')?.scrollIntoView({ behavior: 'smooth' }); }}><i><Package size={16} /></i><span><b>{tx("Low stock items")}</b><small>{low.length} {tx("items below threshold")}</small></span><em className="r">{low.length}</em></div>
+                <div className="lg-lnk" onClick={() => router.push('/dashboard/resource-requests')}><i><ClipboardList size={16} /></i><span><b>{tx("Requests awaiting a decision")}</b><small>{tx("Admin, zone lead or leadership")}</small></span><em className="r">{pending.length}</em></div>
+                <div className="lg-lnk" onClick={() => router.push('/dashboard/rehearsals')}><i><CalendarDays size={16} /></i><span><b>{tx("Rooms booked today")}</b><small>{booked} / {roomNames.length} {tx("rooms")}</small></span><em className="r">{booked}</em></div>
+                <div className="lg-lnk" onClick={() => setManageSignal((n) => n + 1)}><i><Truck size={16} /></i><span><b>{tx("Pending delivery tasks")}</b><small>{(tasks ?? []).filter((t) => t.status === 'pending').length} {tx("awaiting delivery")}</small></span><em className="r">{(tasks ?? []).filter((t) => t.status === 'pending').length}</em></div>
               </div>
             </CxCard>
             <CxCard icon={<BarChart3 size={18} />} title={tx("Most requested items")} sub={tx("Top categories by number of requests.")}>
               <div className="lg-top">
                 {reqByCat.length === 0 && <p className="cx-empty">{tx("No requests yet.")}</p>}
-                {reqByCat.map((r) => (<div key={r.c}><span>{tx(CATEGORY[r.c])}</span><CxBar pct={(r.n / reqByCat[0].n) * 100} tone="gold" /><b>{r.n}</b></div>))}
+                {reqByCat.map((r) => (<div key={r.c} className="lg-lnk" onClick={() => router.push('/dashboard/resource-requests')}><span>{tx(CATEGORY[r.c])}</span><CxBar pct={(r.n / reqByCat[0].n) * 100} tone="gold" /><b>{r.n}</b></div>))}
               </div>
             </CxCard>
           </div>

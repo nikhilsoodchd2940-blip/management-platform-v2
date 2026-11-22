@@ -185,9 +185,9 @@ export default function PerformanceHistoryPage() {
                             <tbody>{g.list.map((s) => { const st = STATUS[s.performanceStatus ?? 'scheduled']; const sl = SELECTION_LABEL[selOf(s.id)?.status ?? 'none']; return (
                               <tr key={s.id}>
                                 <td><span className="at-loc"><Calendar size={15} />{formatInZone(tsMs(s.startAt), s.timeZone)}</span></td>
-                                <td><strong>{titleOf(s.eventId)}</strong></td>
-                                <td><span className="at-loc"><MapPin size={15} />{byId[s.cityId]?.name ?? ''}</span></td>
-                                <td><span className="at-loc"><BookOpen size={15} />{matOf(s.id)}</span></td>
+                                <td><Link href={`/dashboard/events/${s.eventId}`} className="lnk"><strong>{titleOf(s.eventId)}</strong></Link></td>
+                                <td><Link href="/dashboard/locations" className="at-loc lnk"><MapPin size={15} />{byId[s.cityId]?.name ?? ''}</Link></td>
+                                <td><Link href="/dashboard/library" className="at-loc lnk"><BookOpen size={15} />{matOf(s.id)}</Link></td>
                                 <td><span className="at-loc"><Clock size={15} />{formatDuration(s.allocatedSeconds)}</span></td>
                                 <td><CxPill tone={st.cls === 'ok' ? 'green' : st.cls === 'warn' ? 'amber' : 'green'}>{tx(st.text)}</CxPill></td>
                                 <td><CxPill tone={sl.cls === 'ok' ? 'green' : sl.cls === 'warn' ? 'amber' : sl.cls === 'bad' ? 'red' : 'grey'}>{tx(sl.text)}</CxPill></td>

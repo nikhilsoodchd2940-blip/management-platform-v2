@@ -35,7 +35,7 @@ export default function ManageToggle({ title, children, openSignal = 0, closeSig
 
   return (
     <>
-      {!hideButton && (
+      {false && !hideButton && (
         <button type="button" className="manage-open" onClick={() => setOpen(true)}>
           {title}
         </button>

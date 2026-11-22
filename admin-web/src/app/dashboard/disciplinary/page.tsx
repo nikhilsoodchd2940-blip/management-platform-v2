@@ -230,7 +230,6 @@ export default function DisciplinaryPage() {
             </div>
           </CxCard>
 
-          <button type="button" className="dc-manage" onClick={() => setManageSignal((n) => n + 1)}><FolderOpen size={20} /><b>{tx("Manage cases — open and review")}</b><ArrowRight size={20} /></button>
         </div>
       </div>
 

@@ -16,6 +16,7 @@ import { PersonLink } from '@/components/MemberProfile';
 import { Pill, Clear, DateField, useSort } from '@/components/kit';
 import { CxCard, CxStats, CxTabs, CxDonut, CxLine, CxBar, CxInitials, CxPill } from '@/components/Cx';
 import { CheckCircle2, Clock, Eye, ListChecks, MapPin, BarChart3, Calendar, Users, Mail, XCircle, Target, ArrowUpRight } from 'lucide-react';
+import Link from 'next/link';
 import { tx } from '@/lib/i18n/tr';
 
 interface EventRow { title: string; kind?: string; subGroupIds: string[]; startAt: Timestamp; status: string }
@@ -171,9 +172,9 @@ export default function AttendanceSummary({ focus = '', onFocus, extras }: { foc
                       const r = rate(s);
                       return (
                         <tr key={s.id}>
-                          <td><strong>{s.e.title}</strong></td>
+                          <td><Link href={`/dashboard/events/${s.id}`} className="lnk"><strong>{s.e.title}</strong></Link></td>
                           <td><span className={`at-type ${(s.e.kind ?? 'event') === 'rehearsal' ? 'r' : 'e'}`}>{(s.e.kind ?? 'event') === 'rehearsal' ? tx("Rehearsal") : tx("Event")}</span></td>
-                          <td><span className="at-loc"><MapPin size={15} />{s.city}</span></td>
+                          <td><Link href="/dashboard/locations" className="at-loc lnk"><MapPin size={15} />{s.city}</Link></td>
                           <td><span className="at-loc"><Calendar size={15} />{formatInZone(s.startMs, s.geos[0]?.tz ?? 'UTC')}</span></td>
                           <td><span className="at-cell ok"><Users size={14} />{dash(`${s.sum.present}/${s.sum.expected}`)}</span></td>
                           <td><span className="at-cell gold"><Clock size={14} />{dash(s.sum.late)}</span></td>
