@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, CalendarClock, ClipboardCheck, Music2, Pencil, Plus, RefreshCw, Send, Users, BarChart3, Calendar, FileText, Globe2, Building2, Crown, MapPin, Hourglass, Layers, MessageSquare, Upload, Mail, Play, Network, Target, Zap, Eye } from 'lucide-react';
+import { MoreVertical, BookOpen, CalendarClock, ClipboardCheck, Music2, Pencil, Plus, RefreshCw, Send, Users, BarChart3, Calendar, FileText, Globe2, Building2, Crown, MapPin, Hourglass, Layers, MessageSquare, Upload, Mail, Play, Network, Target, Zap, Eye } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { collection, limit as fsLimit, orderBy, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -60,6 +60,8 @@ export default function PedagogicalCommitteePage() {
   const [gLevel, setGLevel] = useState('');
   const [gCountry, setGCountry] = useState('');
   const [gCity, setGCity] = useState('');
+  const [gZone, setGZone] = useState('');
+  const [gSel, setGSel] = useState<string[]>([]);
   const [gPage, setGPage] = useState(1);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [allocations, setAllocations] = useState<Allocation[]>([]);
@@ -213,8 +215,8 @@ export default function PedagogicalCommitteePage() {
   const distinctMelodies = new Set(allocations.map((a) => matById[a.qacaidId]?.melody).filter(Boolean)).size;
   const gRows = useMemo(() => activeLeafGroups.filter((g) => {
     const loc = locationOf(g.id);
-    return (!gLevel || (gLevel === '__none__' ? !g.levelId : g.levelId === gLevel)) && (!gCountry || loc.country?.id === gCountry) && (!gCity || loc.city?.id === gCity) && (!gQ.trim() || g.name.toLowerCase().includes(gQ.trim().toLowerCase()));
-  }).map((g) => ({ g, mats: allocByGroup[g.id] ?? [], pctDone: latestPct[g.id] })).sort((a, b) => (b.pctDone ?? -1) - (a.pctDone ?? -1) || a.g.name.localeCompare(b.g.name)), [activeLeafGroups, gLevel, gCountry, gCity, gQ, allocByGroup, latestPct, locationOf]);
+    return (!gLevel || (gLevel === '__none__' ? !g.levelId : g.levelId === gLevel)) && (!gCountry || loc.country?.id === gCountry) && (!gCity || loc.city?.id === gCity) && (!gZone || (loc.city?.zoneId ?? '') === gZone) && (!gQ.trim() || g.name.toLowerCase().includes(gQ.trim().toLowerCase()));
+  }).map((g) => ({ g, mats: allocByGroup[g.id] ?? [], pctDone: latestPct[g.id] })).sort((a, b) => (b.pctDone ?? -1) - (a.pctDone ?? -1) || a.g.name.localeCompare(b.g.name)), [activeLeafGroups, gLevel, gCountry, gCity, gZone, gQ, allocByGroup, latestPct, locationOf]);
   const GPER = 5;
   const gPages = Math.max(1, Math.ceil(gRows.length / GPER));
   const gCur = Math.min(gPage, gPages);
@@ -234,34 +236,44 @@ export default function PedagogicalCommitteePage() {
           <label className="cx-search"><span aria-hidden>⌕</span><input type="search" placeholder={tx("Search a group")} value={gQ} onChange={(e) => { setGQ(e.target.value); setGPage(1); }} /></label>
           <Dropdown label={tx("Country")} value={gCountry} onChange={(v) => { setGCountry(v); setGCity(''); setGPage(1); }} allLabel={tx("All countries")} options={countries.map((c) => ({ value: c.id, label: c.name }))} className="loc-dd" />
           <Dropdown label={tx("City")} value={gCity} onChange={(v) => { setGCity(v); setGPage(1); }} allLabel={tx("All cities")} options={cities.filter((c) => !gCountry || c.parentGroupId === gCountry).map((c) => ({ value: c.id, label: c.name }))} className="loc-dd" />
+          <Dropdown label={tx("Zone")} value={gZone} onChange={(v) => { setGZone(v); setGPage(1); }} allLabel={tx("All zones")} options={(zones ?? []).filter((z) => !gCountry || z.countryId === gCountry).map((z) => ({ value: z.id, label: z.name }))} className="loc-dd" />
           <Dropdown label={tx("Level")} value={gLevel} onChange={(v) => { setGLevel(v); setGPage(1); }} allLabel={tx("All levels")} options={[{ value: '__none__', label: tx("No level") }, ...levels.map((l) => ({ value: l.id, label: l.name }))]} className="loc-dd" />
         </div>
       )}
       <div className="cx-scroll">
         <table className="cx-table pd-t">
-          <thead><tr><th>{tx("Group (Kurel)")}</th><th>{tx("Level")}</th><th>{tx("Assigned program (book & melody)")}</th><th>{tx("Books")}</th><th>{tx("Duration")}</th><th>{tx("Status")}</th><th>{tx("Progress")}</th><th /></tr></thead>
+          <thead>{withFilters
+            ? <tr><th className="ck"><input type="checkbox" aria-label={tx("Select all")} checked={rowsShown.length > 0 && rowsShown.every((x) => gSel.includes(x.g.id))} onChange={() => setGSel(rowsShown.every((x) => gSel.includes(x.g.id)) ? gSel.filter((id) => !rowsShown.some((x) => x.g.id === id)) : [...new Set([...gSel, ...rowsShown.map((x) => x.g.id)])])} /></th><th>{tx("Group (Kurel)")}</th><th>{tx("Level")}</th><th>{tx("Assigned program (book & melody)")}</th><th>{tx("Duration")}</th><th>{tx("Status")}</th><th>{tx("Progress")}</th><th>{tx("Actions")}</th></tr>
+            : <tr><th>{tx("Group")}</th><th>{tx("Level")}</th><th>{tx("Assigned program")}</th><th>{tx("Books")}</th><th>{tx("Melodies")}</th><th>{tx("Progress")}</th><th>{tx("Actions")}</th></tr>}</thead>
           <tbody>
-            {rowsShown.length === 0 && <tr><td colSpan={8}><span className="cx-empty"><b>{tx("No group matches these filters.")}</b></span></td></tr>}
+            {rowsShown.length === 0 && <tr><td colSpan={withFilters ? 8 : 7}><span className="cx-empty"><b>{tx("No group matches these filters.")}</b></span></td></tr>}
             {rowsShown.map(({ g, mats, pctDone }) => {
               const first = mats[0];
               const dur = mats.reduce((n, m) => n + (m.durationSeconds ?? 0), 0);
               const lv = g.levelId ? levelById[g.levelId] : undefined;
               return (
                 <tr key={g.id}>
+                  {withFilters && <td className="ck"><input type="checkbox" aria-label={`${tx("Select")} ${g.name}`} checked={gSel.includes(g.id)} onChange={() => setGSel((x) => (x.includes(g.id) ? x.filter((id) => id !== g.id) : [...x, g.id]))} /></td>}
                   <td><Link href="/dashboard/groups" className="pd-g lnk"><CxInitials name={g.name} size={38} /><strong>{g.name}</strong></Link></td>
                   <td>{lv ? <Link href="/dashboard/levels" className="pd-lv">{lv.name}</Link> : <span className="cx-pill grey">{tx("No level")}</span>}</td>
-                  <td>{first ? <Link href="/dashboard/library" className="pd-prog lnk"><BookOpen size={15} />{first.title}{first.melody && <><Music2 size={15} />{first.melody}</>}{mats.length > 1 && <em>+{mats.length - 1}</em>}</Link> : <span className="cx-note-i">—</span>}</td>
-                  <td>{mats.length}</td>
-                  <td>{dur ? mmss(dur) : '—'}</td>
-                  <td>{mats.length ? <CxPill tone="green">{tx("Assigned")}</CxPill> : <CxPill tone="amber">{tx("Pending")}</CxPill>}</td>
+                  {withFilters ? (<>
+                    <td>{first ? <Link href="/dashboard/library" className="pd-prog lnk"><BookOpen size={15} />{first.title}{first.melody && <><Music2 size={15} />{first.melody}</>}{mats.length > 1 && <em>+{mats.length - 1}</em>}</Link> : <span className="cx-note-i">—</span>}</td>
+                    <td>{dur ? mmss(dur) : '—'}</td>
+                    <td>{mats.length ? <CxPill tone="green">{tx("Assigned")}</CxPill> : <CxPill tone="amber">{tx("Pending")}</CxPill>}</td>
+                  </>) : (<>
+                    <td>{mats.length ? <Link href="/dashboard/library" className="pd-prog lnk">{tx("Annual program")} {academicYear}</Link> : <span className="cx-note-i">—</span>}</td>
+                    <td><span className="pd-cnt"><BookOpen size={15} />{mats.length}</span></td>
+                    <td><span className="pd-cnt"><Music2 size={15} />{mats.filter((m) => m.melody).length}</span></td>
+                  </>)}
                   <td>{pctDone === undefined ? <span className="cx-note-i">—</span> : <span className="pd-pr"><CxBar pct={pctDone} /><b>{pctDone}%</b></span>}</td>
-                  <td><button type="button" className="cx-btn sm" title={tx("Manage this book")} onClick={manage}><Eye size={15} /></button></td>
+                  <td className="pd-acts"><button type="button" className="cx-btn sm" title={tx("Manage this book")} onClick={manage}><Eye size={15} /></button><Link href="/dashboard/groups" className="cx-btn sm" title={tx("Open the group")}><MoreVertical size={15} /></Link></td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+      {withFilters && gSel.length > 0 && <div className="pd-selbar"><b>{gSel.length}</b> {tx("selected")}<button type="button" className="cx-btn sm ok" onClick={manage}>{tx("Assign books & melodies")}</button><button type="button" className="cx-btn sm" onClick={() => setGSel([])}>{tx("Clear")}</button></div>}
       <div className="cx-pager"><span>{tx("Showing")} {gRows.length === 0 ? 0 : (gCur - 1) * GPER + 1}–{Math.min(gCur * GPER, gRows.length)} {tx("of")} {gRows.length} {tx("groups")}</span>
         <div><button type="button" disabled={gCur <= 1} onClick={() => setGPage(gCur - 1)}>‹</button>{Array.from({ length: Math.min(gPages, 4) }, (_, i) => i + 1).map((n) => <button type="button" key={n} className={n === gCur ? 'on' : ''} onClick={() => setGPage(n)}>{n}</button>)}{gPages > 4 && <span>…</span>}<button type="button" disabled={gCur >= gPages} onClick={() => setGPage(gCur + 1)}>›</button></div></div>
     </>
@@ -373,20 +385,20 @@ export default function PedagogicalCommitteePage() {
 
         {tab === 'assign' && (
           <div className="cx-grid cx-g21">
-            <CxCard dark icon={<Users size={22} />} title={tx("Group assignments")} sub={tx("List of all groups with their assigned books and melodies.")}>
+            <CxCard dark icon={<Users size={22} />} title={tx("Group Assignments")} sub={tx("List of all groups with their assigned books and melodies.")}>
               {groupTable(gShown, true)}
             </CxCard>
             <div className="ev-side">
-              <CxCard tone="red" icon={<Hourglass size={22} />} title={tx("Unassigned groups")} sub={tx("Groups that still need a book and melody.")} right={<span className="cx-pill red">{pendingGroups.length}</span>}>
+              <CxCard tone="red" icon={<Hourglass size={22} />} title={tx("Unassigned Groups")} sub={tx("Groups that still need a book and melody.")} right={<span className="cx-pill red">{pendingGroups.length}</span>}>
                 <ul className="pd-un">{pendingGroups.slice(0, 6).map((g) => <li key={g.id}><MapPin size={15} /><span>{g.name}{g.levelId && levelById[g.levelId] ? ` (${levelById[g.levelId].name})` : ''}</span></li>)}{pendingGroups.length === 0 && <li>{tx("Every group has a program.")}</li>}</ul>
-                <button type="button" className="cx-btn" onClick={manage}>{tx("Assign to these groups")} →</button>
+                <button type="button" className="cx-btn" onClick={manage}>{tx("Assign to These Groups")} →</button>
               </CxCard>
-              <CxCard icon={<Zap size={22} />} title={tx("Quick actions")}>
+              <CxCard icon={<Zap size={22} />} title={tx("Quick Actions")}>
                 <div className="pd-qa">
-                  <button type="button" className="cx-btn ok" onClick={manage}><Plus size={16} />{tx("Assign books & melodies")}</button>
-                  <button type="button" className="cx-btn" onClick={manage}><Upload size={16} />{tx("Import assignments (Excel)")}</button>
-                  <button type="button" className="cx-btn" onClick={() => router.push('/dashboard/messagerie')}><Mail size={16} />{tx("Send the program to the groups")}</button>
-                  <button type="button" className="cx-btn" onClick={() => router.push('/dashboard/announcements')}><MessageSquare size={16} />{tx("Create a group announcement")}</button>
+                  <button type="button" className="cx-btn ok" onClick={manage}><Plus size={16} />{tx("Assign Books & Melodies")}</button>
+                  <button type="button" className="cx-btn" onClick={manage}><Upload size={16} />{tx("Import Assignments (Excel)")}</button>
+                  <button type="button" className="cx-btn" onClick={() => router.push('/dashboard/messagerie')}><Mail size={16} />{tx("Send Program to Groups")}</button>
+                  <button type="button" className="cx-btn" onClick={() => router.push('/dashboard/announcements')}><MessageSquare size={16} />{tx("Create Group Announcement")}</button>
                 </div>
               </CxCard>
             </div>
@@ -394,8 +406,8 @@ export default function PedagogicalCommitteePage() {
         )}
 
         {tab === 'assign' && (
-          <CxCard dark icon={<Network size={22} />} title={tx("Program assignment workflow")} sub={tx("Annual process to prepare, assign and follow up the groups' program.")}>
-            <ol className="pd-flow">{process.slice(0, 5).map(([ic, t, d], i) => <li key={t} className={i === 0 ? 'on' : ''}><i>{ic}</i><b>{tx(t)}</b><span>{tx(d)}</span></li>)}</ol>
+          <CxCard dark icon={<Network size={22} />} title={tx("Program Assignment Workflow")} sub={tx("Annual process to prepare, assign and follow up the groups' program.")}>
+            <ol className="pd-flow pd-flow5">{[[<BookOpen size={26} key="1" />, '1. Prepare Program', 'Select books & melodies for the academic year.'], [<Users size={26} key="2" />, '2. Assign to Groups', 'Distribute the program to all groups (kurels).'], [<Mail size={26} key="3" />, '3. Notify Groups', 'Send the assignment and program details.'], [<Play size={26} key="4" />, '4. Follow Up', 'Monitor rehearsals and program progress.'], [<BarChart3 size={26} key="5" />, '5. Evaluate', 'Assess execution and prepare next year.']].map(([ic, t, d], i) => <li key={t as string} className={i === 3 ? 'on' : ''}><i>{ic}{i === 0 && <u aria-hidden>✓</u>}</i><b>{tx(t as string)}</b><span>{tx(d as string)}</span></li>)}</ol>
           </CxCard>
         )}
 

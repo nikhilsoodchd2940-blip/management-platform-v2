@@ -5,7 +5,6 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { limit as fsLimit, orderBy, type Timestamp } from 'firebase/firestore';
 import { useCollection, tsMs } from '@/lib/useCollection';
-import { useZones } from '@/lib/useZones';
 import { useGroupHierarchy } from '@/lib/useGroupHierarchy';
 import { useMyScope } from '@/lib/useMyScope';
 import { formatDuration, formatInZone } from '@/lib/timeZones';
@@ -13,7 +12,7 @@ import { SELECTION_LABEL, type Remark, type Selection, type Slot } from '../even
 import Dropdown from '@/components/Dropdown';
 import { Clear } from '@/components/kit';
 import { CxBanner, CxBar, CxCard, CxDonut, CxInitials, CxPill, CxStats, CxTabs } from '@/components/Cx';
-import { Archive, BarChart3, Calendar, CheckCircle2, ChevronDown, ChevronRight, Download, FileText, Layers, MapPin, MessageCircle, Mic, Plus, Search, Trophy, Users, Eye, Clock, BookOpen } from 'lucide-react';
+import { Filter, MoreVertical, Archive, BarChart3, Calendar, CheckCircle2, ChevronDown, ChevronRight, Download, FileText, Layers, MapPin, MessageCircle, Mic, Plus, Search, Trophy, Users, Eye, Clock, BookOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { tx } from '@/lib/i18n/tr';
 
@@ -28,15 +27,13 @@ const STATUS: Record<string, { text: string; cls: string }> = {
 
 /** Everything a group has done on stage, kept for good, so feedback and instructions can guide the next event. */
 export default function PerformanceHistoryPage() {
-  const { byId, countries, cities, activeLeafGroups } = useGroupHierarchy();
+  const { byId, cities, activeLeafGroups } = useGroupHierarchy();
   const { allows } = useMyScope();
   const slots = useCollection<Slot>('eventSlots', [orderBy('startAt', 'desc'), fsLimit(500)], 'hist');
   const sels = useCollection<Sel>('performanceSelections', [fsLimit(1000)], 'hist-sel');
   const remarks = useCollection<Remark & { slotId: string }>('performanceRemarks', [orderBy('createdAt', 'desc'), fsLimit(1000)], 'hist-rem');
   const events = useCollection<EventRow>('events', [fsLimit(1000)], 'hist-ev');
-  const zones = useZones();
-  const [country, setCountry] = useState('');
-  const [zone, setZone] = useState('');
+  const [range, setRange] = useState('');
   const [city, setCity] = useState('');
   const [group, setGroup] = useState('');
   const [perf, setPerf] = useState('');
@@ -50,8 +47,9 @@ export default function PerformanceHistoryPage() {
   const router = useRouter();
 
   const titleOf = (id: string) => events?.find((e) => e.id === id)?.title ?? '—';
+  const inRange = (ms: number) => { if (!range) return true; const now = Date.now(); const y = new Date().getFullYear(); const yr = new Date(ms).getFullYear(); return range === '30' ? ms >= now - 30 * 864e5 : range === '90' ? ms >= now - 90 * 864e5 : range === 'year' ? yr === y : yr === y - 1; };
   const base = useMemo(() => (slots ?? []).filter((s) => allows(s)
-    && (!country || s.countryId === country) && (!zone || s.zoneId === zone) && (!city || s.cityId === city) && (!group || s.groupId === group)), [slots, allows, country, zone, city, group]);
+    && (!city || s.cityId === city) && (!group || s.groupId === group) && inRange(tsMs(s.startAt))), [slots, allows, city, group, range]); // eslint-disable-line react-hooks/exhaustive-deps
   const selOf = (id: string) => sels?.find((x) => x.id === id);
   const term = q.trim().toLowerCase();
   const rows = useMemo(() => base.filter((s) => (!perf || (s.performanceStatus ?? 'scheduled') === perf) && (!apr || (selOf(s.id)?.status ?? 'none') === apr)
@@ -62,8 +60,8 @@ export default function PerformanceHistoryPage() {
     return [...m.entries()];
   }, [rows]);
   const leaf = (activeLeafGroups ?? []).filter((g) => allows({ groupId: g.id, cityId: g.parentGroupId }));
-  const filtering = !!(country || zone || city || group || perf || apr || q);
-  const clear = () => { setCountry(''); setZone(''); setCity(''); setGroup(''); setPerf(''); setApr(''); setQ(''); };
+  const filtering = !!(range || city || group || perf || apr || q);
+  const clear = () => { setRange(''); setCity(''); setGroup(''); setPerf(''); setApr(''); setQ(''); };
   const nApproved = base.filter((s) => selOf(s.id)?.status === 'approved').length;
   const nFeedback = base.filter((s) => (remarks ?? []).some((r) => r.slotId === s.id)).length;
 
@@ -77,6 +75,13 @@ export default function PerformanceHistoryPage() {
   const locations = useMemo(() => { const m = new Map<string, number>(); base.forEach((s) => { const c = byId[s.cityId]?.name ?? '—'; m.set(c, (m.get(c) ?? 0) + 1); }); return [...m.entries()].sort((a, b) => b[1] - a[1]); }, [base, byId]);
   const top3 = [...groupStats].sort((a, b) => b.n - a.n).slice(0, 3);
   const matOf = (id: string) => { const sel = selOf(id); return sel?.items?.length ? sel.items.map((x) => x.title).join(', ') : '—'; };
+  function exportGroup(gid: string) {
+    const list = rows.filter((s) => s.groupId === gid);
+    const lines = [['Date', 'Event', 'Location', 'Material', 'Duration', 'Status', 'Approval'], ...list.map((s) => [formatInZone(tsMs(s.startAt), s.timeZone), titleOf(s.eventId), byId[s.cityId]?.name ?? '', matOf(s.id), formatDuration(s.allocatedSeconds), STATUS[s.performanceStatus ?? 'scheduled'].text, SELECTION_LABEL[selOf(s.id)?.status ?? 'none'].text])];
+    const csv = lines.map((r) => r.map((x) => `"${String(x).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a'); a.href = url; a.download = `performances-${(list[0]?.groupName ?? 'group').replace(/\s+/g, '-')}.csv`; a.click(); URL.revokeObjectURL(url);
+  }
   function exportCsv() {
     const lines = [['Date', 'Event', 'Group', 'Location', 'Material', 'Duration', 'Status', 'Approval'], ...rows.map((s) => [formatInZone(tsMs(s.startAt), s.timeZone), titleOf(s.eventId), s.groupName, byId[s.cityId]?.name ?? '', matOf(s.id), formatDuration(s.allocatedSeconds), STATUS[s.performanceStatus ?? 'scheduled'].text, SELECTION_LABEL[selOf(s.id)?.status ?? 'none'].text])];
     const csv = lines.map((r) => r.map((x) => `"${String(x).replace(/"/g, '""')}"`).join(',')).join('\n');
@@ -100,12 +105,11 @@ export default function PerformanceHistoryPage() {
 
       <section className="cx-filters ph-filters">
         <label className="cx-search"><Search size={18} /><input type="search" placeholder={tx("Search an event or a group")} value={q} onChange={(e) => setQ(e.target.value)} /></label>
-        <Dropdown label={tx("Country")} value={country} onChange={(v) => { setCountry(v); setZone(''); setCity(''); setGroup(''); }} allLabel={tx("All countries")} options={countries.map((c) => ({ value: c.id, label: c.name }))} className="loc-dd" />
-        <Dropdown label={tx("Zone")} value={zone} onChange={(v) => { setZone(v); setCity(''); setGroup(''); }} allLabel={tx("All zones")} options={(zones ?? []).filter((z) => !country || z.countryId === country).map((z) => ({ value: z.id, label: z.name }))} className="loc-dd" />
-        <Dropdown label={tx("City")} value={city} onChange={(v) => { setCity(v); setGroup(''); }} allLabel={tx("All cities")} options={cities.filter((c) => (!country || c.parentGroupId === country) && (!zone || c.zoneId === zone)).map((c) => ({ value: c.id, label: c.name }))} className="loc-dd" />
+        <Dropdown label={tx("Date range")} value={range} onChange={setRange} allLabel={tx("All dates")} options={[{ value: '30', label: tx("Last 30 days") }, { value: '90', label: tx("Last 90 days") }, { value: 'year', label: tx("This year") }, { value: 'last', label: tx("Last year") }]} className="loc-dd" />
+        <Dropdown label={tx("Location")} value={city} onChange={(v) => { setCity(v); setGroup(''); }} allLabel={tx("All locations")} options={cities.map((c) => ({ value: c.id, label: c.name }))} className="loc-dd" />
         <Dropdown label={tx("Group")} value={group} onChange={setGroup} allLabel={tx("All groups")} options={leaf.filter((g) => !city || g.parentGroupId === city).map((g) => ({ value: g.id, label: g.name }))} className="loc-dd" />
         <Dropdown label={tx("Status")} value={perf} onChange={setPerf} allLabel={tx("All statuses")} options={Object.entries(STATUS).map(([k, v]) => ({ value: k, label: tx(v.text) }))} className="loc-dd" />
-        <Dropdown label={tx("Approval")} value={apr} onChange={setApr} allLabel={tx("Any status")} options={['none', 'submitted', 'approved', 'rejected', 'needs_revision'].map((k) => ({ value: k, label: tx(SELECTION_LABEL[k].text) }))} className="loc-dd" />
+        <button type="button" className="cx-btn green ph-fbtn" onClick={() => document.getElementById('ph-groups')?.scrollIntoView({ behavior: 'smooth' })}><Filter size={16} />{tx("Filter")}</button>
         {filtering && <Clear onClick={clear} />}
       </section>
 
@@ -171,7 +175,7 @@ export default function PerformanceHistoryPage() {
                       <span className="ph-c ok"><CheckCircle2 size={18} /><b>{g.done}</b></span>
                       <span className="ph-c gold"><CheckCircle2 size={18} /><b>{g.appr}</b></span>
                       <span className="ph-c red"><MessageCircle size={18} /><b>{g.fb}</b></span>
-                      <span className="ph-ga"><span className="cx-btn sm"><FileText size={14} />{tx("View details")}</span></span>
+                      <span className="ph-ga"><span className="cx-btn sm"><FileText size={14} />{tx("View details")}</span><button type="button" className="cx-btn sm ph-kb" aria-label={tx("Export this group")} title={tx("Export this group")} onClick={(e) => { e.stopPropagation(); exportGroup(g.gid); }}><MoreVertical size={15} /></button></span>
                     </div>
                     {open && (
                       <div className="ph-in">

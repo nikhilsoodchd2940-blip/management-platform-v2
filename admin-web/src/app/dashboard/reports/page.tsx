@@ -10,7 +10,7 @@ import ManageToggle from '../../px/ManageToggle';
 import ReportsManage from './Manage';
 import AttendanceSummary from './AttendanceSummary';
 import { CxBanner } from '@/components/Cx';
-import { Calendar, CalendarCheck, Download } from 'lucide-react';
+import { Calendar, CalendarCheck, ChevronDown, Download } from 'lucide-react';
 import type { Bucket } from '@/lib/attendancePolicy';
 import { tx } from '@/lib/i18n/tr';
 
@@ -20,6 +20,7 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export default function AttendanceReportPage() {
   const [stamps, setStamps] = useState<number[]>([]);
   const [manageSignal, setManageSignal] = useState(0);
+  const [expOpen, setExpOpen] = useState(false);
   const [focus, setFocus] = useState<'' | Bucket>('');
   const events = useCount('events', [['status', '==', 'published']]);
   const [since] = useState(() => {
@@ -52,7 +53,8 @@ export default function AttendanceReportPage() {
       <div className="px px-index">
         <div className="zp cx-page at-page">
           <CxBanner icon={<CalendarCheck size={26} />} kicker={tx("Reports")} title={tx("Attendance Report")} sub={tx("Visual tracking of sessions, punctuality and absences by group, event and period.")}>
-            <button className="cx-btn ghost-light" type="button" onClick={() => window.print()}><Download size={16} />{tx("Export")}</button>
+            <div className="at-exp"><button className="cx-btn ghost-light" type="button" aria-haspopup="menu" aria-expanded={expOpen} onClick={() => setExpOpen(!expOpen)}><Download size={16} />{tx("Export")}<ChevronDown size={15} /></button>
+              {expOpen && <div className="at-expm" role="menu" onMouseLeave={() => setExpOpen(false)}><button type="button" role="menuitem" onClick={() => { setExpOpen(false); window.dispatchEvent(new Event('att-export-csv')); }}>{tx("Download CSV")}</button><button type="button" role="menuitem" onClick={() => { setExpOpen(false); window.print(); }}>{tx("Print or save as PDF")}</button></div>}</div>
             <button className="cx-btn gold" type="button" onClick={() => setManageSignal((n) => n + 1)}><Calendar size={16} />{tx("Attendance by Event")}</button>
           </CxBanner>
           <div id="att-summary"><AttendanceSummary focus={focus} onFocus={setFocus} extras={{ labels, values: perDay.map((d) => d.n), events, week, today }} /></div>

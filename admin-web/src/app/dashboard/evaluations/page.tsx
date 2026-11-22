@@ -3,7 +3,7 @@
 import '../../px/index.css';
 import { useMemo, useState } from 'react';
 import { orderBy, limit as fsLimit, where } from 'firebase/firestore';
-import { useCollection } from '@/lib/useCollection';
+import { useCollection, tsMs } from '@/lib/useCollection';
 import { useGroupHierarchy } from '@/lib/useGroupHierarchy';
 import { useGroupMembers } from '@/lib/useGroupMembers';
 import { fmt } from '@/lib/liveStats';
@@ -14,7 +14,7 @@ import Dropdown from '@/components/Dropdown';
 import { PersonLink } from '@/components/MemberProfile';
 import { Pill, Th, Clear, useSort } from '@/components/kit';
 import { CxBanner, CxBar, CxCard, CxDonut, CxInitials, CxLine, CxStats, CxTabs } from '@/components/Cx';
-import { Award, BarChart3, Calendar, CheckCircle2, ClipboardCheck, Clock, Headphones, Hourglass, Layers, Plus, Search, TrendingUp, Undo2, UserRound, Users } from 'lucide-react';
+import { Eye, MoreVertical, Award, BarChart3, Calendar, CheckCircle2, ClipboardCheck, Clock, Headphones, Hourglass, Layers, Plus, Search, TrendingUp, Undo2, UserRound, Users } from 'lucide-react';
 import { tx } from '@/lib/i18n/tr';
 
 type Stage = 'pending_head' | 'pending_central' | 'approved' | 'returned';
@@ -29,6 +29,7 @@ interface Evaluation {
   comment?: string;
   evaluatorName: string;
   stage: Stage;
+  updatedAt?: unknown;
   history: { action: string; actorName: string; comment?: string }[];
 }
 interface Track { title: string; category: string; fileUrl: string; linkedEventId?: string; durationSeconds?: number }
@@ -110,6 +111,7 @@ export default function EvaluationPage() {
     }
   }
 
+  const [evSel, setEvSel] = useState<string[]>([]);
   const [stageF, setStageF] = useState('');
   const [grpF, setGrpF] = useState('');
   const [q, setQ] = useState('');
@@ -141,6 +143,14 @@ export default function EvaluationPage() {
   const byMember = useMemo(() => aggregate((r) => r.memberId, (k) => rows.find((r) => r.memberId === k)?.memberName ?? k), [rows]); // eslint-disable-line react-hooks/exhaustive-deps
   const byGroupAgg = useMemo(() => aggregate((r) => r.groupId, (k) => byId[k]?.name ?? k), [rows, byId]); // eslint-disable-line react-hooks/exhaustive-deps
   const byZoneAgg = useMemo(() => aggregate((r) => { const g = byId[r.groupId]; const c = g?.parentGroupId ? byId[g.parentGroupId] : undefined; return c?.name ?? ''; }, (k) => k), [rows, byId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const prevPeriod = (() => { const [y, m] = period.split('-').map(Number); return periodType === 'monthly' && y && m ? (m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`) : ''; })();
+  const prevAtt = prevPeriod ? mean(rows.filter((x) => x.periodType === 'monthly' && x.period === prevPeriod), 'attendance') : null;
+  const curAtt = mean(current, 'attendance');
+  const attRate = curAtt === null ? null : Math.round((curAtt / 20) * 1000) / 10;
+  const attDelta = curAtt !== null && prevAtt !== null ? Math.round(((curAtt - prevAtt) / 20) * 1000) / 10 : null;
+  const allPrograms = useCollection<Program>('eventPrograms', [fsLimit(500)]);
+  const performedN = (allPrograms ?? []).filter((p) => p.status === 'performed').length;
+  const actRate = allPrograms && allPrograms.length ? Math.round((performedN / allPrograms.length) * 1000) / 10 : null;
   const grade = (v: number) => (v >= 16 ? tx("Excellent") : v >= 14 ? tx("Good") : v >= 10 ? tx("Fair") : tx("Needs work"));
   const rank = (list: { k: string; name: string; n: number; avg: number; att: number }[], att?: boolean) => (
     <ul className="ev-rank">{list.slice(0, 20).map((x, i) => (<li key={x.k}><b>{i + 1}</b><CxInitials name={x.name} /><span><strong>{x.name}</strong><small>{x.n} {tx("evaluations")}</small></span><CxBar pct={((att ? x.att : x.avg) / 20) * 100} tone="gold" thick /><em>{att ? x.att : x.avg} / 20</em></li>))}{list.length === 0 && <li className="ev-none">{tx("No evaluation yet.")}</li>}</ul>
@@ -200,8 +210,8 @@ export default function EvaluationPage() {
               </CxCard>
               <CxCard icon={<Calendar size={22} />} title={tx("Attendance & Activities Overview")}>
                 <div className="cx-two">
-                  <div className="ev-mini"><small>{tx("Attendance score")}</small><b>{mean(current, 'attendance') ?? '—'} / 20</b></div>
-                  <div className="ev-mini warm"><small>{tx("Discipline score")}</small><b>{mean(current, 'discipline') ?? '—'} / 20</b></div>
+                  <div className="ev-mini"><small><Users size={18} /> {tx("Attendance Rate")}</small><b>{attRate === null ? '—' : `${attRate}%`}{attDelta !== null && <em className={attDelta < 0 ? 'dn' : ''}>{attDelta < 0 ? '▼' : '▲'} {attDelta > 0 ? '+' : ''}{attDelta} pp</em>}</b></div>
+                  <div className="ev-mini warm"><small><Layers size={18} /> {tx("Activities Completion")}</small><b>{actRate === null ? '—' : `${actRate}%`}<em>{performedN} / {allPrograms?.length ?? 0}</em></b></div>
                 </div>
               </CxCard>
             </div>
@@ -222,19 +232,18 @@ export default function EvaluationPage() {
           </>}>
           <div className="cx-scroll">
             <table className="cx-table ev-table">
-              <thead><tr><Th k="member" sort={sort} toggle={toggle}>{tx("Member")}</Th><Th k="group" sort={sort} toggle={toggle}>{tx("Kurel")}</Th><Th k="period" sort={sort} toggle={toggle}>{tx("Period")}</Th><Th k="p" sort={sort} toggle={toggle} num>{tx("Pron.")}</Th><Th k="v" sort={sort} toggle={toggle} num>{tx("Voice")}</Th><Th k="d" sort={sort} toggle={toggle} num>{tx("Discipline")}</Th><Th k="a" sort={sort} toggle={toggle} num>{tx("Attendance")}</Th><Th k="avg" sort={sort} toggle={toggle} num>{tx("Score (/20)")}</Th><Th k="stage" sort={sort} toggle={toggle}>{tx("Status")}</Th><th /></tr></thead>
+              <thead><tr><th className="ck"><input type="checkbox" aria-label={tx("Select all")} checked={sorted.length > 0 && sorted.every((x) => evSel.includes(x.id))} onChange={() => setEvSel(sorted.every((x) => evSel.includes(x.id)) ? [] : sorted.map((x) => x.id))} /></th><Th k="member" sort={sort} toggle={toggle}>{tx("Member / Entity")}</Th><th>{tx("Type")}</th><Th k="group" sort={sort} toggle={toggle}>{tx("Group / Zone")}</Th><th>{tx("Evaluator")}</th><Th k="avg" sort={sort} toggle={toggle}>{tx("Score (/20)")}</Th><Th k="stage" sort={sort} toggle={toggle}>{tx("Status")}</Th><Th k="period" sort={sort} toggle={toggle}>{tx("Updated")}</Th><th>{tx("Actions")}</th></tr></thead>
               <tbody>
                 {sorted.map((r) => (
                   <tr key={r.id}>
-                    <td><span className="ev-who"><CxInitials name={r.memberName} size={34} /><span><PersonLink userId={r.memberId}><strong>{r.memberName}</strong></PersonLink><small>{tx("by")} {r.evaluatorName}</small></span></span></td>
+                    <td className="ck"><input type="checkbox" aria-label={`${tx("Select")} ${r.memberName}`} checked={evSel.includes(r.id)} onChange={() => setEvSel((x) => (x.includes(r.id) ? x.filter((id) => id !== r.id) : [...x, r.id]))} /></td>
+                    <td><span className="ev-who"><CxInitials name={r.memberName} size={34} /><span><PersonLink userId={r.memberId}><strong>{r.memberName}</strong></PersonLink><small>{r.period}</small></span></span></td>
+                    <td><span className="ev-type"><UserRound size={14} />{tx("Member")}</span></td>
                     <td><button type="button" className="kt-link" onClick={() => setGrpF(r.groupId)}>{byId[r.groupId]?.name ?? ''}</button></td>
-                    <td>{r.period}</td>
-                    <td className="num"><Pill tone={scoreTone(r.scores.pronunciation)}>{r.scores.pronunciation}</Pill></td>
-                    <td className="num"><Pill tone={scoreTone(r.scores.voice)}>{r.scores.voice}</Pill></td>
-                    <td className="num"><Pill tone={scoreTone(r.scores.discipline)}>{r.scores.discipline}</Pill></td>
-                    <td className="num"><Pill tone={scoreTone(r.scores.attendance)}>{r.scores.attendance}</Pill></td>
-                    <td className="num"><b>{r.average}</b></td>
+                    <td>{r.evaluatorName}</td>
+                    <td title={`${tx("Pron.")} ${r.scores.pronunciation} · ${tx("Voice")} ${r.scores.voice} · ${tx("Discipline")} ${r.scores.discipline} · ${tx("Attendance")} ${r.scores.attendance}`}><span className="ev-sc"><b>{r.average}</b><CxBar pct={(r.average / 20) * 100} tone={scoreTone(r.average) === 'red' ? 'red' : 'green'} /></span></td>
                     <td><button type="button" className="kt-link" onClick={() => setStage(r.stage.startsWith('pending') ? 'pending' : r.stage)}><Pill tone={stageTone(r.stage)}>{tx(STAGE[r.stage])}</Pill></button></td>
+                    <td>{tsMs(r.updatedAt) ? new Date(tsMs(r.updatedAt)).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</td>
                     <td className="num" style={{ whiteSpace: 'nowrap' }}>
                       {(r.stage === 'pending_head' || r.stage === 'pending_central') && (
                         <>
@@ -243,10 +252,12 @@ export default function EvaluationPage() {
                         </>
                       )}
                       {r.stage === 'returned' && <small>{r.history[r.history.length - 1]?.comment ?? ''}</small>}
+                      <PersonLink userId={r.memberId}><span className="cx-btn sm" title={tx("Open the profile")}><Eye size={15} /></span></PersonLink>{' '}
+                      <button type="button" className="cx-btn sm" title={tx("Show only this group")} onClick={() => setGrpF(r.groupId)}><MoreVertical size={15} /></button>
                     </td>
                   </tr>
                 ))}
-                {rowsRaw !== null && sorted.length === 0 && <tr><td colSpan={10} className="cx-empty">{rows.length === 0 ? tx("No evaluation yet. Use “New evaluation” to score a member.") : tx("No evaluation matches these filters.")}</td></tr>}
+                {rowsRaw !== null && sorted.length === 0 && <tr><td colSpan={9} className="cx-empty">{rows.length === 0 ? tx("No evaluation yet. Use “New evaluation” to score a member.") : tx("No evaluation matches these filters.")}</td></tr>}
               </tbody>
             </table>
           </div>

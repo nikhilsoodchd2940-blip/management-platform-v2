@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { BookOpen, CalendarClock, ChevronLeft, ChevronRight, Download, FileUp, Filter, GraduationCap, Pencil, PenLine, Plus, RotateCcw, Search, Trash2, X } from 'lucide-react';
+import { BookOpen, CalendarClock, ChevronLeft, ChevronRight, Download, FileUp, Filter, Pencil, PenLine, Plus, RotateCcw, Search, Trash2, X } from 'lucide-react';
 import { deleteEventBook, importEventBooks, listEventBooks, saveEventBook, type EventBookRow, type ImportBooksResult } from '@/lib/functions';
 import { useLevels } from '@/lib/useLevels';
 import BookSuggestions from '@/components/BookSuggestions';
@@ -11,7 +11,6 @@ import { parseCsv } from '@/lib/csv';
 import { downloadCsv } from '@/lib/download';
 import Dropdown from '@/components/Dropdown';
 import { useSort } from '@/components/kit';
-import { zonePal } from '@/lib/zoneColor';
 import { notify } from '@/lib/notify';
 import { tx, txf } from '@/lib/i18n/tr';
 
@@ -91,7 +90,6 @@ export default function EventBooksPage() {
   const artists = useMemo(() => Array.from(new Set(all.map((b) => b.artist).filter(Boolean))).sort(), [all]);
   const term = f.q.trim().toLowerCase();
   const shown = all.filter((b) => (!term || `${b.title} ${b.artist}`.toLowerCase().includes(term)) && (!f.level || b.levelId === (f.level === 'none' ? '' : f.level)) && (!f.artist || b.artist === f.artist) && (!f.dur || durKey(b.durationSeconds) === f.dur));
-  const levelCount = (id: string) => all.filter((b) => b.levelId === id).length;
   const totalSec = all.reduce((n, b) => n + b.durationSeconds, 0);
   const apply = (n: typeof d) => { setD(n); setF(n); setPage(1); };
   const clear = () => apply({ q: '', artist: '', level: '', dur: '' });
@@ -104,7 +102,6 @@ export default function EventBooksPage() {
   }
 
   const levelName = (b: EventBookRow) => (b.levelId ? levelById[b.levelId]?.name ?? '' : tx("Every level"));
-  const levelIx = (id: string) => Math.max(0, levels.findIndex((l) => l.id === id));
   const { sorted, sort, toggle, setSort } = useSort(shown, { title: (b) => b.title.toLowerCase(), artist: (b) => (b.artist || '~').toLowerCase(), level: (b) => levelName(b).toLowerCase(), duration: (b) => b.durationSeconds });
   const sortBy = (key: string, dir: 'asc' | 'desc') => setSort({ key, dir });
   const pages = Math.max(1, Math.ceil(sorted.length / PAGE));
@@ -113,7 +110,6 @@ export default function EventBooksPage() {
   const tiles = [
     { cls: 't1', icon: <BookOpen size={26} />, label: tx("Books"), value: all.length, on: !filtering && !sort, go: () => { clear(); setSort(null); } },
     { cls: 't2', icon: <PenLine size={26} />, label: tx("Artists"), value: artists.length, on: sort?.key === 'artist', go: () => sortBy('artist', 'asc') },
-    { cls: 't3', icon: <GraduationCap size={26} />, label: tx("Levels used"), value: new Set(all.map((b) => b.levelId).filter(Boolean)).size, on: sort?.key === 'level', go: () => sortBy('level', 'asc') },
     { cls: 't4', icon: <CalendarClock size={26} />, label: tx("In total"), value: hours(totalSec), on: sort?.key === 'duration', go: () => sortBy('duration', 'desc') },
   ];
   const head = (i: number, k: string, label: string, sortable = true) => {
@@ -132,7 +128,7 @@ export default function EventBooksPage() {
         <div className="eb2-ht">
           <span className="eb2-line" aria-hidden />
           <h1>{tx("Event books")}</h1>
-          <p>{tx("The books groups can choose for their performances at an event. Each has an artist, a duration and a level.")}</p>
+          <p>{tx("This section stores the books chosen for performances, including the book title, the interpreting artist, and the performance duration.")}</p>
         </div>
         {!readOnly && (
           <div className="eb2-acts">
@@ -161,7 +157,6 @@ export default function EventBooksPage() {
           <form className="eb2-bar" onSubmit={(e) => { e.preventDefault(); apply(d); }}>
             <label className="eb2-search"><Search size={18} aria-hidden /><input type="search" placeholder={tx("Search for a book or an artist…")} value={d.q} onChange={(e) => setD({ ...d, q: e.target.value })} aria-label={tx("Search")} />{d.q && <button type="button" aria-label={tx("Clear")} onClick={() => { const n = { ...d, q: '' }; setD(n); if (f.q) apply(n); }}><X size={16} /></button>}</label>
             <Dropdown label={tx("Artist")} value={d.artist} onChange={(v) => setD({ ...d, artist: v })} allLabel={`${tx("All artists")} · ${artists.length}`} options={artists.map((a) => ({ value: a, label: a }))} className="eb2-dd" />
-            <Dropdown label={tx("Level")} value={d.level} onChange={(v) => setD({ ...d, level: v })} allLabel={`${tx("All levels")} · ${all.length}`} options={[...levels.map((l) => ({ value: l.id, label: `${l.name} · ${levelCount(l.id)}` })), ...(all.some((b) => !b.levelId) ? [{ value: 'none', label: `${tx("Every level")} · ${all.filter((b) => !b.levelId).length}` }] : [])]} className="eb2-dd" />
             <Dropdown label={tx("Duration")} value={d.dur} onChange={(v) => setD({ ...d, dur: v })} allLabel={tx("All durations")} options={DUR.map((x) => ({ value: x.v, label: tx(x.label) }))} className="eb2-dd" />
             <button type="submit" className={`eb2-apply${dirty ? ' dirty' : ''}`}><Filter size={16} /> {tx("Apply filters")}</button>
             <button type="button" className="eb2-clear" onClick={clear} disabled={!filtering && !dirty}><RotateCcw size={15} /> {tx("Clear all")}</button>
@@ -180,15 +175,13 @@ export default function EventBooksPage() {
               {shown.length === 0 ? <p className="kt-empty">{tx("No book matches.")}</p> : (
                 <div className="eb2-scroll">
                   <table className="eb2-table">
-                    <thead><tr>{head(0, 'title', tx("Book title"))}{head(1, 'artist', tx("Artist"))}{head(2, 'level', tx("Level"))}{head(3, 'duration', tx("Duration"))}{!readOnly && head(4, 'actions', tx("Actions"), false)}</tr></thead>
+                    <thead><tr>{head(0, 'title', tx("Book title"))}{head(1, 'artist', tx("Artist"))}{head(3, 'duration', tx("Duration"))}{!readOnly && head(4, 'actions', tx("Actions"), false)}</tr></thead>
                     <tbody>
                       {rows.map((b) => {
-                        const pal = zonePal(b.levelId ? levelIx(b.levelId) : 1);
                         return (
                           <tr key={b.id}>
                             <td className="c0"><button type="button" className="eb2-cell" disabled={readOnly} title={readOnly ? undefined : tx("Edit the book")} onClick={() => setEdit(b)}><i aria-hidden><BookOpen size={17} /></i><b>{b.title}</b>{b.version && <em className="eb-ver">{b.version}</em>}</button></td>
                             <td className="c1">{b.artist ? <button type="button" className="eb2-cell link" title={tx("Show only this artist")} onClick={() => apply({ ...d, artist: b.artist })}>{b.artist}</button> : <em className="eb-none">{tx("No artist")}</em>}</td>
-                            <td className="c2"><button type="button" className="eb2-cell" title={tx("Show only this level")} onClick={() => apply({ ...d, level: b.levelId || 'none' })}><span className="eb2-lv" style={{ ['--lc' as string]: b.levelId ? pal[0] : '#e8832f', ['--lb' as string]: b.levelId ? pal[1] : '#fdebd9' } as React.CSSProperties}>{levelName(b)}</span></button></td>
                             <td className="c3"><button type="button" className="eb2-cell" title={tx("Show books of this length")} onClick={() => apply({ ...d, dur: durKey(b.durationSeconds) })}><span className="eb-dur">{clock(b.durationSeconds)}</span></button></td>
                             {!readOnly && <td className="c4 num"><span className="eb-btns"><button type="button" className="ed" aria-label={`Edit ${b.title}`} onClick={() => setEdit(b)}><Pencil size={15} /></button><button type="button" aria-label={`Remove ${b.title}`} className="del" onClick={() => void remove(b)}><Trash2 size={15} /></button></span></td>}
                           </tr>

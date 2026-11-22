@@ -9,6 +9,7 @@ import FormDialog from '@/components/FormDialog';
 import ImpactPanel from './ImpactPanel';
 import HistoryList from './HistoryList';
 import { notify } from '@/lib/notify';
+import { Pause, Play, Square } from 'lucide-react';
 import TimingAnalysis from './TimingAnalysis';
 import LiveSections from './LiveSections';
 import { tx, dateLocale } from '@/lib/i18n/tr';
@@ -543,13 +544,13 @@ export function RunBar({ run, slots, now, can, busy, onAction }: { run: RunState
   const tone = ended ? 'ended' : paused ? 'paused' : before ? 'wait' : 'live';
   return (
     <div className={`lb-run ${tone}`}>
-      <div className="lb-run-state"><i aria-hidden /><b>{tx("Event:")} {label}</b>{paused && <span>{tx("The clock is stopped. Nothing starts by itself.")}</span>}{ended && <span>{tx("Nothing starts by itself. You can still correct the times.")}</span>}</div>
+      <div className="lb-run-state"><i aria-hidden>{tone === 'live' ? <Play size={12} /> : null}</i><b>{tx("Event:")} {label}</b>{paused && <span>{tx("The clock is stopped. Nothing starts by itself.")}</span>}{ended && <span>{tx("Nothing starts by itself. You can still correct the times.")}</span>}</div>
       {can('status') && (
         <div className="lb-actions">
           {(notPressed || ended) && <button type="button" className="btn btn-primary" disabled={busy === 'run'} onClick={() => onAction('start')}>{ended ? tx("Reopen the event") : tx("Start the event now")}</button>}
           {paused && <button type="button" className="btn btn-primary" disabled={busy === 'run'} onClick={() => onAction('resume')}>{tx("Resume")}</button>}
-          {!paused && !ended && !before && <button type="button" className="btn btn-secondary" disabled={busy === 'run'} onClick={() => onAction('pause')}>{tx("Pause")}</button>}
-          {!ended && <button type="button" className="btn btn-secondary danger" disabled={busy === 'run'} onClick={() => onAction('end')}>{tx("End the event")}</button>}
+          {!paused && !ended && !before && <button type="button" className="btn btn-secondary" disabled={busy === 'run'} onClick={() => onAction('pause')}><Pause size={15} aria-hidden />{tx("Pause")}</button>}
+          {!ended && <button type="button" className="btn btn-secondary danger" disabled={busy === 'run'} onClick={() => onAction('end')}><Square size={14} aria-hidden />{tx("End the event")}</button>}
         </div>
       )}
     </div>

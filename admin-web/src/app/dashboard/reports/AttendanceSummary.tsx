@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { limit as fsLimit, orderBy, Timestamp } from 'firebase/firestore';
 import { useCollection, tsMs } from '@/lib/useCollection';
 import { useZones } from '@/lib/useZones';
@@ -15,7 +15,7 @@ import Dropdown from '@/components/Dropdown';
 import { PersonLink } from '@/components/MemberProfile';
 import { Pill, Clear, DateField, useSort } from '@/components/kit';
 import { CxCard, CxStats, CxTabs, CxDonut, CxLine, CxBar, CxInitials, CxPill } from '@/components/Cx';
-import { CheckCircle2, Clock, Eye, ListChecks, MapPin, BarChart3, Calendar, Users, Mail, XCircle, Target, ArrowUpRight } from 'lucide-react';
+import { CheckCircle2, Clock, Eye, LogIn, MoreVertical, Search, ListChecks, MapPin, BarChart3, Calendar, Users, XCircle, Target, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { tx } from '@/lib/i18n/tr';
 
@@ -36,6 +36,7 @@ export default function AttendanceSummary({ focus = '', onFocus, extras }: { foc
   const [eventId, setEventId] = useState('');
   const [date, setDate] = useState('');
   const [kind, setKind] = useState('');
+  const [q, setQ] = useState('');
   const [tab, setTab] = useState<'session' | 'group' | 'location' | 'stats' | 'published'>('session');
   const [page, setPage] = useState(1);
   const [order, setOrder] = useState<'new' | 'old' | 'rate'>('new');
@@ -56,9 +57,10 @@ export default function AttendanceSummary({ focus = '', onFocus, extras }: { foc
       .filter((s) => !city || s.geos.some((g) => g.cityId === city))
       .filter((s) => !group || s.e.subGroupIds.includes(group))
       .filter((s) => !date || dayKeyInZone(s.startMs, s.geos[0]?.tz ?? 'UTC') === date)
-      .filter((s) => !eventId || s.id === eventId);
+      .filter((s) => !eventId || s.id === eventId)
+      .filter((s) => { const t = q.trim().toLowerCase(); return !t || s.e.title.toLowerCase().includes(t) || s.geos.some((g) => (byId[g.groupId]?.name ?? '').toLowerCase().includes(t) || g.cityName.toLowerCase().includes(t)); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [events, byId, kind, country, zone, city, group, date, eventId, allows]);
+  }, [events, byId, kind, country, zone, city, group, date, eventId, allows, q]);
 
   const shown = list.slice(0, 60);
   const att = useEventAttendance(useMemo(() => shown.map((s) => s.id), [shown]));
@@ -72,8 +74,8 @@ export default function AttendanceSummary({ focus = '', onFocus, extras }: { foc
   const rowsX = shown.map((s) => ({ ...s, sum: summarize(bucketsOf(s.id)), city: Array.from(new Set(s.geos.map((g) => g.cityName))).join(', ') }));
   const filteredRows = focus ? rowsX.filter((r) => r.sum[focus] > 0) : rowsX;
   const { sorted } = useSort(filteredRows, { title: (r) => r.e.title.toLowerCase(), type: (r) => r.e.kind ?? 'event', city: (r) => r.city.toLowerCase(), time: (r) => r.startMs, present: (r) => r.sum.present, late: (r) => r.sum.late, leave: (r) => r.sum.leave, absent: (r) => r.sum.absent }, { key: 'time', dir: 'desc' });
-  const filtering = !!(country || zone || city || group || eventId || date || kind || focus);
-  const clear = () => { setCountry(''); setZone(''); setCity(''); setGroup(''); setEventId(''); setDate(''); setKind(''); onFocus?.(''); };
+  const filtering = !!(country || zone || city || group || eventId || date || kind || focus || q);
+  const clear = () => { setCountry(''); setZone(''); setCity(''); setGroup(''); setEventId(''); setDate(''); setKind(''); setQ(''); onFocus?.(''); };
   const setF = (b: Bucket) => onFocus?.(focus === b ? '' : b);
 
   const pct = (n: number, d: number) => (d ? Math.round((n / d) * 1000) / 10 : 0);
@@ -93,6 +95,16 @@ export default function AttendanceSummary({ focus = '', onFocus, extras }: { foc
     rowsX.forEach((r) => { const c = m.get(r.city) ?? { name: r.city, present: 0, expected: 0, n: 0 }; c.present += r.sum.present; c.expected += r.sum.expected; c.n++; m.set(r.city, c); });
     return [...m.values()].sort((a, b) => b.n - a.n);
   }, [rowsX]);
+  useEffect(() => {
+    const h = () => {
+      const lines = [['Session', 'Type', 'Location', 'Date', 'Expected', 'Present', 'Late', 'Leave', 'Absent', 'Rate %'], ...ordered.map((x) => [x.e.title, x.e.kind ?? 'event', x.city, formatInZone(x.startMs, x.geos[0]?.tz ?? 'UTC'), x.sum.expected, x.sum.present, x.sum.late, x.sum.leave, x.sum.absent, rate(x)])];
+      const csv = lines.map((l) => l.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      const a = document.createElement('a'); a.href = url; a.download = 'attendance-sessions.csv'; a.click(); URL.revokeObjectURL(url);
+    };
+    window.addEventListener('att-export-csv', h);
+    return () => window.removeEventListener('att-export-csv', h);
+  }); // eslint-disable-line react-hooks/exhaustive-deps
   const full = rowsX.filter((r) => r.sum.expected > 0 && r.sum.present === r.sum.expected).length;
   const overall = pct(total.present, total.expected);
   const dash = (v: number | string) => (att.loading ? '—' : v);
@@ -102,11 +114,12 @@ export default function AttendanceSummary({ focus = '', onFocus, extras }: { foc
       <CxStats items={[
         { label: tx("Present"), value: dash(`${total.present} / ${total.expected}`), badge: att.loading ? undefined : `${pct(total.present, total.expected)}%`, icon: <CheckCircle2 size={24} />, tone: 'green', onClick: () => setF('present') },
         { label: tx("Late"), value: dash(total.late), badge: att.loading ? undefined : `${pct(total.late, total.expected)}%`, icon: <Clock size={24} />, tone: 'amber', onClick: () => setF('late') },
-        { label: tx("Excused Absences"), value: dash(`${total.leave} / ${total.expected}`), badge: att.loading ? undefined : `${pct(total.leave, total.expected)}%`, icon: <Mail size={24} />, tone: 'blue', onClick: () => setF('leave') },
+        { label: tx("Excused Absences"), value: dash(`${total.leave} / ${total.expected}`), badge: att.loading ? undefined : `${pct(total.leave, total.expected)}%`, icon: <LogIn size={24} />, tone: 'blue', onClick: () => setF('leave') },
         { label: tx("Unexcused Absences"), value: dash(`${total.absent} / ${total.expected}`), badge: att.loading ? undefined : `${pct(total.absent, total.expected)}%`, icon: <XCircle size={24} />, tone: 'red', onClick: () => setF('absent') },
       ]} />
 
       <section className="cx-filters at-filters">
+        <label className="cx-search"><Search size={16} aria-hidden /><input type="search" placeholder={tx("Search session, event or group…")} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} /></label>
         <Dropdown label={tx("Country")} value={country} onChange={(v) => { setCountry(v); setZone(''); setCity(''); setGroup(''); setEventId(''); }} allLabel={tx("All countries")} options={countries.map((c) => ({ value: c.id, label: c.name }))} className="loc-dd" />
         <Dropdown label={tx("Zone")} value={zone} onChange={(v) => { setZone(v); setCity(''); setGroup(''); setEventId(''); }} allLabel={tx("All zones")} options={(zones ?? []).filter((z) => !country || z.countryId === country).map((z) => ({ value: z.id, label: z.name }))} className="loc-dd" />
         <Dropdown label={tx("City")} value={city} onChange={(v) => { setCity(v); setGroup(''); setEventId(''); }} allLabel={tx("All cities")} options={cities.filter((c) => (!country || c.parentGroupId === country) && (!zone || c.zoneId === zone)).map((c) => ({ value: c.id, label: c.name }))} className="loc-dd" />
@@ -166,7 +179,7 @@ export default function AttendanceSummary({ focus = '', onFocus, extras }: { foc
             <>
               <div className="cx-scroll">
                 <table className="cx-table at-table">
-                  <thead><tr><th>{tx("Session")}</th><th>{tx("Type")}</th><th>{tx("Location")}</th><th>{tx("Date & time")}</th><th>{tx("Present")}</th><th>{tx("Late")}</th><th>{tx("Leave")}</th><th>{tx("Absent")}</th><th>{tx("Rate")}</th><th /></tr></thead>
+                  <thead><tr className="at-h1"><th rowSpan={2}>{tx("Session")}</th><th rowSpan={2}>{tx("Type")}</th><th rowSpan={2}>{tx("Location")}</th><th rowSpan={2}>{tx("Date & time")}</th><th colSpan={4} className="at-grp">{tx("Attendance")}</th><th rowSpan={2}>{tx("Rate")}</th><th rowSpan={2}>{tx("Actions")}</th></tr><tr className="at-h2"><th>{tx("Present")}</th><th>{tx("Late")}</th><th>{tx("Leave")}</th><th>{tx("Absent")}</th></tr></thead>
                   <tbody>
                     {pageRows.map((s) => {
                       const r = rate(s);
@@ -181,7 +194,7 @@ export default function AttendanceSummary({ focus = '', onFocus, extras }: { foc
                           <td><span className="at-cell blue">{dash(`${s.sum.leave}/${s.sum.expected}`)}</span></td>
                           <td><span className="at-cell red">{dash(`${s.sum.absent}/${s.sum.expected}`)}</span></td>
                           <td><CxPill tone={r >= 70 ? 'green' : r >= 30 ? 'amber' : 'red'}>{att.loading ? '—' : `${r}%`}</CxPill></td>
-                          <td><button type="button" className="cx-btn sm" title={tx("Members")} onClick={() => { setEventId(s.id); }}><Eye size={15} /></button></td>
+                          <td className="at-acts"><button type="button" className="cx-btn sm" title={tx("Members")} onClick={() => { setEventId(s.id); }}><Eye size={15} /></button><Link className="cx-btn sm at-kb" href={`/dashboard/events/${s.id}`} title={tx("Open the event plan")}><MoreVertical size={15} /></Link></td>
                         </tr>
                       );
                     })}

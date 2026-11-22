@@ -25,7 +25,7 @@ import AllKurels from './AllKurels';
 import { HubOverview, HubSection, HUB_TABS, useKurelHub, type HubTab } from './KurelHub';
 import CreateKurel from './CreateKurel';
 import { CxHead } from '@/components/Cx';
-import { ChevronLeft, ChevronRight, Globe2, Layers, Search, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Filter, Globe2, Layers, MoreVertical, Search, Users } from 'lucide-react';
 import { tx } from '@/lib/i18n/tr';
 
 interface Counts {
@@ -301,7 +301,7 @@ export default function KurelsPage() {
 
           <section className="card filters">
             <input type="search" placeholder={tx("Search a group, city or country…")} value={search} onChange={(e) => setSearch(e.target.value)} />
-            <Dropdown label={tx("Types")} value={kind} onChange={setKind} allLabel="All kurels" options={[{ value: 'special', label: tx("★ Special kurels") }, { value: 'regular', label: tx("Regular kurels") }]} />
+            <Dropdown label={tx("Types")} value={kind} onChange={setKind} allLabel="All kurels" options={[{ value: 'special', label: tx("★ Special groups") }, { value: 'regular', label: tx("Regular groups") }]} />
             <Dropdown label={tx("Country")} value={country} onChange={(v) => { setCountry(v); setZone(''); setCity(''); }} allLabel="All countries" options={countries.map((c) => ({ value: c.id, label: c.name }))} />
             <Dropdown label={tx("Zone")} value={zone} onChange={(v) => { setZone(v); setCity(''); }} allLabel="All zones" options={(zones ?? []).filter((z) => !country || z.countryId === country).map((z) => ({ value: z.id, label: z.name }))} />
             <Dropdown label={tx("City")} value={city} onChange={setCity} allLabel="All cities" options={cities.filter((c) => (!country || c.parentGroupId === country) && (!zone || c.zoneId === zone)).map((c) => ({ value: c.id, label: c.name }))} />
@@ -314,6 +314,7 @@ export default function KurelsPage() {
             <section className="card panel" id="kurel-directory">
               <div className="panel-head">
                 <div><h2>{tx("Group Directory")}</h2><p>{rows.length} {tx("of")} {activeLeafGroups.length} {tx("groups · select one to open it")}</p></div>
+                <button type="button" className="gd2-kb" aria-label={tx("Export the status")} title={tx("Export the status")} onClick={exportStatus}><MoreVertical size={18} /></button>
               </div>
               <div className="gd-chips">
                 {([['', tx("All groups"), activeLeafGroups.length, ''], ['full', tx("At capacity"), full, 'red'], ['normal', tx("Available"), activeLeafGroups.filter((g) => capState(g) === 'normal').length, 'green'], ['warning', tx("Nearly full"), activeLeafGroups.filter((g) => capState(g) === 'warning').length, 'amber']] as const).map(([k, l, n, tone]) => (
@@ -323,6 +324,7 @@ export default function KurelsPage() {
               <div className="gd2-tools">
                 <label className="gd2-s"><Search size={16} aria-hidden /><input type="search" placeholder={tx("Search a group…")} value={dirQ} onChange={(e) => { setDirQ(e.target.value); setDirPage(1); }} aria-label={tx("Search")} /></label>
                 <Dropdown label={tx("Sort")} value={dirSort} onChange={(v) => { setDirSort((v || 'az') as typeof dirSort); setDirPage(1); }} allLabel={tx("Name (A–Z)")} options={[{ value: 'za', label: tx("Name (Z–A)") }, { value: 'members', label: tx("Most members") }, { value: 'fullest', label: tx("Fullest first") }]} className="gd2-dd" />
+                <button type="button" className="gd2-f" aria-label={tx("Filters")} title={tx("Filters")} onClick={() => document.querySelector('.card.filters')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}><Filter size={18} /></button>
               </div>
               <div className="gd2-h"><span>{tx("Group")}</span><span>{tx("Members")}</span><span>{tx("Structure")}</span><span>{tx("Status")}</span><span /></div>
               <div className="kurel-scroll"><div className="kurel-list">
@@ -357,7 +359,7 @@ export default function KurelsPage() {
                   <div className="detail-hero kd-slim">
                     <span className="kd-ico" style={palette(selected.name)}>{code(selected.name)}</span>
                     <div className="detail-title kd-title">
-                      <h2>{selected.name}{selected.special && <span className="star" title={tx("Special kurel")}> ★</span>}</h2>
+                      <h2>{selected.name}{selected.special && <span className="star" title={tx("Special group")}> ★</span>}</h2>
                       <div className="kd-eyebrow"><i className="kd-lv">{levelById[selected.levelId ?? ''] ? levelById[selected.levelId as string].name : tx("No level")}</i><i className="kd-kind">{selected.special ? tx("★ Special kurel") : tx("Kurel")}</i><span className="kd-hint">{[selLoc.city?.name, selLoc.country?.name].filter(Boolean).join(' · ')}</span></div>
                     </div>
                     <div className="actions">
@@ -447,7 +449,7 @@ export default function KurelsPage() {
                       <div className="operation"><span>{tx("Substitutes")}</span><strong>{selCounts?.substitutes ?? 0} / 5</strong><small>{tx("Seats beyond the regular headcount")}</small></div>
                     </div>
                     <div className="delegation">
-                      <div><strong>{tx("Special kurel")}</strong><br /><span>{tx("A special kurel depends directly on the national direction; members must belong to a local kurel with good attendance.")}</span></div>
+                      <div><strong>{tx("Special group")}</strong><br /><span>{tx("A special kurel depends directly on the national direction; members must belong to a local kurel with good attendance.")}</span></div>
                       <button type="button" className="secondary" onClick={() => setGroupSpecial({ groupId: selected.id, special: !selected.special }).then(() => notify(selected.special ? 'Kurel is now a regular kurel' : 'Kurel marked as special', 'success')).catch((e: Error) => notify(e.message, 'error'))}>{selected.special ? tx("Make it a regular kurel") : tx("Mark as special")}</button>
                     </div>
                     </div>)}

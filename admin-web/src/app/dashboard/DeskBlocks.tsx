@@ -2,6 +2,7 @@
 
 import { useMemo, type ReactNode } from 'react';
 import Link from 'next/link';
+import { ArrowRight, Bell, CalendarDays, CheckCircle2, ChevronRight, FileText, FolderOpen, Gavel, Scale, Upload, Users, Vote } from 'lucide-react';
 import { where } from 'firebase/firestore';
 import { useCollection, tsMs } from '@/lib/useCollection';
 import { useCount } from '@/lib/liveStats';
@@ -108,7 +109,7 @@ const money = (c: number) => formatMoney(c, undefined, 'en-US');
 const Big = ({ children }: { children: ReactNode }) => <p className="event-desk-big">{children}</p>;
 
 /* ---------- Disciplinary council ---------- */
-const CASE_LABEL: Record<string, string> = { open: 'Open', hearing_requested: 'Hearing requested', vote_required: 'Vote required', escalated: 'Escalated' };
+const CASE_LABEL: Record<string, string> = { open: 'Open', hearing_requested: 'Hearing Requested', vote_required: 'Vote Required', escalated: 'Escalated' };
 export function DisciplinaryDesk({ now }: { now: number }) {
   const { byId } = useGroupHierarchy();
   const cases = useCollection<{ memberName: string; groupId: string; reason: string; status: string; openedAt?: unknown }>('disciplinaryCases', []);
@@ -118,24 +119,58 @@ export function DisciplinaryDesk({ now }: { now: number }) {
     return { open, hearings: open.filter((c) => c.status === 'hearing_requested'), voting: open.filter((c) => c.status === 'vote_required'), escalated: open.filter((c) => c.status === 'escalated'), resolved: all.filter((c) => c.status === 'resolved').length };
   }, [cases]);
   const first = d.open[0];
+  const agoLong = (ms: number) => { const n = Math.max(0, Math.round((now - ms) / day)); return n === 0 ? tx("today") : `${n} ${n === 1 ? tx("day") : tx("days")} ${tx("ago")}`; };
+  const label = (st: string) => tx(CASE_LABEL[st] ?? st);
+  const href = '/dashboard/disciplinary#cases';
+  const tiles = [
+    { cls: 'g', icon: <FolderOpen size={26} />, n: d.open.length, t: tx("Open Cases"), h: tx("Not closed yet") },
+    { cls: 'b', icon: <Users size={26} />, n: d.hearings.length, t: tx("Hearings Requested"), h: tx("Members asking to be heard") },
+    { cls: 'a', icon: <Vote size={26} />, n: d.voting.length, t: tx("Waiting for a Vote"), h: tx("Council votes needed") },
+    { cls: 'p', icon: <Upload size={26} />, n: d.escalated.length, t: tx("Escalated"), h: tx("Sent to the national direction") },
+    { cls: 'r', icon: <CheckCircle2 size={26} />, n: d.resolved, t: tx("Resolved"), h: tx("Closed cases") },
+  ];
   return (
-    <Desk title={tx("Disciplinary council")} desc="Cases that wait for a hearing, a vote or a decision" href="/dashboard/disciplinary" loading={cases === null}
-      tiles={[
-        { label: tx("Open cases"), value: d.open.length, hint: tx("not closed yet"), href: '/dashboard/disciplinary#cases', hot: d.open.length > 0 },
-        { label: tx("Hearings requested"), value: d.hearings.length, hint: tx("members asking to be heard"), href: '/dashboard/disciplinary#cases', hot: d.hearings.length > 0 },
-        { label: tx("Waiting for a vote"), value: d.voting.length, hint: tx("council votes needed"), href: '/dashboard/disciplinary#cases', hot: d.voting.length > 0 },
-        { label: tx("Escalated"), value: d.escalated.length, hint: tx("sent to the national direction"), href: '/dashboard/disciplinary#cases', hot: d.escalated.length > 0 },
-        { label: tx("Resolved"), value: d.resolved, hint: tx("closed cases"), href: '/dashboard/disciplinary#cases' },
-      ]}
-      leftTitle="Latest case"
-      left={first ? (<><Big>{first.memberName}</Big><p>{byId[first.groupId]?.name ?? tx("A kurel")} · <strong>{CASE_LABEL[first.status] ?? first.status}</strong></p><p>{first.reason || tx("No reason written")}</p><p>{tx("Opened")} {ago(tsMs(first.openedAt), now)}</p></>) : <p className="event-desk-empty">{tx("No open case. Nothing is waiting for the council.")}</p>}
-      rightTitle="Needs your attention"
-      rows={d.open.slice(0, 5).map((c) => ({ pill: CASE_LABEL[c.status] ?? c.status, tone: c.status === 'escalated' || c.status === 'vote_required' ? 'bad' as const : 'warn' as const, text: <><strong>{c.memberName}</strong> {tx("of")} {byId[c.groupId]?.name ?? tx("a kurel")}{tx(", opened")} {ago(tsMs(c.openedAt), now)}</> }))}
-      empty={tx("Every case is closed.")} />
+    <section className="dc2">
+      <header className="dc2-h">
+        <i aria-hidden><Scale size={30} /></i>
+        <div><h2>{tx("Disciplinary Council")}</h2><p>{tx("Cases that wait for a hearing, a vote or a decision")}</p></div>
+        <Link href="/dashboard/disciplinary" className="dc2-open">{tx("Open Disciplinary Council")} <ArrowRight size={17} aria-hidden /></Link>
+      </header>
+      <div className="dc2-tiles">
+        {tiles.map((t) => (
+          <Link key={t.t} href={href} className={`dc2-tile ${t.cls}`}>
+            <i aria-hidden>{t.icon}</i>
+            <span><strong>{cases === null ? '—' : t.n}</strong><b>{t.t}</b><small>{t.h}</small></span>
+          </Link>
+        ))}
+      </div>
+      <div className="dc2-cols">
+        <article className="dc2-box">
+          <h3><FileText size={22} aria-hidden />{tx("Latest Case")}</h3>
+          <div className="dc2-body">
+            {first ? (<>
+              <h4>{first.memberName}</h4>
+              <p><Users size={18} aria-hidden /> <span>{byId[first.groupId]?.name ?? tx("A kurel")}</span> <u>·</u> <em className="dc2-pill">{label(first.status)}</em></p>
+              <p><Gavel size={18} aria-hidden /> <span>{first.reason || tx("No reason written")}</span></p>
+              <p><CalendarDays size={18} aria-hidden /> <span>{tx("Opened")} {agoLong(tsMs(first.openedAt))}</span></p>
+              <Link href={href} className="dc2-case">{tx("Open Case")} <ArrowRight size={17} aria-hidden /></Link>
+            </>) : <p className="dc2-empty">{cases === null ? tx("Loading…") : tx("No open case. Nothing is waiting for the council.")}</p>}
+          </div>
+        </article>
+        <article className="dc2-box">
+          <h3><Bell size={22} aria-hidden />{tx("Needs Your Attention")}</h3>
+          <ul className="dc2-rows">
+            {d.open.slice(0, 5).map((c, i) => (
+              <li key={i}><Link href={href}><em className={`dc2-pill ${c.status === 'vote_required' || c.status === 'escalated' ? 'red' : ''}`}>{label(c.status)}</em><span><b>{c.memberName}</b> {tx("of")} {byId[c.groupId]?.name ?? tx("a kurel")}, {tx("opened")} {agoLong(tsMs(c.openedAt))}</span><ChevronRight size={18} aria-hidden /></Link></li>
+            ))}
+            {cases !== null && d.open.length === 0 && <li className="dc2-empty">{tx("Every case is closed.")}</li>}
+          </ul>
+        </article>
+      </div>
+    </section>
   );
 }
 
-/* ---------- Finance ---------- */
 export function FinanceDesk() {
   const { byId } = useGroupHierarchy();
   const programs = useCollection<{ name: string; goalAmountCents: number; status: string }>('financialPrograms', []);
