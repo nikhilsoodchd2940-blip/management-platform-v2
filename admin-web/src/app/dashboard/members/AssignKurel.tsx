@@ -9,6 +9,7 @@ import Dropdown from '@/components/Dropdown';
 import { DEFAULT_MEMBER_PHOTO } from '@/components/MemberPicker';
 import { notify } from '@/lib/notify';
 import { tx } from '@/lib/i18n/tr';
+import { Search, MapPin, BookOpen, Check, X, LayoutGrid, List, UserRound, Users } from 'lucide-react';
 
 export interface AssignMember { id: string; name: string; memberId: string; photoUrl: string; kurels: string[] }
 
@@ -28,6 +29,7 @@ export default function AssignKurel({ members, headcount, initialId, onClose }: 
   const [busy, setBusy] = useState('');
   const [added, setAdded] = useState<Record<string, string[]>>({});
   const [mounted, setMounted] = useState(false);
+  const [gview, setGview] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => setMounted(true), []);
   useEffect(() => {
@@ -80,35 +82,36 @@ export default function AssignKurel({ members, headcount, initialId, onClose }: 
   if (!mounted) return null;
   return createPortal(
     <div className="manage-page akp" role="dialog" aria-modal="true" aria-label={tx("Assign to a Group")}>
-      <div className="manage-page-bar"><strong>{tx("Assign to a Group")}</strong><button type="button" className="manage-close" onClick={onClose}>{tx("Close")}</button></div>
+      <div className="manage-page-bar ak-bar2"><span className="ak-logo"><img alt="" src="/hizbut-logo.png" /></span><i className="ak-vl" /><span className="ak-ttl"><small>{tx("Direction du Conservatoire")}</small><strong>{tx("Assign to a Group")}</strong></span><em>{tx("Member management — add, import, edit, assign")}</em><button type="button" className="manage-close" onClick={onClose}><X size={16} /> {tx("Close")}</button></div>
       <div className="manage-page-body ak-body">
         <section className="ak-col">
           <header><span className="ak-n">1</span><div><b>{tx("Choose the member")}</b><small>{tx("Search by name or member ID")}</small></div></header>
           <div className="ak-mf">
-            <input type="search" placeholder={tx("Search a member")} value={mq} onChange={(e) => setMq(e.target.value)} autoFocus={!pick} />
+            <label className="ak-srch"><Search size={18} /><input type="search" placeholder={tx("Search a member…")} value={mq} onChange={(e) => setMq(e.target.value)} autoFocus={!pick} /></label>
             <Dropdown label={tx("Country")} value={mCountry} onChange={(v) => { setMCountry(v); setMCity(''); }} allLabel={tx("All countries")} options={countries.map((c) => ({ value: c.id, label: c.name }))} />
             <Dropdown label={tx("City")} value={mCity} onChange={setMCity} allLabel={tx("All cities")} options={cities.filter((c) => !mCountry || c.parentGroupId === mCountry).map((c) => ({ value: c.id, label: c.name }))} />
             <Dropdown label={tx("Group")} value={mGroup} onChange={setMGroup} allLabel={tx("All groups")} options={activeLeafGroups.map((g) => ({ value: g.id, label: g.name }))} />
-            <Dropdown label={tx("Groups per member")} value={mState} onChange={setMState} allLabel={tx("Any number of kurels")} options={[{ value: 'none', label: tx("Without a kurel") }, { value: 'one', label: tx("1 kurel") }, { value: 'multi', label: tx("2 kurels or more") }]} />
+            <Dropdown label={tx("Groups per member")} value={mState} onChange={setMState} allLabel={tx("Any number")} options={[{ value: 'none', label: tx("Without a group") }, { value: 'one', label: tx("1 group") }, { value: 'multi', label: tx("2 groups or more") }]} />
           </div>
           <div className="ak-list">
             {people.map((m) => (
               <button type="button" key={m.id} className={`ak-person${pick === m.id ? ' on' : ''}`} onClick={() => setPick(m.id)}>
                 <img alt="" src={m.photoUrl || DEFAULT_MEMBER_PHOTO} />
-                <span><b>{m.name || tx("(no name)")}</b><small>{m.memberId || '—'} · {m.kurels.length + (added[m.id]?.length ?? 0)} {tx("group")}</small></span>
+                <span><b>{m.name || tx("(no name)")}</b><small>{m.memberId || '—'} · {m.kurels.length + (added[m.id]?.length ?? 0)} {(m.kurels.length + (added[m.id]?.length ?? 0)) === 1 ? tx("group") : tx("groups")}</small></span>{pick === m.id && <i className="ak-tick"><Check size={16} /></i>}
               </button>
             ))}
             {people.length === 0 && <div className="mm-empty">{tx("No member matches.")}</div>}
           </div>
         </section>
         <section className="ak-col wide">
-          <header><span className="ak-n">2</span><div><b>{person ? `${tx("Assign")} ${person.name}` : tx("Choose the group")}</b><small>{person ? tx("Select the group you want to assign this member to.") : tx("Pick a member first")}</small></div></header>
+          <header><span className="ak-n">2</span><div><b>{person ? `${tx("Assign")} ${person.name}` : tx("Choose the group")}</b><small>{person ? tx("Select the group you want to assign this member to.") : tx("Pick a member first")}</small></div>{person && <div className="ak-sel"><UserRound size={22} /><span><small>{tx("Selected member:")}</small><b>{person.name || tx("(no name)")}</b></span><em>{person.memberId || '—'} · {mine.size} {mine.size === 1 ? tx("group") : tx("groups")}</em></div>}</header>
           <div className="ak-filters">
-            <input type="search" placeholder={tx("Search a group or city")} value={kq} onChange={(e) => setKq(e.target.value)} />
+            <label className="ak-srch"><Search size={18} /><input type="search" placeholder={tx("Search a group or city…")} value={kq} onChange={(e) => setKq(e.target.value)} /></label>
             <Dropdown label={tx("Country")} value={country} onChange={(v) => { setCountry(v); setCity(''); }} allLabel={tx("All countries")} options={countries.map((c) => ({ value: c.id, label: c.name }))} />
             <Dropdown label={tx("City")} value={city} onChange={setCity} allLabel={tx("All cities")} options={cities.filter((c) => !country || c.parentGroupId === country).map((c) => ({ value: c.id, label: c.name }))} />
+            <span className="ak-vt"><button type="button" className={gview === 'grid' ? 'on' : ''} aria-label={tx("Grid")} onClick={() => setGview('grid')}><LayoutGrid size={18} /></button><button type="button" className={gview === 'list' ? 'on' : ''} aria-label={tx("List")} onClick={() => setGview('list')}><List size={18} /></button></span>
           </div>
-          <div className="ak-grid">
+          <div className={`ak-grid${gview === 'list' ? ' list' : ''}`}>
             {kurels.map((g) => {
               const n = headcount[g.id] ?? 0;
               const cap = g.capacity;
@@ -117,11 +120,11 @@ export default function AssignKurel({ members, headcount, initialId, onClose }: 
               const has = mine.has(g.id);
               return (
                 <article key={g.id} className={`ak-k${has ? ' has' : ''}${full ? ' full' : ''}`}>
-                  <div><b>{g.name}</b><small>{[loc.city?.name, loc.country?.name].filter(Boolean).join(' · ') || '—'}</small></div>
-                  <div className="ak-meta"><span>{g.levelId && levelById[g.levelId] ? levelById[g.levelId].name : tx("No level")}</span><span>{n}{cap !== undefined ? ` / ${cap}` : ''} {tx("seats")}</span></div>
+                  <div className="ak-kt"><i className="ak-bk"><BookOpen size={17} /></i><span><b>{g.name}</b><small><MapPin size={13} />{[loc.city?.name, loc.country?.name].filter(Boolean).join(' · ') || '—'}</small></span></div>
+                  <div className="ak-meta"><span>{g.levelId && levelById[g.levelId] ? levelById[g.levelId].name : tx("No level")}</span><span className={full ? "red" : ""}>{n}{cap !== undefined ? ` / ${cap}` : ""} {tx("seats")}</span></div>
                   {cap !== undefined && <div className="ak-bar"><i style={{ width: `${Math.min(100, Math.round((n / Math.max(1, cap)) * 100))}%` }} /></div>}
                   <button type="button" className={has ? 'ok' : 'go'} disabled={!person || has || full || busy === g.id} onClick={() => void assign(g.id)}>
-                    {has ? `✓ ${tx("Assigned")}` : full ? tx("Full") : busy === g.id ? '…' : tx("Assign")}
+                    {has ? <><Check size={16} /> {tx("Assigned")}</> : full ? <><Users size={16} /> {tx("Full")}</> : busy === g.id ? '…' : tx("Assign")}
                   </button>
                 </article>
               );

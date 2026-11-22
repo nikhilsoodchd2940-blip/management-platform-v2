@@ -22,7 +22,7 @@ import { notify } from '@/lib/notify';
 import { useGroupHierarchy } from '@/lib/useGroupHierarchy';
 import ManageToggle from '../../px/ManageToggle';
 import FinanceManage from './Manage';
-import { BarChart3, CheckCircle2, Clock, Coins, FileText, Info, Layers, Plus } from 'lucide-react';
+import { BarChart3, CheckCircle2, Clock, Coins, FileText, Globe2, Info, Layers, MapPin, Plus, UserRound, Users } from 'lucide-react';
 import { tx, dateLocale } from '@/lib/i18n/tr';
 
 type Method = 'wave' | 'orange_money' | 'cash';
@@ -70,6 +70,7 @@ export default function FinancePage() {
   const [status, setStatus] = useState('');
   const [stripeTotal, setStripeTotal] = useState<number | null>(null);
   const [manageSignal, setManageSignal] = useState(0);
+  const [heroTab, setHeroTab] = useState<'overview' | 'details'>('overview');
   const [dialog, setDialog] = useState<null | 'allocate' | 'shares' | 'create' | 'edit'>(null);
   const [flowStep, setFlowStep] = useState<0 | 1 | 2 | 3 | 4>(0);
   const [groupBy, setGroupBy] = useState<'kurel' | 'city' | 'country'>('kurel');
@@ -229,7 +230,7 @@ export default function FinancePage() {
           <section className="fn-plist">
             <header>
               <div className="fn-seg" role="tablist" aria-label={tx("Programs")}>
-                {([['open', 'Open'], ['closed', 'Closed'], ['all', 'All']] as const).map(([k, l]) => (
+                {([['all', 'All'], ['open', 'Open'], ['closed', 'Closed']] as const).map(([k, l]) => (
                   <button type="button" role="tab" aria-selected={progFilter === k} key={k} className={progFilter === k ? 'on' : ''} onClick={() => { setProgFilter(k); setSelectedId(''); }}>{l}<b>{k === 'all' ? programs.length : programs.filter((p) => p.status === k).length}</b></button>
                 ))}
               </div>
@@ -272,6 +273,8 @@ export default function FinancePage() {
                   <span className={program.status === 'open' ? 'ok' : ''}>{program.status === 'open' ? tx("Collection open") : tx("Closed")}</span>
                 </div>
               </div>
+              <div className="fn-htabs" role="tablist"><button type="button" role="tab" aria-selected={heroTab === 'overview'} className={heroTab === 'overview' ? 'on' : ''} onClick={() => setHeroTab('overview')}>{tx("Overview")}</button><button type="button" role="tab" aria-selected={heroTab === 'details'} className={heroTab === 'details' ? 'on' : ''} onClick={() => setHeroTab('details')}>{tx("Program details")}</button></div>
+              {heroTab === 'overview' && (<>
               <div className="fn-metrics">
                 <div className="g"><small>{tx("Total to collect")}</small><strong>{money(program.goalAmountCents)}</strong><span>{pp.hasPhases ? `${pp.rows.length} phases planned` : tx("One collection")}</span></div>
                 <div className="b"><small>{tx("Collected")}</small><strong>{money(paid)}</strong><span>{rate}{tx("% of the total")}</span></div>
@@ -279,6 +282,9 @@ export default function FinancePage() {
                 <div className="p"><small>{tx("Contributors")}</small><strong>{fmt(new Set(validated.map((c) => c.userName)).size)}</strong><span>{tx("validated payments")}</span></div>
                 <div className="r"><small>{tx("Proofs to check")}</small><strong>{fmt(review.length)}</strong><span>{money(reviewAmount)} {tx("waiting")}</span></div>
               </div>
+              <div className="fn-hprog"><b>{tx("Collection progress")}</b><span>{money(paid)} {tx("of")} {money(program.goalAmountCents)} ({rate}%)</span><u><s style={{ width: `${Math.min(100, rate)}%` }} /></u></div>
+              </>)}
+              {heroTab === 'details' && (
               <div className="fn-phases">
                 <div className="fn-phases-head"><b>{pp.hasPhases ? tx("Phases") : tx("Collection")}</b><button type="button" onClick={() => setDialog('edit')}>{pp.hasPhases ? tx("Edit the phases") : tx("Split into phases")}</button></div>
                 <div className="fn-phase-row">
@@ -293,6 +299,7 @@ export default function FinancePage() {
                   {pp.hasPhases && pp.unplanned > 0 && <div className="fn-phase later"><span><b>{tx("Not planned yet")}</b><em>{tx("Later")}</em></span><strong>{money(pp.unplanned)} <small>{tx("left for next phases")}</small></strong><span className="fn-bar"><i style={{ width: '0%' }} /></span></div>}
                 </div>
               </div>
+              )}
             </section>
           )}
 
@@ -313,6 +320,10 @@ export default function FinancePage() {
                 { n: 4, title: tx("Paid so far"), big: money(paid), line: `${new Set(validated.map((c) => c.userName)).size} member${new Set(validated.map((c) => c.userName)).size === 1 ? ' has' : 's have'} paid, with the proof checked.`, bar: pct(paid, goal), note: `${pct(paid, goal)}% of the total · ${money(remaining)} still to collect` },
               ];
               return (
+                <div className="fn-flowrow">
+                <aside className="fn-levels"><b>{tx("Assignment levels")}</b>
+                  {[[Globe2, tx("Country")], [MapPin, tx("City")], [Layers, tx("Zone")], [Users, tx("Group / Kurel")], [UserRound, tx("Individual member")]].map(([Ic, l]) => { const I = Ic as typeof Globe2; return <span key={l as string}><I size={15} />{l as string}</span>; })}
+                </aside>
                 <div className="fn-steps">
                   {steps.map((st) => (
                     <button type="button" key={st.n} onClick={() => setFlowStep(st.n as 1 | 2 | 3 | 4)} title={tx("Click to see the details")}>
@@ -323,6 +334,7 @@ export default function FinancePage() {
                       <small>{st.note}</small>
                     </button>
                   ))}
+                </div>
                 </div>
               );
             })()}

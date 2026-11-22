@@ -8,6 +8,7 @@ import { notify } from '@/lib/notify';
 import DatePicker from '@/components/DatePicker';
 import KurelPicker from './KurelPicker';
 import { tx } from '@/lib/i18n/tr';
+import { Tag, Coins, Layers, Users, UserPlus, Wallet, CalendarDays, CheckCircle2, Sprout, Info, X } from 'lucide-react';
 
 type Rec = 'none' | 'monthly' | 'quarterly' | 'yearly';
 const REC_LABEL: Record<Rec, string> = { none: 'One time', monthly: 'Every month', quarterly: 'Every quarter', yearly: 'Every year' };
@@ -83,17 +84,17 @@ export default function ProgramForm({ onClose, edit }: { onClose: () => void; ed
   return createPortal(
     <div className="fx-backdrop" role="presentation" style={{ zIndex: 2000 }} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="fm" role="dialog" aria-modal="true" aria-label={edit ? tx("Edit the program") : tx("Create a program")}>
-        <header><div><h2>{edit ? `Edit · ${edit.name}` : tx("Create a program")}</h2><p>{edit ? tx("Change the details, the dates and the phases.") : tx("Fill the sections from top to bottom.")}</p></div><button type="button" aria-label={tx("Close")} onClick={onClose}>×</button></header>
+        <header><span className="fm-logo"><Sprout size={30} /></span><span className="fm-vl" /><div><h2>{edit ? `Edit · ${edit.name}` : tx("Create a program")}</h2><p>{edit ? tx("Change the details, the dates and the phases.") : tx("Fill the sections from top to bottom.")}</p></div><button type="button" aria-label={tx("Close")} onClick={onClose}><X size={20} /></button></header>
         <div className="fm-body">
           <section className="fm-sec">
-            <h3><i>1</i>{tx("What is it for")}<small>{tx("Give your program a clear name and description.")}</small></h3>
-            <label className="fm-f">{tx("Name")}<input value={name} onChange={(e) => setName(e.target.value)} /></label>
-            <label className="fm-f">{tx("Description")}<textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
+            <h3><em className="fm-ic"><Tag size={22} /></em><i>1</i>{tx("What is it for")}<small>{tx("Give your program a clear name and description.")}</small></h3>
+            <label className="fm-f fm-row">{tx("Name")} <b className="req">*</b><input value={name} placeholder={tx("Enter program name")} onChange={(e) => setName(e.target.value)} /></label>
+            <label className="fm-f fm-row">{tx("Description")}<textarea rows={3} value={description} placeholder={tx("Describe the purpose of this program (optional)")} onChange={(e) => setDescription(e.target.value)} /></label>
           </section>
           <section className="fm-sec">
-            <h3><i>2</i>{tx("Amount and dates")}<small>{tx("Define the amount to collect, currency, recurrence, and period.")}</small></h3>
+            <h3><em className="fm-ic"><Coins size={22} /></em><i>2</i>{tx("Amount and dates")}<small>{tx("Define the amount to collect, currency, recurrence, and period.")}</small></h3>
             <div className="fm-goal">
-              <label className="fm-f">{tx("Total to collect")}<input type="number" min={0} step="any" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder={tx("Add amount")} /></label>
+              <label className="fm-f fm-amt">{tx("Total to collect")} <b className="req">*</b><span className="fm-inw"><Coins size={18} /><input type="number" min={0} step="any" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder={tx("Enter amount")} /></span></label>
               <div className="fm-cur" role="group" aria-label={tx("Currency")}>{CURRENCIES.map((c) => <button type="button" key={c} className={c === currency ? 'on' : ''} disabled={!!edit && c !== currency} onClick={() => setCurrency(c)}>{c}</button>)}</div>
             </div>
             {edit ? (
@@ -102,11 +103,11 @@ export default function ProgramForm({ onClose, edit }: { onClose: () => void; ed
               <div className="fm-conv">
                 <span>{tx("Convert")}</span>
                 {CURRENCIES.filter((c) => c !== currency).map((c) => <button type="button" key={c} onClick={() => switchTo(c)}>{tx("to")} {c}{goalNum > 0 ? ` · ${new Intl.NumberFormat('en-US', { maximumFractionDigits: c === 'XOF' ? 0 : 2 }).format(convert(goalNum, currency, c, rates))}` : ''}</button>)}
-                <em>{rates.live ? tx("Live rates") : tx("Approximate rates")}{tx(": 1 USD =")} {rates.xofPerUsd.toFixed(1)} {tx("XOF · 1 EUR =")} {rates.xofPerEur.toFixed(1)} XOF</em>
+                <em><Info size={15} /> {rates.live ? tx("Live rates") : tx("Approximate rates")}{tx(": 1 USD =")} {rates.xofPerUsd.toFixed(1)} {tx("XOF · 1 EUR =")} {rates.xofPerEur.toFixed(1)} XOF</em>
               </div>
             )}
             <div className="fm-sw-h">{tx("Repeats")}</div>
-            <div className="fm-cur wide" role="group" aria-label={tx("Repeats")}>{(Object.keys(REC_LABEL) as Rec[]).map((r) => <button type="button" key={r} className={r === rec ? 'on' : ''} onClick={() => { setRec(r); if (r !== 'none' && !start) setStart(isoOf(Date.now())); }}>{REC_LABEL[r]}</button>)}</div>
+            <div className="fm-cur wide" role="group" aria-label={tx("Repeats")}>{(Object.keys(REC_LABEL) as Rec[]).map((r) => <button type="button" key={r} className={r === rec ? 'on' : ''} onClick={() => { setRec(r); if (r !== 'none' && !start) setStart(isoOf(Date.now())); }}><CalendarDays size={18} />{tx(REC_LABEL[r])}</button>)}</div>
             {rec !== 'none' && <p className="fm-note">{tx("Each period is its own program with the same total. When one ends, the next is created automatically and Top Management is told. The previous targets are copied as drafts to adjust and share.")}</p>}
             <div className="fm-2">
               <DatePicker label={rec !== 'none' ? tx("First period starts") : tx("Start date")} value={start} onChange={(v) => { setStart(v); if (end && v && end < v) setEnd(''); }} max={rec === 'none' ? end || undefined : undefined} />
@@ -114,8 +115,8 @@ export default function ProgramForm({ onClose, edit }: { onClose: () => void; ed
             </div>
           </section>
           <section className="fm-sec">
-            <h3><i>3</i>{tx("Phases")}</h3>
-            <label className="fm-sw"><input type="checkbox" checked={usePhases} onChange={(e) => setUsePhases(e.target.checked)} /><span><b>{tx("Collect in phases")}</b><small>{usePhases ? tx("Each phase has its own amount and dates. Phase 2 opens once phase 1 is complete or its end date has passed.") : `No phase: the whole ${goalNum > 0 ? fmt(goalNum) : 'amount'} is collected at once.`}</small></span></label>
+            <h3><em className="fm-ic"><Layers size={22} /></em><i>3</i>{tx("Phases")}</h3>
+            <label className="fm-sw"><input className="fm-tg" type="checkbox" checked={usePhases} onChange={(e) => setUsePhases(e.target.checked)} /><span><b>{tx("Collect in phases")}</b><small>{usePhases ? tx("Each phase has its own amount and dates. Phase 2 opens once phase 1 is complete or its end date has passed.") : `No phase: the whole ${goalNum > 0 ? fmt(goalNum) : 'amount'} is collected at once.`}</small></span></label>
             {usePhases && (
               <div className="fm-phs">
                 {phases.map((p, i) => (
@@ -138,22 +139,22 @@ export default function ProgramForm({ onClose, edit }: { onClose: () => void; ed
           </section>
           {!edit && (
             <section className="fm-sec">
-              <h3><i>4</i>{tx("Who gets it")}<small>{tx("Choose the recipients of this program.")}</small></h3>
-              <div className="fm-cur wide" role="group" aria-label={tx("Who gets it")}><button type="button" className={all ? 'on' : ''} onClick={() => setAll(true)}>{tx("All kurels")}</button><button type="button" className={!all ? 'on' : ''} onClick={() => setAll(false)}>{tx("Choose kurels")}</button></div>
-              {all ? <p className="fm-note">{tx("Every kurel takes part. Later you can allocate the envelope by country, city, local zone or kurel.")}</p> : <KurelPicker selected={kurels} onChange={setKurels} height={200} />}
+              <h3><em className="fm-ic"><Users size={22} /></em><i>4</i>{tx("Who gets it")}<small>{tx("Choose the recipients of this program.")}</small></h3>
+              <div className="fm-cur wide" role="group" aria-label={tx("Who gets it")}><button type="button" className={all ? 'on' : ''} onClick={() => setAll(true)}><Users size={18} />{tx("All groups")}</button><button type="button" className={!all ? 'on' : ''} onClick={() => setAll(false)}><UserPlus size={18} />{tx("Choose groups")}</button></div>
+              {all ? <p className="fm-note"><Info size={15} /> {tx("The envelope can later be allocated by country, city, local zone, or group.")}</p> : <KurelPicker selected={kurels} onChange={setKurels} height={200} />}
             </section>
           )}
           <section className="fm-psum">
-            <div><b>{tx("Program summary")}</b><small>{tx("Here's what will be created.")}</small></div>
+            <span className="fm-wl"><Wallet size={24} /></span><div><b>{tx("Program summary")}</b><small>{tx("Here's what will be created.")}</small></div>
             <dl>
               <div><dt>{tx("Program name")}</dt><dd>{name.trim() || '—'}</dd></div>
               <div><dt>{tx("Total amount")}</dt><dd>{goalNum > 0 ? fmt(goalNum) : '—'}</dd></div>
               <div><dt>{tx("Recurrence")}</dt><dd>{tx(REC_LABEL[rec])}</dd></div>
-              <div><dt>{tx("Recipients")}</dt><dd>{all ? tx("All kurels") : `${kurels.length} ${tx("kurels")}`}</dd></div>
+              <div><dt>{tx("Recipients")}</dt><dd>{all ? tx("All groups") : `${kurels.length} ${tx("groups")}`}</dd></div>
             </dl>
           </section>
         </div>
-        <footer>{err && <span className="fm-err">{err}</span>}<button type="button" className="fm-ghost" onClick={onClose}>{tx("Cancel")}</button><button type="button" className="fm-go" disabled={busy} onClick={save}>{busy ? tx("Saving…") : edit ? tx("Save the changes") : tx("Create the program")}</button></footer>
+        <footer>{err && <span className="fm-err">{err}</span>}<button type="button" className="fm-ghost" onClick={onClose}>{tx("Cancel")}</button><button type="button" className="fm-go" disabled={busy} onClick={save}>{busy ? tx("Saving…") : edit ? tx("Save the changes") : <><CheckCircle2 size={20} /> {tx("Create the program")}</>}</button></footer>
       </div>
     </div>,
     document.body
