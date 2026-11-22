@@ -22,7 +22,7 @@ import { notify } from '@/lib/notify';
 import { useGroupHierarchy } from '@/lib/useGroupHierarchy';
 import ManageToggle from '../../px/ManageToggle';
 import FinanceManage from './Manage';
-import { BarChart3, CheckCircle2, Clock, Coins, FileText, Globe2, Info, Layers, MapPin, Plus, UserRound, Users } from 'lucide-react';
+import { BarChart3, CheckCircle2, Clock, Coins, FileText, Globe2, Info, Layers, MapPin, Plus, UserRound, Users, CalendarDays, CreditCard, PieChart, Network, Download, ChevronRight, FileCheck } from 'lucide-react';
 import { tx, dateLocale } from '@/lib/i18n/tr';
 
 type Method = 'wave' | 'orange_money' | 'cash';
@@ -247,7 +247,7 @@ export default function FinancePage() {
                     <span className="fn-prog-top"><strong>{p.name}</strong><em>{p.status === 'open' ? tx("Open") : tx("Closed")}</em></span>
                     <span className="fn-prog-amt"><b>{fmtMoney(paidP, p.currency)}</b> {tx("of")} {fmtMoney(p.goalAmountCents, p.currency)}<i>{r}%</i></span>
                     <span className="fn-bar"><i style={{ width: `${Math.min(100, r)}%` }} /></span>
-                    <small>{ph.hasPhases ? `Phase ${ph.current.i} of ${ph.rows.length}` : tx("Single collection")} · {p.scopeAllGroups ? tx("All kurels") : `${p.groupIds.length} kurels`}{p.endMs ? ` · until ${frDate(p.endMs)}` : ''}</small>
+                    <small><CalendarDays size={14} />{ph.hasPhases ? `Phase ${ph.current.i} of ${ph.rows.length} · ` : ''}{p.scopeAllGroups ? tx("All groups") : `${p.groupIds.length} kurels`}{p.endMs ? ` · until ${frDate(p.endMs)}` : ''}</small>
                   </button>
                 );
               })}
@@ -257,18 +257,18 @@ export default function FinancePage() {
           {program && (
             <section className="fn-hero">
               <div className="fn-hero-top">
-                <div>
+                <div className="fn-hero-id"><i className="fn-hero-ic"><FileText size={30} /></i><div>
                   <h2>{program.name}{program.recurrence && <em className="cm-rec">{{ monthly: 'Monthly', quarterly: 'Quarterly', yearly: 'Yearly' }[program.recurrence]} {tx("· period")} {program.cycle ?? 1}</em>}</h2>
                   <p>{program.description || tx("No description yet.")}</p>
                   <div className="fn-hero-act">
                     <button type="button" onClick={() => setDialog('edit')}>{tx("Edit the program")}</button>
                     <button type="button" onClick={() => updateFinancialProgram({ programId: program.id, status: program.status === 'open' ? 'closed' : 'open' }).then(() => notify(program.status === 'open' ? 'Program closed' : 'Program reopened', 'success')).catch((e: Error) => notify(e.message, 'error'))}>{program.status === 'open' ? tx("Close the program") : tx("Reopen the program")}</button>
                   </div>
-                </div>
+                </div></div>
                 <div className="fn-chips">
                   <span>{program.currency}</span>
-                  <span>{program.scopeAllGroups ? tx("All kurels") : `${program.groupIds.length} kurels`}</span>
-                  <span>{program.startMs ? `From ${dateOf(program.startMs)}` : tx("No start date")}</span>
+                  <span><Users size={14} />{program.scopeAllGroups ? tx("All groups") : `${program.groupIds.length} kurels`}</span>
+                  <span><CalendarDays size={14} />{program.startMs ? `From ${dateOf(program.startMs)}` : tx("No start date")}</span>
                   <span>{program.endMs ? `Until ${dateOf(program.endMs)}${daysLeft !== null ? (daysLeft >= 0 ? ` · ${daysLeft} day${daysLeft === 1 ? '' : 's'} left` : ' · ended') : ''}` : tx("No end date")}</span>
                   <span className={program.status === 'open' ? 'ok' : ''}>{program.status === 'open' ? tx("Collection open") : tx("Closed")}</span>
                 </div>
@@ -276,11 +276,11 @@ export default function FinancePage() {
               <div className="fn-htabs" role="tablist"><button type="button" role="tab" aria-selected={heroTab === 'overview'} className={heroTab === 'overview' ? 'on' : ''} onClick={() => setHeroTab('overview')}>{tx("Overview")}</button><button type="button" role="tab" aria-selected={heroTab === 'details'} className={heroTab === 'details' ? 'on' : ''} onClick={() => setHeroTab('details')}>{tx("Program details")}</button></div>
               {heroTab === 'overview' && (<>
               <div className="fn-metrics">
-                <div className="g"><small>{tx("Total to collect")}</small><strong>{money(program.goalAmountCents)}</strong><span>{pp.hasPhases ? `${pp.rows.length} phases planned` : tx("One collection")}</span></div>
-                <div className="b"><small>{tx("Collected")}</small><strong>{money(paid)}</strong><span>{rate}{tx("% of the total")}</span></div>
-                <div className="y"><small>{pp.hasPhases ? `${pp.current.name} still to collect` : tx("Still to collect")}</small><strong>{money(pp.hasPhases ? Math.max(0, pp.current.target - pp.current.got) : remaining)}</strong><span>{pp.hasPhases ? (pp.current.endMs ? `until ${dateOf(pp.current.endMs)}` : tx("no end date")) : `${money(allocated)} allocated`}</span></div>
-                <div className="p"><small>{tx("Contributors")}</small><strong>{fmt(new Set(validated.map((c) => c.userName)).size)}</strong><span>{tx("validated payments")}</span></div>
-                <div className="r"><small>{tx("Proofs to check")}</small><strong>{fmt(review.length)}</strong><span>{money(reviewAmount)} {tx("waiting")}</span></div>
+                <div className="g"><i className="fn-mi"><Coins size={26} /></i><small>{tx("Total to collect")}</small><strong>{money(program.goalAmountCents)}</strong><span>{pp.hasPhases ? `${pp.rows.length} phases planned` : tx("One collection")}</span></div>
+                <div className="b"><i className="fn-mi"><CheckCircle2 size={26} /></i><small>{tx("Collected")}</small><strong>{money(paid)}</strong><span>{rate}{tx("% of the total")}</span></div>
+                <div className="y"><i className="fn-mi"><Clock size={26} /></i><small>{pp.hasPhases ? `${pp.current.name} still to collect` : tx("Still to collect")}</small><strong>{money(pp.hasPhases ? Math.max(0, pp.current.target - pp.current.got) : remaining)}</strong><span>{pp.hasPhases ? (pp.current.endMs ? `until ${dateOf(pp.current.endMs)}` : tx("no end date")) : `${money(allocated)} allocated`}</span></div>
+                <div className="p"><i className="fn-mi"><Users size={26} /></i><small>{tx("Contributors")}</small><strong>{fmt(new Set(validated.map((c) => c.userName)).size)}</strong><span>{tx("validated payments")}</span></div>
+                <div className="r"><i className="fn-mi"><FileText size={26} /></i><small>{tx("Proofs to check")}</small><strong>{fmt(review.length)}</strong><span>{money(reviewAmount)} {tx("waiting")}</span></div>
               </div>
               <div className="fn-hprog"><b>{tx("Collection progress")}</b><span>{money(paid)} {tx("of")} {money(program.goalAmountCents)} ({rate}%)</span><u><s style={{ width: `${Math.min(100, rate)}%` }} /></u></div>
               </>)}
@@ -305,7 +305,7 @@ export default function FinancePage() {
 
           <section className="fn-flow">
             <header>
-              <div><h2>{tx("Where the money stands")}</h2><p>{tx("Figures for the program chosen here. Change the program to see its own figures.")}</p></div>
+              <div className="fn-flow-t"><i><Network size={24} /></i><div><h2>{tx("Money flow & assignment overview")}</h2><p>{tx("How the amount is allocated, assigned, and paid within this program.")}</p></div></div>
               <div className="fn-flow-act"><Dropdown label={tx("Program")} value={program?.id ?? ''} onChange={(v) => { setSelectedId(v); const pr = programs.find((x) => x.id === v); if (pr && progFilter !== 'all' && pr.status !== progFilter) setProgFilter('all'); }} options={programs.map((x) => ({ value: x.id, label: x.recurrence ? `${x.name} · period ${x.cycle ?? 1}` : x.name, hint: x.status === 'open' ? tx("Open") : tx("Closed") }))} /><button type="button" disabled={!program || program.status !== 'open'} onClick={() => setDialog('allocate')}>{tx("Allocate the envelope")}</button><button type="button" disabled={!program || program.status !== 'open'} onClick={() => setDialog('shares')}>{tx("Split among members")}</button></div>
             </header>
             {program && <div className="fn-flow-prog"><span>{tx("Program")}</span><b>{program.name}</b><em className={program.status === 'open' ? 'ok' : ''}>{program.status === 'open' ? tx("Open") : tx("Closed")}</em><small>{program.currency}</small></div>}
@@ -314,10 +314,10 @@ export default function FinancePage() {
               const pct = (n: number, d: number) => (d > 0 ? Math.min(100, Math.round((n / d) * 1000) / 10) : 0);
               const members = (sharesRaw ?? []).length;
               const steps = [
-                { n: 1, title: tx("Total to collect"), big: money(goal), line: `The amount to collect. ${program.scopeAllGroups ? 'All kurels take part' : `${program.groupIds.length} kurel${program.groupIds.length === 1 ? ' takes' : 's take'} part`}.`, bar: 100, note: pp.hasPhases ? `${pp.rows.length} phases · phase ${pp.current.i} is ${money(pp.current.target)}` : 'Collected in one go' },
-                { n: 2, title: tx("Targets for kurels"), big: money(allocated), line: allocs.length === 0 ? `${program.scopeAllGroups ? 'The kurels take' : `The ${program.groupIds.length} kurel${program.groupIds.length === 1 ? ' takes' : 's take'}`} part, but none has its share of the total yet. Press “Allocate the envelope” to set each kurel's target.` : `${allocs.length} kurel${allocs.length === 1 ? ' has' : 's have'} a target, their share of the total to collect.`, bar: pct(allocated, goal), note: `${pct(allocated, goal)}% of the total has a target · ${money(Math.max(0, goal - allocated))} not assigned yet` },
-                { n: 3, title: tx("Shared among members"), big: money(sharesTotal), line: members === 0 ? 'No kurel leader has split its target among members yet.' : `${members} member${members === 1 ? ' has' : 's have'} an amount to pay, set by their kurel leader.`, bar: pct(sharesTotal, allocated), note: `${pct(sharesTotal, allocated)}% of the kurel targets · ${money(Math.max(0, allocated - sharesTotal))} not shared yet` },
-                { n: 4, title: tx("Paid so far"), big: money(paid), line: `${new Set(validated.map((c) => c.userName)).size} member${new Set(validated.map((c) => c.userName)).size === 1 ? ' has' : 's have'} paid, with the proof checked.`, bar: pct(paid, goal), note: `${pct(paid, goal)}% of the total · ${money(remaining)} still to collect` },
+                { n: 1, Ic: Layers, title: tx("Allocation envelope"), big: money(goal), line: `The amount to collect. ${program.scopeAllGroups ? 'All kurels take part' : `${program.groupIds.length} kurel${program.groupIds.length === 1 ? ' takes' : 's take'} part`}.`, bar: 100, note: pp.hasPhases ? `${pp.rows.length} phases · phase ${pp.current.i} is ${money(pp.current.target)}` : 'Collected in one go' },
+                { n: 2, Ic: Users, title: tx("Targets for groups"), big: money(allocated), line: allocs.length === 0 ? `${program.scopeAllGroups ? 'The kurels take' : `The ${program.groupIds.length} kurel${program.groupIds.length === 1 ? ' takes' : 's take'}`} part, but none has its share of the total yet. Press “Allocate the envelope” to set each kurel's target.` : `${allocs.length} kurel${allocs.length === 1 ? ' has' : 's have'} a target, their share of the total to collect.`, bar: pct(allocated, goal), note: `${pct(allocated, goal)}% of the total has a target · ${money(Math.max(0, goal - allocated))} not assigned yet` },
+                { n: 3, Ic: Network, title: tx("Shared among members"), big: money(sharesTotal), line: members === 0 ? 'No kurel leader has split its target among members yet.' : `${members} member${members === 1 ? ' has' : 's have'} an amount to pay, set by their kurel leader.`, bar: pct(sharesTotal, allocated), note: `${pct(sharesTotal, allocated)}% of the kurel targets · ${money(Math.max(0, allocated - sharesTotal))} not shared yet` },
+                { n: 4, Ic: CheckCircle2, title: tx("Paid so far"), big: money(paid), line: `${new Set(validated.map((c) => c.userName)).size} member${new Set(validated.map((c) => c.userName)).size === 1 ? ' has' : 's have'} paid, with the proof checked.`, bar: pct(paid, goal), note: `${pct(paid, goal)}% of the total · ${money(remaining)} still to collect` },
               ];
               return (
                 <div className="fn-flowrow">
@@ -327,11 +327,12 @@ export default function FinancePage() {
                 <div className="fn-steps">
                   {steps.map((st) => (
                     <button type="button" key={st.n} onClick={() => setFlowStep(st.n as 1 | 2 | 3 | 4)} title={tx("Click to see the details")}>
-                      <span className="fn-step-top"><b>{st.n}</b><strong>{st.title}</strong><i aria-hidden>{tx("See the list ›")}</i></span>
+                      <span className="fn-step-top"><i className="fn-sic"><st.Ic size={22} /></i><strong>{st.title}</strong></span>
                       <em>{st.big}</em>
                       <span className="fn-bar"><i style={{ width: `${st.bar}%` }} /></span>
                       <p>{st.line}</p>
                       <small>{st.note}</small>
+                      <ChevronRight className="fn-chev" size={18} aria-hidden />
                     </button>
                   ))}
                 </div>
@@ -342,7 +343,7 @@ export default function FinancePage() {
 
           <div className="fn-grid">
             <section className="fn-card">
-              <header><div><h2>{tx("Collection status")}</h2><p>{tx("How much of the total has come in")}</p></div><span className="fn-pill">{rate}%</span></header>
+              <header><div className="fn-ct"><i><PieChart size={20} /></i><div><h2>{tx("Collection status")}</h2><p>{tx("Breakdown of the total amount and payment status.")}</p></div></div><span className="fn-pill">{rate}%</span></header>
               {(() => {
                 const g = Math.max(1, program?.goalAmountCents ?? 0);
                 const v = Math.min(100, (paid / g) * 100);
@@ -373,7 +374,7 @@ export default function FinancePage() {
               <footer><span><b>{validated.length}</b> {tx("validated")}</span><span><b>{mine.length}</b> {tx("payments in all")}</span></footer>
             </section>
             <section className="fn-card">
-              <header><div><h2>{tx("Payment channels")}</h2><p>{tx("Validated amount per way of paying")}</p></div></header>
+              <header><div className="fn-ct"><i><CreditCard size={20} /></i><div><h2>{tx("Payment channels")}</h2><p>{tx("Validated amount by way of paying.")}</p></div></div></header>
               <ul className="fn-ch">
                 {(['wave', 'orange_money', 'cash'] as Method[]).map((m) => {
                   const v = byMethod(m);
@@ -391,7 +392,7 @@ export default function FinancePage() {
               <footer><span><b>{review.length}</b> {tx("waiting for a check")}</span><span><b>{mine.filter((c) => c.status === 'rejected').length}</b> {tx("rejected")}</span></footer>
             </section>
             <section className="fn-card">
-              <header><div><h2>{tx("Proofs to check")}</h2><p>{tx("Validate or reject right here")}</p></div><span className="fn-pill warn">{review.length}</span></header>
+              <header><div className="fn-ct"><i><FileCheck size={20} /></i><div><h2>{tx("Proofs to check")}</h2><p>{tx("Validate or reject payment proofs.")}</p></div></div><span className="fn-pill warn">{review.length}</span></header>
               <ul className="fn-list2">
                 {review.map((c) => (
                   <li key={c.id}><PayIcon kind={c.method} size={30} /><span><b>{c.userName || '—'}</b><small>{byId[c.groupId]?.name ?? ''} · {money(c.amountCents)}</small></span>
@@ -406,7 +407,7 @@ export default function FinancePage() {
           <div className="cx-grid cx-g21 fn-cmpgrid">
           <section className="fn-cmp">
             <header>
-              <div><h2>{tx("Comparative progress")}</h2><p>{tx("What each")} {groupBy} {tx("has paid, against what it was given. Rank 1 is the highest progress.")}</p></div>
+              <div className="fn-ct"><i><BarChart3 size={20} /></i><div><h2>{tx("Comparative progress")}</h2><p>{tx("What each")} {groupBy} {tx("has paid, against what it was given. Rank 1 is the highest progress.")}</p></div></div>
             </header>
             <div className="fn-cmp-filters">
               <label className="og-search"><svg viewBox="0 0 20 20" aria-hidden><circle cx="9" cy="9" r="5.5" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M13.5 13.5L17 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg><span>{tx("Search")}</span><input type="search" placeholder={tx("Name")} value={cmpQ} onChange={(e) => setCmpQ(e.target.value)} /></label>
@@ -469,8 +470,8 @@ export default function FinancePage() {
 
           <section className="fn-reg" id="register">
             <div className="fn-reg-head">
-              <div><h2>{tx("Detailed payment register")}</h2><p>{rows.length} {tx("payment")}{rows.length === 1 ? '' : 's'} {tx("shown")}</p></div>
-              <button type="button" className="secondary" onClick={exportRegister}>{tx("Export")}</button>
+              <div className="fn-ct"><i><FileText size={20} /></i><div><h2>{tx("Detailed payment register")}</h2><p>{rows.length} {tx("payment")}{rows.length === 1 ? '' : 's'} {tx("shown")}</p></div></div>
+              <button type="button" className="secondary fn-exp" onClick={exportRegister}><Download size={16} /> {tx("Export")}</button>
             </div>
             <div className="fn-filters">
               <label className="og-search"><svg viewBox="0 0 20 20" aria-hidden><circle cx="9" cy="9" r="5.5" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M13.5 13.5L17 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg><span>{tx("Search")}</span><input type="search" placeholder={tx("Member or kurel")} value={search} onChange={(e) => setSearch(e.target.value)} /></label>
