@@ -380,15 +380,7 @@ export default function MembersPage() {
         <div className="content">
           <CxBanner kicker="Direction du Conservatoire" title={tx("Member Management")} />
 
-          <div className="mm-stripe">
-            <button type="button" className="tot" onClick={() => showList({})}><Users size={30} /><span><b>{fmt(everyone)}</b><small>{tx("Total members")}</small></span></button>
-            <button type="button" onClick={() => showList({ status: 'active' })}><i className="dot g" /><span><b>{fmt(active)}</b><small>{tx("Active")}</small></span></button>
-            <button type="button" onClick={() => showList({ status: 'suspended' })}><i className="dot y" /><span><b>{everyone !== null && active !== null && pending !== null ? fmt(Math.max(0, everyone - active - pending)) : '—'}</b><small>{tx("Inactive")}</small></span></button>
-            <button type="button" onClick={() => router.push('/dashboard/approvals')}><i className="dot r" /><span><b>{fmt(pending)}</b><small>{tx("Pending")}</small></span></button>
-            <button type="button" className="cx-btn gold mm-add" onClick={() => { setManageView('add'); setEditRequest({ id: '', n: 0 }); setAddRequest((r) => ({ n: r.n + 1 })); setManageSignal((n) => n + 1); }}><UserPlus size={18} />{tx("Add Member")}</button>
-          </div>
 
-          <MemberCollective rows={shown.map((m) => ({ id: m.id, status: m.status, registered: m.registrationStatus === 'approved', hasPhoto: !!m.photoUrl, online: online(m), kurels: (memberships[m.id] ?? []).map((k) => k.groupId) }))} byId={byId} locationOf={locationOf} scoped={!!(appF || profile || presenceF || country || zoneF || cityF || localF || kurelF || roleF || statusFilter || kurelCount || search)} onCity={(id) => applyTile({ city: id })} onKurel={(id) => applyTile({ kurel: id })} onCountry={(id) => applyTile({ country: id })} onFilter={applyTile} />
 
           <section className="card filters">
             <input type="search" placeholder={tx("Search by name, ID, or phone number…")} value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -404,6 +396,16 @@ export default function MembersPage() {
             </>)}
             {(appF || profile || presenceF || search || country || zoneF || cityF || localF || kurelF || roleF || statusFilter || kurelCount) && <button type="button" className="secondary mm-clear" onClick={() => { setSearch(''); setCountry(''); setZoneF(''); setCityF(''); setLocalF(''); setKurelF(''); setRoleF(''); setStatusFilter(''); setKurelCount(''); setAlsoKurel(''); setSelectedId(''); setPresenceF(''); setProfile(''); setAppF(''); }}>{tx("Clear all ✕")}</button>}
           </section>
+
+          <div className="mm-stripe">
+            <button type="button" className="tot" onClick={() => showList({})}><Users size={30} /><span><b>{fmt(everyone)}</b><small>{tx("Total members")}</small></span></button>
+            <button type="button" onClick={() => showList({ status: 'active' })}><i className="dot g" /><span><b>{fmt(active)}</b><small>{tx("Active")}</small></span></button>
+            <button type="button" onClick={() => showList({ status: 'suspended' })}><i className="dot y" /><span><b>{everyone !== null && active !== null && pending !== null ? fmt(Math.max(0, everyone - active - pending)) : '—'}</b><small>{tx("Inactive")}</small></span></button>
+            <button type="button" onClick={() => router.push('/dashboard/approvals')}><i className="dot r" /><span><b>{fmt(pending)}</b><small>{tx("Pending")}</small></span></button>
+            <button type="button" className="cx-btn gold mm-add" onClick={() => { setManageView('add'); setEditRequest({ id: '', n: 0 }); setAddRequest((r) => ({ n: r.n + 1 })); setManageSignal((n) => n + 1); }}><UserPlus size={18} />{tx("Add Member")}</button>
+          </div>
+
+          <MemberCollective rows={shown.map((m) => ({ id: m.id, status: m.status, registered: m.registrationStatus === 'approved', hasPhoto: !!m.photoUrl, online: online(m), kurels: (memberships[m.id] ?? []).map((k) => k.groupId) }))} byId={byId} locationOf={locationOf} scoped={!!(appF || profile || presenceF || country || zoneF || cityF || localF || kurelF || roleF || statusFilter || kurelCount || search)} onCity={(id) => applyTile({ city: id })} onKurel={(id) => applyTile({ kurel: id })} onCountry={(id) => applyTile({ country: id })} onFilter={applyTile} />
 
 
           <div className="workspace" id="memberWorkspace">

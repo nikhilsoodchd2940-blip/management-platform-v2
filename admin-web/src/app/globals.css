@@ -10408,3 +10408,12 @@ a.lnk,.lnk a{color:inherit;text-decoration:none}a.lnk:hover{color:#0b5b3f;text-d
 .px-gestion-membres .member-row .mr-side small+.mr-chat{margin-left:6px;position:relative}
 .px-gestion-membres .member-row .mr-side small+.mr-chat::before{content:"";position:absolute;left:-14px;top:50%;height:36px;transform:translateY(-50%);border-left:1px solid #cfd8d2}
 .px-gestion-membres .member-row .mr-chips em{font-weight:800;text-transform:uppercase;font-style:normal}
+
+/* ui159 Members: filters bar on top, stats row directly under it, as one panel */
+.px-gestion-membres .card.filters{margin:0;border-radius:20px 20px 0 0;border:1px solid #cfdcd4;border-bottom:0;background:linear-gradient(#f4f8f2,#fff);box-shadow:none;padding:16px 18px 10px;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:12px}
+.px-gestion-membres .card.filters input[type=search]{height:54px;border-radius:14px;font-size:1rem}
+.px-gestion-membres .mm-stripe{margin:0 0 16px;border-radius:0 0 20px 20px;border:1px solid #cfdcd4;border-top:0;background:linear-gradient(#fff,#f4f8f2);box-shadow:0 6px 16px rgba(8,54,42,.08);padding:6px 18px 18px;align-items:stretch}
+.px-gestion-membres .mm-stripe button{background:#fff;box-shadow:0 2px 6px rgba(8,54,42,.08);border:1px solid #e3ece7}
+.px-gestion-membres .mm-stripe .tot{background:linear-gradient(135deg,#12643f,#083d2a)}
+.px-gestion-membres .mm-stripe .dot{width:14px;height:14px}
+.px-gestion-membres .mm-stripe b{font-size:1.75rem}
