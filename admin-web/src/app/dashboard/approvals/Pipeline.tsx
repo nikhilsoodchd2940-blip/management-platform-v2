@@ -19,7 +19,7 @@ import { formatMoney } from '@/lib/money';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { tx, dateLocale } from '@/lib/i18n/tr';
-import { Calendar, CreditCard, Layers, Plus, Users } from 'lucide-react';
+import { Calendar, Coins, CreditCard, Filter, Layers, Plus, Search, Users } from 'lucide-react';
 
 type Stage = 'requested' | 'daara_verification' | 'test' | 'pedagogy_opinion' | 'head_validation' | 'final_validation' | 'account_created' | 'rejected';
 interface Application { userId?: string; updatedAt?: unknown; candidateName: string; matricule: string; phone?: string; groupId?: string; stage: Stage; testAt?: unknown; testLocation?: string; history: { stage: Stage; actorName: string; comment?: string }[] }
@@ -41,6 +41,7 @@ export function Admissions({ newSignal = 0 }: { newSignal?: number }) {
   const raw = useCollection<Application>('admissionApplications', [orderBy('updatedAt', 'desc'), fsLimit(100)]);
   const rows = raw ?? [];
   const [filter, setFilter] = useState('');
+  const [showF, setShowF] = useState(false);
   const [q, setQ] = useState('');
   const [openId, setOpenId] = useState('');
   useEffect(() => { if (newSignal > 0) setDialog('new'); }, [newSignal]);
@@ -71,17 +72,17 @@ export function Admissions({ newSignal = 0 }: { newSignal?: number }) {
   return (
     <section className="ap-pane cx-card">
       <header><i aria-hidden><Layers size={22} /></i>
-        <div><h2>{tx("Admission applications")}</h2><p>{shown.length} {tx("of")} {rows.length} {tx("shown. Click a row to see its history.")}</p></div>
+        <div><h2>{tx("Admission Applications")}</h2><p>{shown.length} {tx("of")} {rows.length} {tx("shown. Click a row to see its history.")}</p></div>
         <div className="ap-right"><button type="button" className="cx-btn green" onClick={() => setDialog('new')}><Plus size={16} />{tx("New application")}</button></div>
       </header>
       <div className="ap-stages">
         <button type="button" className={!filter ? 'on' : ''} onClick={() => setFilter('')}>{tx("All")}<em>{rows.length}</em></button>
         {(Object.keys(STAGE_LABEL) as Stage[]).map((st) => <button type="button" key={st} className={filter === st ? 'on' : ''} onClick={() => setFilter(filter === st ? '' : st)}>{STAGE_LABEL[st]}<em>{counts(st)}</em></button>)}
       </div>
-      <div className="ap-bar"><input type="search" placeholder={tx("Candidate name, matricule or phone")} value={q} onChange={(e) => setQ(e.target.value)} /><Dropdown label={tx("Stage")} value={filter} onChange={setFilter} allLabel="All stages" options={(Object.keys(STAGE_LABEL) as Stage[]).map((st) => ({ value: st, label: STAGE_LABEL[st] }))} /></div>
+      <div className="ap-bar"><label className="ap-srch"><Search size={17} aria-hidden /><input type="search" placeholder={tx("Search by name or matricule…")} value={q} onChange={(e) => setQ(e.target.value)} /></label><button type="button" className={`ap-fbtn${showF || filter ? " on" : ""}`} aria-expanded={showF} onClick={() => setShowF(!showF)}><Filter size={16} aria-hidden />{tx("Filters")}</button>{(showF || filter) && <Dropdown label={tx("Stage")} value={filter} onChange={setFilter} allLabel="All stages" options={(Object.keys(STAGE_LABEL) as Stage[]).map((st) => ({ value: st, label: STAGE_LABEL[st] }))} />}</div>
       <div className="ap-twrap">
         <table className="ap-table">
-          <thead><tr><th>{tx("Candidate")}</th><th>{tx("Matricule")}</th><th>{tx("Stage")}</th><th>{tx("Kurel")}</th><th>{tx("Last update")}</th><th className="act">{tx("Actions")}</th></tr></thead>
+          <thead><tr><th>{tx("Candidate")}</th><th>{tx("Matricule")}</th><th>{tx("Stage")}</th><th>{tx("Group")}</th><th>{tx("Last update")}</th><th className="act">{tx("Actions")}</th></tr></thead>
           <tbody>
             {raw === null && <tr><td colSpan={6} className="ap-none">{tx("Loading…")}</td></tr>}
             {raw !== null && shown.length === 0 && <tr><td colSpan={6} className="ap-none">{tx("No application")}{filter || q ? tx(" matches") : tx(" yet. Use “New application” to register a candidate")}.</td></tr>}
@@ -179,7 +180,7 @@ export function RenewalCard() {
   return (
     <section className="ap-pane cx-card">
       <header><i aria-hidden><Calendar size={22} /></i>
-        <div><h2>{tx("Annual renewal")} {current ? current.year : ''}</h2><p>{current ? `${new Date(tsMs(current.startAt)).toLocaleDateString(dateLocale())} → ${new Date(tsMs(current.endAt)).toLocaleDateString(dateLocale())} · fee ${formatMoney(current.feeCents, current.currency, 'en-US')}${current.status === 'closed' ? ' · closed' : ''}` : tx("One common campaign, one month at most.")}</p></div>
+        <div><h2>{tx("Annual Renewal")} {current ? current.year : ''}</h2>{current ? <p className="ap-rn"><span><Calendar size={16} aria-hidden />{new Date(tsMs(current.startAt)).toLocaleDateString(dateLocale())} → {new Date(tsMs(current.endAt)).toLocaleDateString(dateLocale())}</span><span><Coins size={16} aria-hidden />{tx("Fee")}: {formatMoney(current.feeCents, current.currency, 'en-US')}</span>{current.status === 'closed' && <span>{tx("Closed")}</span>}</p> : <p>{tx("One common campaign, one month at most.")}</p>}</div>
         <div className="ap-right">
           {(!current || current.status === 'closed') && <button type="button" className="fx2-btn primary" onClick={() => setDialog('open')}>{tx("Open the campaign")}</button>}
           {current?.status === 'open' && <button type="button" className="cx-btn green" onClick={() => setDialog('pay')}><CreditCard size={16} />{tx("Record a payment")}</button>}
@@ -188,9 +189,9 @@ export function RenewalCard() {
       </header>
       <div className="ap-stats">
         <div className="g"><span>{tx("Confirmed")}</span><strong>{current ? (paid ?? '—') : '—'}</strong><small>{tx("Paid the fee")}</small></div>
-        <div className="y"><span>{tx("Awaiting payment")}</span><strong>{awaiting ?? '—'}</strong><small>{tx("Not yet paid")}</small></div>
+        <div className="y"><span>{tx("Awaiting Payment")}</span><strong>{awaiting ?? '—'}</strong><small>{tx("Not yet paid")}</small></div>
         <div className="r"><span>{tx("Suspended")}</span><strong>{current ? (suspended ?? '—') : '—'}</strong><small>{tx("After the deadline")}</small></div>
-        <div className="p"><span>{tx("Fee per member")}</span><strong>{current ? formatMoney(current.feeCents, current.currency, 'en-US') : '—'}</strong><small>{current ? (current.status === 'open' ? tx("Campaign open") : tx("Campaign closed")) : tx("No campaign")}</small></div>
+        <div className="p"><span>{tx("Fee per Member")}</span><strong>{current ? formatMoney(current.feeCents, current.currency, 'en-US') : '—'}</strong><small>{current ? (current.status === 'open' ? tx("Campaign open") : tx("Campaign closed")) : tx("No campaign")}</small></div>
       </div>
       {current?.status === 'open' && !ended && <p className="ap-warn">{tx("Closing and suspending non-payers is possible once the period ends on")} {new Date(tsMs(current.endAt)).toLocaleDateString(dateLocale())}.</p>}
       {dialog === 'open' && (

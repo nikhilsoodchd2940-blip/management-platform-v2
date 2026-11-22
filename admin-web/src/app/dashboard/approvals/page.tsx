@@ -125,10 +125,10 @@ export default function AdministrationPage() {
   const openTransfers = (transfers ?? []).filter((t) => t.stage === 'zone_opinion' || t.stage === 'decision').length;
   const oldest = pending.reduce((m, p) => (p.createdMs && (!m || p.createdMs < m) ? p.createdMs : m), 0);
   const TILES: { tab: Tab; label: string; value: string; note: string; tone: string }[] = [
-    { tab: 'registrations', label: tx("Registrations to review"), value: loaded ? fmt(pending.length) : '—', note: oldest ? `Oldest waiting ${ago(oldest).toLowerCase()}` : 'Nothing waiting', tone: 'y' },
-    { tab: 'applications', label: tx("Applications in progress"), value: apps === null ? '—' : fmt(activeApps), note: `${fmt(testsScheduled)} at test stage`, tone: 'b' },
-    { tab: 'requests', label: tx("Requests to answer"), value: fmt(phoneRequests.length + openTransfers), note: `${phoneRequests.length} phone · ${openTransfers} kurel`, tone: 'p' },
-    { tab: 'activity', label: tx("Online now"), value: fmt(online), note: 'Last 5 minutes', tone: 'g' },
+    { tab: 'registrations', label: tx("Registrations to Review"), value: loaded ? fmt(pending.length) : '—', note: oldest ? `Oldest waiting ${ago(oldest).toLowerCase()}` : 'Nothing waiting', tone: 'y' },
+    { tab: 'applications', label: tx("Applications in Progress"), value: apps === null ? '—' : fmt(activeApps), note: `${fmt(testsScheduled)} at test stage`, tone: 'b' },
+    { tab: 'requests', label: tx("Requests to Answer"), value: fmt(phoneRequests.length + openTransfers), note: `${phoneRequests.length} phone · ${openTransfers} kurel`, tone: 'p' },
+    { tab: 'activity', label: tx("Online Now"), value: fmt(online), note: 'Last 5 minutes', tone: 'g' },
   ];
   const TABS: { key: Tab; name: string; badge?: number }[] = [
     { key: 'registrations', name: 'Registrations', badge: pending.length }, { key: 'applications', name: 'Applications', badge: activeApps },
@@ -139,7 +139,7 @@ export default function AdministrationPage() {
   return (
     <div className="ap cx-page">
       <CxBanner logo kicker="Direction Conservatoire" title={tx("Administration")} sub={tx("Review registrations, move applications through the official path, answer requests and run renewals.")}>
-        <button type="button" className="cx-btn gold" onClick={() => { setTab('applications'); setNewApp((n) => n + 1); }}><Plus size={18} />{tx("New application")}</button>
+        <button type="button" className="cx-btn green" onClick={() => { setTab('applications'); setNewApp((n) => n + 1); }}><Plus size={18} />{tx("New application")}</button>
       </CxBanner>
 
       <CxStats items={[
@@ -238,7 +238,7 @@ export default function AdministrationPage() {
 
       {tab === 'requests' && (
         <div className="ap-two">
-          <Pane icon={<Phone size={22} />} title={tx("Phone number changes")} note="Members asking to use a new number." right={<span className="ap-count">{phoneRequests.length}</span>}>
+          <Pane icon={<Phone size={22} />} title={tx("Phone Number Changes")} note="Members asking to use a new number." right={<span className="ap-count">{phoneRequests.length}</span>}>
             {phoneRequests.length === 0 && <p className="ap-none">{tx("No pending phone change.")}</p>}
             <div className="ap-cards">
               {phoneRequests.map((r) => (

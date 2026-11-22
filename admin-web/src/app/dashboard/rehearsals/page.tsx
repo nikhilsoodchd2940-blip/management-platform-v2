@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AlarmClock, CalendarClock, List as ListIcon, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Mail, Plus, RefreshCw, RotateCcw, Users, XCircle } from 'lucide-react';
+import Link from 'next/link';
+import { AlarmClock, CalendarClock, List as ListIcon, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Mail, Plus, RefreshCw, MoreVertical, RotateCcw, Users, XCircle } from 'lucide-react';
 import { where, Timestamp } from 'firebase/firestore';
 import { useCollection, tsMs } from '@/lib/useCollection';
 import { useZones } from '@/lib/useZones';
@@ -159,7 +160,7 @@ export default function RehearsalsPage() {
         {view === 'list' && (rows === null ? <p className="kt-empty">{tx("Loading…")}</p> : sorted.length === 0 ? <p className="kt-empty">{tx("No rehearsal matches these filters.")}</p> : (
           <div className="eb2-scroll">
             <table className="eb2-table rh-table">
-              <thead><tr>{th(0, 'title', tx("Session"))}{th(1, 'city', tx("City"))}{th(2, 'groups', tx("Groups"))}{th(3, 'time', tx("Local time"))}{th(4, 'rate', tx("Attendance"))}{th(5, '', tx("Members"))}</tr></thead>
+              <thead><tr>{th(0, 'title', tx("Session"))}{th(1, 'city', tx("City"))}{th(2, 'groups', tx("Group"))}{th(3, 'time', tx("Local time"))}{th(4, 'rate', tx("Attendance"))}{th(5, '', tx("Actions"))}</tr></thead>
               <tbody>
                 {pageRows.map((s) => {
                   const isOpen = openId === s.id;
@@ -172,7 +173,7 @@ export default function RehearsalsPage() {
                         <td className="c2"><button type="button" className="eb2-cell" title={tx("Show only this group")} onClick={() => setGroup(s.geos[0]?.groupId ?? '')}>{s.groupsTxt}</button></td>
                         <td className="c3"><button type="button" className="eb2-cell stack" title={tx("Show only this day")} onClick={() => setDate(dayKeyInZone(s.startMs, s.tz))}><span>{formatInZone(s.startMs, s.tz)}</span><small>{tx("to")} {formatInZone(s.endMs, s.tz, false)}</small></button></td>
                         <td className="c4"><button type="button" className="eb2-cell" title={tx("Show the members")} onClick={flip}>{s.startMs > now ? <Pill>{tx("Not started")}</Pill> : att.loading ? '—' : <span className="kt-rate"><Pill tone="ok">{s.sum.present}/{s.sum.expected}</Pill><Pill tone="gold">{s.sum.late} {tx("Late")}</Pill><Pill tone="teal">{s.sum.leave} {tx("Leave")}</Pill></span>}</button></td>
-                        <td className="c5 num"><button type="button" className="rh-btn" onClick={flip}><Users size={15} /> {isOpen ? tx("Hide members") : tx("Members")}</button></td>
+                        <td className="c5 num"><button type="button" className="rh-btn" onClick={flip}><Users size={15} /> {isOpen ? tx("Hide members") : tx("Members")}</button><Link className="rh-kb" href={`/dashboard/events/${s.id}`} title={tx("Open the event plan")} aria-label={tx("Open the event plan")}><MoreVertical size={16} /></Link></td>
                       </tr>
                       {isOpen && (
                         <tr className="kt-sub"><td colSpan={6}>
