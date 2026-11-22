@@ -20,11 +20,12 @@ export function CxSkyline() {
   );
 }
 
-export function CxBanner({ icon, kicker, title, sub, children }: { icon?: ReactNode; kicker?: string; title: string; sub?: string; children?: ReactNode }) {
+export function CxBanner({ icon, logo, kicker, title, sub, children }: { icon?: ReactNode; logo?: boolean; kicker?: string; title: string; sub?: string; children?: ReactNode }) {
   return (
     <section className="cx-banner">
       <CxSkyline />
       <div className="cx-bt">
+        {logo && <><span className="cx-logo"><img src="/hizbut-logo.png" alt="" /></span><span className="cx-vline" aria-hidden /></>}
         {icon && <i className="cx-bi" aria-hidden>{icon}</i>}
         <div>{kicker && <small>{kicker}</small>}<h1>{title}</h1>{sub && <p>{sub}</p>}</div>
       </div>

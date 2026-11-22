@@ -242,10 +242,10 @@ export function TransferTools() {
     <>
       <section className="ap-pane cx-card">
         <header><i aria-hidden><Users size={22} /></i>
-          <div><h2>{tx("Kurel transfers")}</h2><p>{tx("Zone opinion first, then the decision of senior management.")}</p></div>
-          <div className="ap-right"><span className="ap-count">{rows.length}</span><button type="button" className="cx-btn green" onClick={() => setDialog(true)}><Plus size={16} />{tx("Request a member for another kurel")}</button></div>
+          <div><h2>{tx("Group Transfers")}</h2><p>{tx("Zone opinion first, then the decision of senior management.")}</p></div>
         </header>
-        {rows.length === 0 && <p className="ap-none">{tx("No transfer waiting.")}</p>}
+        <div className="ap-tr-bar"><span className="ap-count">{rows.length}</span><button type="button" className="cx-btn green" onClick={() => setDialog(true)}><Plus size={16} />{tx("Request a member for another group")}</button></div>
+        {rows.length === 0 && <p className="ap-none ap-dash"><Users size={30} />{tx("No transfer waiting.")}</p>}
         <div className="ap-cards">
           {rows.map((t) => (
             <article className="ap-req" key={t.id}>

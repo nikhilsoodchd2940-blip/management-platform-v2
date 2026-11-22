@@ -137,7 +137,7 @@ export default function AdministrationPage() {
 
   return (
     <div className="ap cx-page">
-      <CxBanner kicker="Direction Conservatoire" title={tx("Administration")} sub={tx("Review registrations, move applications through the official path, answer requests and run renewals.")}>
+      <CxBanner logo kicker="Direction Conservatoire" title={tx("Administration")} sub={tx("Review registrations, move applications through the official path, answer requests and run renewals.")}>
         <button type="button" className="cx-btn gold" onClick={() => { setTab('applications'); setNewApp((n) => n + 1); }}><Plus size={18} />{tx("New application")}</button>
       </CxBanner>
 
