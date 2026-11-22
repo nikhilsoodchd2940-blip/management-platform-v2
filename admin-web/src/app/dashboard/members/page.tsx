@@ -324,7 +324,8 @@ export default function MembersPage() {
   const online = (m: MemberRow) => (presence[m.id] ?? 0) > 0 && now - presence[m.id] < ONLINE_MS;
   const [sortBy, setSortBy] = useState<'az' | 'za' | 'id'>('az');
   const shown = useMemo(() => {
-    const base = [...rows].sort((a, b) => (sortBy === 'id' ? (a.memberId || '').localeCompare(b.memberId || '') : sortBy === 'za' ? (b.displayName || '').localeCompare(a.displayName || '') : (a.displayName || '').localeCompare(b.displayName || '')));
+    const blankLast = (x: string, y: string, dir: 1 | -1) => (!x && !y ? 0 : !x ? 1 : !y ? -1 : dir * x.localeCompare(y));
+    const base = [...rows].sort((a, b) => (sortBy === 'id' ? blankLast(a.memberId || '', b.memberId || '', 1) : sortBy === 'za' ? blankLast(a.displayName || '', b.displayName || '', -1) : blankLast(a.displayName || '', b.displayName || '', 1)));
     if (!presenceF) return base;
     return base.filter((m) => {
       const age = now - (presence[m.id] ?? 0);
@@ -423,7 +424,7 @@ export default function MembersPage() {
               )}
               <div className="panel-head">
                 <div>
-                  <h2>{tx("Member list")}</h2>
+                  <h2>{tx("Member List")}</h2>
                   <p>{shown.length} {tx("member")}{shown.length === 1 ? '' : 's'} {tx("shown")}</p>
                 </div>
                 <div className="mm-ph"><span className="status">{tx("Live data")}</span><button type="button" className={`mm-fbtn${moreOpen || moreCount > 0 ? ' on' : ''}`} onClick={() => setMoreOpen((v) => !v)}><SlidersHorizontal size={15} />{tx("Filters")}</button><Dropdown label={tx("Sort")} value={sortBy} onChange={(v) => setSortBy((v || 'az') as 'az' | 'za' | 'id')} options={[{ value: 'az', label: tx("Name (A–Z)") }, { value: 'za', label: tx("Name (Z–A)") }, { value: 'id', label: tx("Member ID") }]} className="mm-sort" /><details className="mm-kb2"><summary aria-label={tx("More actions")}><MoreHorizontal size={17} /></summary><div className="mm-kbm"><button type="button" onClick={exportList}><Download size={15} />{tx("Export the list")}</button><button type="button" onClick={() => setAssignOpen({ id: selected?.id ?? '' })}><Layers size={15} />{tx("Assign to a kurel")}</button><button type="button" onClick={() => router.push('/dashboard/approvals')} title={tx("Review the registrations waiting for approval")}><UserPlus size={15} />{tx("Pending approvals")} <b>{fmt(pending)}</b></button></div></details><span className="mm-vt" role="group" aria-label={tx("View")}><button type="button" className={listView ? 'on' : ''} aria-pressed={listView} onClick={() => setListView(true)}><List size={17} /></button><button type="button" className={!listView ? 'on' : ''} aria-pressed={!listView} onClick={() => setListView(false)}><LayoutGrid size={17} /></button></span></div>
