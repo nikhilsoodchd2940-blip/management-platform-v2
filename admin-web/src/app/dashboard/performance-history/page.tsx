@@ -53,7 +53,7 @@ export default function PerformanceHistoryPage() {
   const selOf = (id: string) => sels?.find((x) => x.id === id);
   const term = q.trim().toLowerCase();
   const rows = useMemo(() => base.filter((s) => (!perf || (s.performanceStatus ?? 'scheduled') === perf) && (!apr || (selOf(s.id)?.status ?? 'none') === apr)
-    && (!term || titleOf(s.eventId).toLowerCase().includes(term) || s.groupName.toLowerCase().includes(term))), [base, perf, apr, term, sels, events]); // eslint-disable-line react-hooks/exhaustive-deps
+    && (!term || titleOf(s.eventId).toLowerCase().includes(term) || s.groupName.toLowerCase().includes(term) || (byId[s.cityId]?.name ?? '').toLowerCase().includes(term))), [base, perf, apr, term, sels, events, byId]); // eslint-disable-line react-hooks/exhaustive-deps
   const byGroup = useMemo(() => {
     const m = new Map<string, Slot[]>();
     rows.forEach((s) => m.set(s.groupId, [...(m.get(s.groupId) ?? []), s]));
@@ -104,7 +104,7 @@ export default function PerformanceHistoryPage() {
       ]} />
 
       <section className="cx-filters ph-filters">
-        <label className="cx-search"><Search size={18} /><input type="search" placeholder={tx("Search an event or a group")} value={q} onChange={(e) => setQ(e.target.value)} /></label>
+        <label className="cx-search"><Search size={18} /><input type="search" placeholder={tx("Search by event, group or location…")} value={q} onChange={(e) => setQ(e.target.value)} /></label>
         <Dropdown label={tx("Date range")} value={range} onChange={setRange} allLabel={tx("All dates")} options={[{ value: '30', label: tx("Last 30 days") }, { value: '90', label: tx("Last 90 days") }, { value: 'year', label: tx("This year") }, { value: 'last', label: tx("Last year") }]} className="loc-dd" />
         <Dropdown label={tx("Location")} value={city} onChange={(v) => { setCity(v); setGroup(''); }} allLabel={tx("All locations")} options={cities.map((c) => ({ value: c.id, label: c.name }))} className="loc-dd" />
         <Dropdown label={tx("Group")} value={group} onChange={setGroup} allLabel={tx("All groups")} options={leaf.filter((g) => !city || g.parentGroupId === city).map((g) => ({ value: g.id, label: g.name }))} className="loc-dd" />

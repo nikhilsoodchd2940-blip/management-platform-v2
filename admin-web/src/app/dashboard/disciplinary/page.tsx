@@ -149,7 +149,7 @@ export default function DisciplinaryPage() {
           ]} />
 
           <section className="cx-filters">
-            <label className="cx-search"><Search size={18} /><input type="search" placeholder={tx("Case, member, member ID or kurel")} value={search} onChange={(e) => setSearch(e.target.value)} /></label>
+            <label className="cx-search"><Search size={18} /><input type="search" placeholder={tx("Case, member, member ID or group…")} value={search} onChange={(e) => setSearch(e.target.value)} /></label>
             <Dropdown label={tx("Zone")} value={zone} onChange={setZone} allLabel={tx("All zones")} options={countries.map((c) => ({ value: c.id, label: c.name }))} />
             <Dropdown label={tx("Status")} value={state} onChange={setState} allLabel={tx("All statuses")} options={(Object.keys(STATUS) as Status[]).map((st) => ({ value: st, label: STATUS[st] }))} />
             <Dropdown label={tx("Reason")} value={reasonFilter} onChange={setReasonFilter} allLabel={tx("All reasons")} options={[...new Set(cases.map((c) => c.reason).filter(Boolean))].map((r) => ({ value: r, label: r }))} />
