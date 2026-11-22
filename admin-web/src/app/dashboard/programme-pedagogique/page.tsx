@@ -21,6 +21,7 @@ import Link from 'next/link';
 import { tx } from '@/lib/i18n/tr';
 import { CxBanner, CxBar, CxCard, CxDonut, CxInitials, CxLine, CxPill, CxStats, CxTabs } from '@/components/Cx';
 import { useZones } from '@/lib/useZones';
+import PdComms from './PdComms';
 
 interface Material {
   id: string;
@@ -329,6 +330,12 @@ export default function PedagogicalCommitteePage() {
         )}
 
         {tab === 'overview' && (<>
+          <section className="pd-mgmt">
+            <div className="pd-mgl"><i><Users size={22} /></i><span><b>{tx("Management level")}</b><small>{tx("Select the level to manage")}</small></span></div>
+            {([[Users, tx("Kurel"), `${activeLeafGroups.length}`], [MapPin, tx("Zone"), `${(zones ?? []).length}`], [Building2, tx("City"), `${cities.length}`], [Globe2, tx("Country"), `${countries.length}`], [Crown, tx("General committee"), tx("Direction")]] as const).map(([Ic, l, n], i) => (
+              <button type="button" key={l} className={i === 4 ? 'on' : ''} onClick={() => router.push('/dashboard/committees')}><Ic size={20} /><span><b>{l}</b><small>{tx("Committee")} · {n}</small></span></button>
+            ))}
+          </section>
           <div className="cx-grid cx-g2">
             <CxCard icon={<Target size={22} />} title={tx("Group progression (Top 5)")} sub={tx("Program completion rate.")} right={<button type="button" className="cx-btn sm ok" onClick={() => setTab('assign')}>{tx("See all groups")} →</button>}>
               <ul className="at-groups">{topProgress.map((t, i) => <li key={t.gid}><b>{i + 1}</b><CxInitials name={t.name} /><span><strong>{t.name}</strong></span><CxBar pct={t.v} thick /><em>{t.v}%</em></li>)}{topProgress.length === 0 && <li className="ev-none">{tx("No reports yet.")}</li>}</ul>
@@ -346,6 +353,7 @@ export default function PedagogicalCommitteePage() {
             <button type="button" className="cx-btn sm" onClick={() => router.push('/dashboard/evaluations')}><BarChart3 size={15} />{tx("Launch an evaluation")}</button>
             <button type="button" className="cx-btn sm" onClick={() => setTab('reports')}><FileText size={15} />{tx("Generate a report")}</button>
           </section>
+          <PdComms />
           <div className="cx-grid cx-g12">
             <CxCard dark icon={<Network size={22} />} title={tx("Committee organisation")} sub={tx("People in charge and deputies by level.")}>
               <ul className="pd-org">

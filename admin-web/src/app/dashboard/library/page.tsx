@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BookOpen, Download, Eye, Layers, Share2, Music2, Library } from 'lucide-react';
+import { BookOpen, Download, Eye, Layers, Share2, Music2, LayoutGrid, Bookmark, Users, UserRound, BarChart3, Zap, UserPlus, Upload, Radio, ChevronLeft, ChevronRight, Check, Circle, Headphones, Play, Search } from 'lucide-react';
 import { collection, orderBy, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { onSnapshot } from '@/lib/firestore';
@@ -11,7 +11,9 @@ import { useLevels } from '@/lib/useLevels';
 import ManageToggle from '../../px/ManageToggle';
 import LibraryManage from './Manage';
 import Dropdown from '@/components/Dropdown';
-import { EbBar, EbHero, EbPanel, EbPill, EbSearch, EbTable, EbTiles, type EbCol } from '@/components/Eb';
+import { EbPanel, EbPill, EbTable, type EbCol } from '@/components/Eb';
+import { CxBanner, CxStats, CxTabs } from '@/components/Cx';
+import Link from 'next/link';
 import { tx } from '@/lib/i18n/tr';
 
 interface Material {
@@ -127,16 +129,24 @@ export default function LibraryPage() {
   const manage = () => setManageSignal((n) => n + 1);
   const approvedAudio = audios.filter((a) => a.status === 'approved').length;
 
-  const cols: EbCol<Book>[] = [
-    { key: 'book', label: tx("Book"), width: '20%', stack: true, sort: (b) => (matById[b.qacaidId]?.title ?? '').toLowerCase(), onCell: (b) => setWork(work === b.qacaidId ? '' : b.qacaidId), hint: tx("Show only this book"), render: (b) => <><b>{matById[b.qacaidId]?.title ?? '—'}</b><small>{matById[b.qacaidId]?.code}</small></> },
-    { key: 'edition', label: tx("Edition"), width: '12%', sort: (b) => b.label.toLowerCase(), onCell: () => manage(), hint: tx("Manage this edition"), render: (b) => <span>{b.label || '—'}</span> },
-    { key: 'level', label: tx("Level"), width: '13%', sort: (b) => levelById[b.levelId ?? '']?.rank ?? 99, onCell: (b) => setLevel(b.levelId ?? '__none__'), hint: tx("Show only this level"), render: (b) => (b.levelId && levelById[b.levelId] ? <EbPill tone="ok">{levelById[b.levelId].name}</EbPill> : <EbPill tone="info">{tx("Everyone")}</EbPill>) },
-    { key: 'audio', label: tx("Audio versions"), width: '10%', num: true, sort: (b) => audioCount(b.qacaidId), onCell: () => router.push('/dashboard/audio'), hint: tx("Open the audio library"), render: (b) => <EbPill tone="teal">{audioCount(b.qacaidId)}</EbPill> },
-    { key: 'shared', label: tx("Shared with"), width: '12%', sort: (b) => shareCount[b.id] ?? 0, onCell: () => { openShares(); }, hint: tx("Show the shares"), render: (b) => <span>{shareCount[b.id] ?? 0} {tx("share")}{(shareCount[b.id] ?? 0) === 1 ? '' : 's'}</span> },
-    { key: 'size', label: tx("Size"), width: '8%', num: true, sort: (b) => b.size, onCell: (b) => window.open(b.fileUrl, '_blank'), hint: tx("Preview the file"), render: (b) => <span>{mb(b.size)}</span> },
-    { key: 'downloads', label: tx("Downloads"), width: '9%', num: true, sort: (b) => b.downloads, onCell: (b) => { setAccess(b.downloadable ? 'download' : 'read'); }, hint: tx("Show books with the same access"), render: (b) => <span>{b.downloads}</span> },
-    { key: 'actions', label: tx("Actions"), width: '16%', actions: true, render: (b) => <span className="eb2-acts-row"><a href={b.fileUrl} target="_blank" rel="noreferrer" className="eb2-ibt" aria-label={tx("Preview")} title={tx("Preview")}><Eye size={15} /></a><button type="button" className="eb2-ibt" aria-label={tx("Download")} title={tx("Download")} disabled={!b.downloadable} onClick={() => window.open(b.fileUrl, '_blank')}><Download size={15} /></button><button type="button" className="eb2-ibt blue" aria-label={tx("Share")} title={tx("Share")} onClick={manage}><Share2 size={15} /></button></span> },
-  ];
+  const mmss = (sec: number) => (sec > 0 ? `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(Math.round(sec % 60)).padStart(2, '0')}` : '—');
+  const [page, setPage] = useState(1);
+  const PAGE_N = 8;
+  useEffect(() => setPage(1), [search, level, access, work, kurelF]);
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE_N));
+  const shownRows = rows.slice((page - 1) * PAGE_N, page * PAGE_N);
+  const assignedBooks = books.filter((b) => (shareCount[b.id] ?? 0) > 0).length;
+  const pctB = (n: number) => (books.length ? Math.round((n / books.length) * 1000) / 10 : 0);
+  const withAudio = books.filter((b) => audioCount(b.qacaidId) > 0).length;
+  const multiAudio = books.filter((b) => audioCount(b.qacaidId) > 1).length;
+  function exportCsv() {
+    const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+    const lines = [['Book', 'Reference', 'Edition', 'Level', 'Duration', 'Audio versions', 'Shares'].join(',')].concat(rows.map((b) => [matById[b.qacaidId]?.title ?? '', matById[b.qacaidId]?.code ?? '', b.label, levelById[b.levelId ?? '']?.name ?? '', mmss(b.durationSeconds), audioCount(b.qacaidId), shareCount[b.id] ?? 0].map(esc).join(',')));
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }));
+    a.download = 'library.csv';
+    a.click();
+  }
 
   const shareRows = shares.filter((s) => (!shType || s.scopeType === shType) && (!shRight || s.right === shRight) && (!work || bookById[s.editionId]?.qacaidId === work));
   const shareCols: EbCol<Share>[] = [
@@ -148,30 +158,95 @@ export default function LibraryPage() {
 
   return (
     <>
-      <div className="eb2">
-        <EbHero title={tx("Book library")} sub={tx("Books, the level each one belongs to, who it is shared with, and its audio versions.")}>
-          <button type="button" className="ghost" onClick={openShares}><Share2 size={16} /> {tx("Shares")}</button>
-          <button type="button" className="gold" onClick={manage}>+ {tx("Add a book")}</button>
-        </EbHero>
-
-        <EbTiles items={[
-          { icon: <BookOpen size={26} />, label: tx("Books"), value: materials.length, on: !anyFilter, onClick: clear },
-          { icon: <Library size={26} />, label: tx("Editions (PDF files)"), value: books.length, onClick: clear },
-          { icon: <Music2 size={26} />, label: tx("Audio versions"), value: approvedAudio, onClick: () => router.push('/dashboard/audio') },
-          { icon: <Layers size={26} />, label: tx("Shares"), value: shares.length, onClick: openShares },
+      <div className="px cx-page lb">
+        <CxBanner icon={<BookOpen size={30} />} kicker={tx("Comité Pédagogique")} title={tx("Book & Melody Library")} sub={tx("Central library of all approved books and their audio versions. Manage, organize and assign to groups.")}>
+          <button type="button" className="cx-btn gold" onClick={manage}><span aria-hidden>+</span> {tx("Add to Library")}</button>
+        </CxBanner>
+        <CxTabs value="library" onChange={(v) => { if (v === 'assignments') router.push('/dashboard/programme-pedagogique'); else if (v === 'audio') router.push('/dashboard/audio'); else if (v === 'artists') router.push('/dashboard/event-books'); else if (v === 'reports') router.push('/dashboard/reports'); else if (v === 'collections') openShares(); }} items={[
+          { value: 'library', label: tx("Library"), icon: <LayoutGrid size={18} /> },
+          { value: 'assignments', label: tx("Assignments"), icon: <Layers size={18} /> },
+          { value: 'collections', label: tx("Shares"), icon: <Bookmark size={18} /> },
+          { value: 'artists', label: tx("Artists"), icon: <UserRound size={18} /> },
+          { value: 'audio', label: tx("Audio Versions"), icon: <Music2 size={18} /> },
+          { value: 'reports', label: tx("Reports"), icon: <BarChart3 size={18} /> },
+        ]} />
+        <CxStats cols={5} items={[
+          { icon: <BookOpen size={24} />, tone: 'amber', label: tx("Total Books"), value: materials.length, onClick: clear },
+          { icon: <Music2 size={24} />, tone: 'amber', label: tx("Audio Versions"), value: approvedAudio, onClick: () => router.push('/dashboard/audio') },
+          { icon: <Users size={24} />, tone: 'green', label: tx("Assigned to Groups"), value: assignedBooks, badge: `${pctB(assignedBooks)}%`, onClick: openShares },
+          { icon: <Layers size={24} />, tone: 'amber', label: tx("Available (Not Assigned)"), value: books.length - assignedBooks, badge: `${pctB(books.length - assignedBooks)}%` },
+          { icon: <Share2 size={24} />, tone: 'green', label: tx("Total Shares"), value: shares.length, onClick: openShares },
         ]} />
 
-        <EbBar active={anyFilter} onClear={clear}>
-          <EbSearch value={search} onChange={setSearch} placeholder={tx("Search a book or an edition")} />
-          <Dropdown label={tx("Book")} value={work} onChange={setWork} allLabel={tx("All books")} options={materials.map((m) => ({ value: m.id, label: `${m.code ? `${m.code} — ` : ''}${m.title}` }))} className="eb2-dd" />
-          <Dropdown label={tx("Level")} value={level} onChange={setLevel} allLabel={tx("All levels")} options={[{ value: '__none__', label: tx("No level (everyone)") }, ...levels.map((l) => ({ value: l.id, label: l.name }))]} className="eb2-dd" />
-          <Dropdown label={tx("Shared with")} value={kurelF} onChange={setKurelF} allLabel={tx("Shared with any kurel")} options={leafGroups.map((g) => ({ value: g.id, label: g.name }))} className="eb2-dd" />
-          <Dropdown label={tx("Access")} value={access} onChange={setAccess} allLabel={tx("All access")} options={[{ value: 'download', label: tx("Can be downloaded") }, { value: 'read', label: tx("Read only") }]} className="eb2-dd" />
-        </EbBar>
+        <div className="lb-grid">
+          <section className="lb-main">
+            <header className="lb-h">
+              <div><i><BookOpen size={24} /></i><span><h2>{tx("Library of Books")}</h2><p>{tx("All approved books with their official audio versions and details.")}</p></span></div>
+              <label className="lb-s"><Search size={16} /><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={tx("Search by title, edition or reference…")} /></label>
+            </header>
+            <div className="lb-f">
+              <Dropdown label={tx("Book")} value={work} onChange={setWork} allLabel={tx("All books")} options={materials.map((m) => ({ value: m.id, label: `${m.code ? `${m.code} — ` : ''}${m.title}` }))} />
+              <Dropdown label={tx("Level")} value={level} onChange={setLevel} allLabel={tx("All levels")} options={[{ value: '__none__', label: tx("No level (everyone)") }, ...levels.map((l) => ({ value: l.id, label: l.name }))]} />
+              <Dropdown label={tx("Shared with")} value={kurelF} onChange={setKurelF} allLabel={tx("Any kurel")} options={leafGroups.map((g) => ({ value: g.id, label: g.name }))} />
+              <Dropdown label={tx("Access")} value={access} onChange={setAccess} allLabel={tx("All access")} options={[{ value: 'download', label: tx("Can be downloaded") }, { value: 'read', label: tx("Read only") }]} />
+              {anyFilter && <button type="button" className="lb-clear" onClick={clear}>{tx("Clear all")}</button>}
+            </div>
+            <div className="lb-t">
+              <table>
+                <thead><tr><th>{tx("Title (Book)")}</th><th>{tx("Edition")}</th><th>{tx("Ref.")}</th><th>{tx("Duration")}</th><th>{tx("Audio versions")}</th><th>{tx("Assigned to")}</th><th>{tx("Level")}</th><th>{tx("Status")}</th><th>{tx("Actions")}</th></tr></thead>
+                <tbody>
+                  {shownRows.length === 0 && <tr><td colSpan={9} className="lb-none">{books.length === 0 ? tx("No book yet. Click \"Add to Library\".") : tx("No book matches these filters.")}</td></tr>}
+                  {shownRows.map((b) => {
+                    const n = shareCount[b.id] ?? 0;
+                    const a = audioCount(b.qacaidId);
+                    return (
+                      <tr key={b.id}>
+                        <td><button type="button" className="lb-ti" onClick={() => setWork(work === b.qacaidId ? '' : b.qacaidId)}><i><BookOpen size={16} /></i><b>{matById[b.qacaidId]?.title ?? '—'}</b></button></td>
+                        <td><button type="button" className="lnk" onClick={manage}>{b.label || '—'}</button></td>
+                        <td><span className="lb-ref">{matById[b.qacaidId]?.code || '—'}</span></td>
+                        <td><span className="lb-du"><Play size={13} /> {mmss(b.durationSeconds)}</span></td>
+                        <td><button type="button" className="lnk" onClick={() => router.push('/dashboard/audio')}><Headphones size={14} /> {a} {a === 1 ? tx("version") : tx("versions")}</button></td>
+                        <td>{n > 0 ? <button type="button" className="lnk" onClick={() => { openShares(); setWork(b.qacaidId); }}><Users size={14} /> {n} {n === 1 ? tx("share") : tx("shares")}</button> : '— —'}</td>
+                        <td><button type="button" className="lnk" onClick={() => setLevel(b.levelId ?? '__none__')}>{b.levelId && levelById[b.levelId] ? <EbPill tone="ok">{levelById[b.levelId].name}</EbPill> : <EbPill tone="info">{tx("Everyone")}</EbPill>}</button></td>
+                        <td>{n > 0 ? <span className="lb-st ok"><Check size={14} /> {tx("Assigned")}</span> : <span className="lb-st"><Circle size={12} /> {tx("Not Assigned")}</span>}</td>
+                        <td><span className="lb-ac"><button type="button" onClick={manage}>{tx("Assign")}</button><a href={b.fileUrl} target="_blank" rel="noreferrer" aria-label={tx("Preview")}><Eye size={16} /></a>{b.downloadable && <a href={b.fileUrl} download aria-label={tx("Download")}><Download size={16} /></a>}</span></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="lb-pg">
+              <span>{tx("Showing")} {rows.length === 0 ? 0 : (page - 1) * PAGE_N + 1}–{Math.min(page * PAGE_N, rows.length)} {tx("of")} {rows.length} {tx("books")}</span>
+              <span>
+                <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} aria-label={tx("Previous")}><ChevronLeft size={16} /></button>
+                {Array.from({ length: Math.min(pages, 5) }, (_, i) => i + 1).map((n) => <button type="button" key={n} className={n === page ? 'on' : ''} onClick={() => setPage(n)}>{n}</button>)}
+                {pages > 5 && <><em>…</em><button type="button" className={page === pages ? 'on' : ''} onClick={() => setPage(pages)}>{pages}</button></>}
+                <button type="button" disabled={page >= pages} onClick={() => setPage((p) => p + 1)} aria-label={tx("Next")}><ChevronRight size={16} /></button>
+              </span>
+            </div>
+          </section>
 
-        <EbPanel icon={<BookOpen size={20} />} title={tx("Books")} count={anyFilter ? `${rows.length} / ${books.length}` : books.length}>
-          <EbTable rows={rows} cols={cols} rowKey={(b) => b.id} empty={books.length === 0 ? tx("No book yet. Click \"Add a book\".") : tx("No book matches these filters.")} />
-        </EbPanel>
+          <aside className="lb-side">
+            <section className="lb-card">
+              <h3><Zap size={20} /> {tx("Quick Actions")}</h3>
+              <button type="button" className="gold" onClick={manage}><UserPlus size={18} /> {tx("Quick Assign to Groups")} <ChevronRight size={16} /></button>
+              <button type="button" onClick={manage}><Upload size={18} /> {tx("Upload Book / Audio")}</button>
+              <Link href="/dashboard/programme-pedagogique"><Layers size={18} /> {tx("Create Collection / Program")}</Link>
+              <Link href="/dashboard/messagerie"><Radio size={18} /> {tx("Notify Groups")}</Link>
+              <button type="button" onClick={exportCsv}><Download size={18} /> {tx("Export Library (CSV)")}</button>
+            </section>
+            <section className="lb-card">
+              <h3><BarChart3 size={20} /> {tx("Library Insights")}</h3>
+              <dl>
+                <div><dt>{tx("Books assigned")}</dt><dd><b>{assignedBooks}</b><em>{pctB(assignedBooks)}%</em></dd></div>
+                <div><dt>{tx("Books not assigned")}</dt><dd><b>{books.length - assignedBooks}</b><em>{pctB(books.length - assignedBooks)}%</em></dd></div>
+                <div><dt>{tx("Books with audio")}</dt><dd><b>{withAudio}</b><em>{pctB(withAudio)}%</em></dd></div>
+                <div><dt>{tx("Multiple audio versions")}</dt><dd><b>{multiAudio}</b><em>{pctB(multiAudio)}%</em></dd></div>
+              </dl>
+            </section>
+          </aside>
+        </div>
 
         <EbPanel id="shares" icon={<Share2 size={20} />} title={tx("Shares")} count={shareRows.length === shares.length ? shares.length : `${shareRows.length} / ${shares.length}`}
           actions={(shType || shRight || work) ? <button type="button" className="eb2-bt" onClick={() => { setShType(''); setShRight(''); setWork(''); }}>{tx("Clear all")}</button> : undefined}>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AlarmClock, CalendarClock, CheckCircle2, ChevronLeft, ChevronRight, Mail, Plus, RefreshCw, RotateCcw, Users, XCircle } from 'lucide-react';
+import { AlarmClock, CalendarClock, List as ListIcon, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Mail, Plus, RefreshCw, RotateCcw, Users, XCircle } from 'lucide-react';
 import { where, Timestamp } from 'firebase/firestore';
 import { useCollection, tsMs } from '@/lib/useCollection';
 import { useZones } from '@/lib/useZones';
@@ -44,6 +44,8 @@ export default function RehearsalsPage() {
   const [openId, setOpenId] = useState('');
   const [page, setPage] = useState(1);
   const [creating, setCreating] = useState(false);
+  const [view, setView] = useState<'list' | 'calendar'>('list');
+  const [calMonth, setCalMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
   const [draftCity, setDraftCity] = useState('');
 
   const geoOf = (groupId: string) => {
@@ -152,9 +154,9 @@ export default function RehearsalsPage() {
       </div>
 
       <section className="eb2-panel">
-        <header><i aria-hidden><CalendarClock size={20} /></i><h2>{tx("Sessions")}</h2><em>{filtering ? tx("Filtered") + ` · ${sorted.length}` : sorted.length}</em></header>
+        <header><i aria-hidden><CalendarClock size={20} /></i><h2>{tx("Rehearsal Sessions")}</h2><em>{filtering ? tx("Filtered") + ` · ${sorted.length}` : sorted.length}</em><span className="rh-vt" role="group" aria-label={tx("View")}><button type="button" className={view === 'list' ? 'on' : ''} onClick={() => setView('list')}><ListIcon size={16} /> {tx("List")}</button><button type="button" className={view === 'calendar' ? 'on' : ''} onClick={() => setView('calendar')}><CalendarDays size={16} /> {tx("Calendar")}</button></span></header>
         <p className="eb2-note">{tx("Counts cover sessions that have already started. A late member counts as absent but may sit and observe; Present + Leave + Absent always equals the expected total.")}</p>
-        {rows === null ? <p className="kt-empty">{tx("Loading…")}</p> : sorted.length === 0 ? <p className="kt-empty">{tx("No rehearsal matches these filters.")}</p> : (
+        {view === 'list' && (rows === null ? <p className="kt-empty">{tx("Loading…")}</p> : sorted.length === 0 ? <p className="kt-empty">{tx("No rehearsal matches these filters.")}</p> : (
           <div className="eb2-scroll">
             <table className="eb2-table rh-table">
               <thead><tr>{th(0, 'title', tx("Session"))}{th(1, 'city', tx("City"))}{th(2, 'groups', tx("Groups"))}{th(3, 'time', tx("Local time"))}{th(4, 'rate', tx("Attendance"))}{th(5, '', tx("Members"))}</tr></thead>
@@ -197,8 +199,33 @@ export default function RehearsalsPage() {
               </tbody>
             </table>
           </div>
-        )}
-        <footer>
+        ))}
+        {view === 'calendar' ? (() => {
+          const y = calMonth.getFullYear();
+          const m = calMonth.getMonth();
+          const first = (new Date(y, m, 1).getDay() + 6) % 7;
+          const days = new Date(y, m + 1, 0).getDate();
+          const cells: (number | null)[] = [...Array(first).fill(null), ...Array.from({ length: days }, (_, i) => i + 1)];
+          while (cells.length % 7) cells.push(null);
+          const byDay: Record<number, typeof sorted> = {};
+          sorted.forEach((s) => { const d = new Date(s.startMs); if (d.getFullYear() === y && d.getMonth() === m) (byDay[d.getDate()] ??= []).push(s); });
+          return (
+            <div className="rh-cal">
+              <div className="rh-calh"><button type="button" aria-label={tx("Previous")} onClick={() => setCalMonth(new Date(y, m - 1, 1))}><ChevronLeft size={16} /></button><b>{calMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</b><button type="button" aria-label={tx("Next")} onClick={() => setCalMonth(new Date(y, m + 1, 1))}><ChevronRight size={16} /></button></div>
+              <div className="rh-calg">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => <span key={d} className="h">{tx(d)}</span>)}
+                {cells.map((d, i) => (
+                  <div key={i} className={`c${d ? '' : ' x'}`}>
+                    {d && <em>{d}</em>}
+                    {d && (byDay[d] ?? []).slice(0, 3).map((s) => <button type="button" key={s.id} title={s.e.title} onClick={() => { setView('list'); setDate(dayKeyInZone(s.startMs, s.tz)); }}>{s.e.title}</button>)}
+                    {d && (byDay[d] ?? []).length > 3 && <small>+{(byDay[d] ?? []).length - 3}</small>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })() : null}
+        {view === 'list' && <footer>
           <span>{txf("Showing {a} of {b} results", { a: pageRows.length, b: sorted.length })}</span>
           {pages > 1 && (
             <nav aria-label={tx("Pages")}>
@@ -207,7 +234,7 @@ export default function RehearsalsPage() {
               <button type="button" aria-label={tx("Next")} disabled={cur >= pages} onClick={() => setPage(cur + 1)}><ChevronRight size={16} /></button>
             </nav>
           )}
-        </footer>
+        </footer>}
       </section>
 
       {creating && (

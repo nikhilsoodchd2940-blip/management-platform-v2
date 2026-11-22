@@ -322,14 +322,16 @@ export default function MembersPage() {
     });
   }, []);
   const online = (m: MemberRow) => (presence[m.id] ?? 0) > 0 && now - presence[m.id] < ONLINE_MS;
+  const [sortBy, setSortBy] = useState<'az' | 'za' | 'id'>('az');
   const shown = useMemo(() => {
-    if (!presenceF) return rows;
-    return rows.filter((m) => {
+    const base = [...rows].sort((a, b) => (sortBy === 'id' ? (a.memberId || '').localeCompare(b.memberId || '') : sortBy === 'za' ? (b.displayName || '').localeCompare(a.displayName || '') : (a.displayName || '').localeCompare(b.displayName || '')));
+    if (!presenceF) return base;
+    return base.filter((m) => {
       const age = now - (presence[m.id] ?? 0);
       return presenceF === 'online' ? (presence[m.id] ?? 0) > 0 && age < ONLINE_MS : presenceF === 'recent' ? (presence[m.id] ?? 0) > 0 && age < 30 * 60 * 1000 : !((presence[m.id] ?? 0) > 0 && age < ONLINE_MS);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, presence, presenceF]);
+  }, [rows, presence, presenceF, sortBy]);
   // The first member is opened by default, and again whenever the current one drops out of the filtered list.
   useEffect(() => {
     if (loading || shown.length === 0) return;
@@ -429,7 +431,7 @@ export default function MembersPage() {
                   <h2>{tx("Member list")}</h2>
                   <p>{shown.length} {tx("member")}{shown.length === 1 ? '' : 's'} {tx("shown")}</p>
                 </div>
-                <div className="mm-ph"><span className="status">{tx("Live data")}</span><button type="button" className={`mm-fbtn${moreOpen || moreCount > 0 ? ' on' : ''}`} onClick={() => setMoreOpen((v) => !v)}><SlidersHorizontal size={15} />{tx("Filters")}</button><span className="mm-vt" role="group" aria-label={tx("View")}><button type="button" className={listView ? 'on' : ''} aria-pressed={listView} onClick={() => setListView(true)}><List size={17} /></button><button type="button" className={!listView ? 'on' : ''} aria-pressed={!listView} onClick={() => setListView(false)}><LayoutGrid size={17} /></button></span></div>
+                <div className="mm-ph"><span className="status">{tx("Live data")}</span><button type="button" className={`mm-fbtn${moreOpen || moreCount > 0 ? ' on' : ''}`} onClick={() => setMoreOpen((v) => !v)}><SlidersHorizontal size={15} />{tx("Filters")}</button><Dropdown label={tx("Sort")} value={sortBy} onChange={(v) => setSortBy((v || 'az') as 'az' | 'za' | 'id')} options={[{ value: 'az', label: tx("Name (A–Z)") }, { value: 'za', label: tx("Name (Z–A)") }, { value: 'id', label: tx("Member ID") }]} className="mm-sort" /><span className="mm-vt" role="group" aria-label={tx("View")}><button type="button" className={listView ? 'on' : ''} aria-pressed={listView} onClick={() => setListView(true)}><List size={17} /></button><button type="button" className={!listView ? 'on' : ''} aria-pressed={!listView} onClick={() => setListView(false)}><LayoutGrid size={17} /></button></span></div>
               </div>
               <div className={`members${listView ? '' : ' grid'}`}>
                 {(loading || (!!areaGroups && areaIds === null)) && <div className="empty" style={{ display: 'block' }}>{tx("Loading…")}</div>}
@@ -613,7 +615,7 @@ export default function MembersPage() {
       {chatFor && <ChatDialog userId={chatFor.id} name={chatFor.name} photoUrl={chatFor.photoUrl} onClose={() => setChatFor(null)} />}
       {assignOpen && <AssignKurel members={members.map((m) => ({ id: m.id, name: m.displayName, memberId: m.memberId, photoUrl: m.photoUrl, kurels: (memberships[m.id] ?? []).map((k) => k.groupId) }))} headcount={headcount} initialId={assignOpen.id} onClose={() => setAssignOpen(null)} />}
       <ManageToggle hideButton title={tx("Manage members — add, import, edit, assign")} openSignal={manageSignal} closeSignal={closeSignal}>
-        <MembersManage view={manageView} openEdit={editRequest} openAdd={addRequest} onEditDone={() => { setEditRequest({ id: '', n: 0 }); setCloseSignal((n) => n + 1); }} />
+        <MembersManage onAssign={() => setAssignOpen({ id: selected?.id ?? '' })} onExport={exportList} view={manageView} openEdit={editRequest} openAdd={addRequest} onEditDone={() => { setEditRequest({ id: '', n: 0 }); setCloseSignal((n) => n + 1); }} />
       </ManageToggle>
     </>
   );

@@ -33,7 +33,7 @@ import {
   setPrimaryGroup as setPrimaryGroupFn,
 } from '@/lib/functions';
 import { useLocale } from '@/lib/i18n/LocaleContext';
-import { Upload, UserPlus, Users } from 'lucide-react';
+import { ArrowLeftRight, Layers, Pencil, Upload, UserPlus, Users } from 'lucide-react';
 import { tx } from '@/lib/i18n/tr';
 
 interface GroupRow {
@@ -140,7 +140,7 @@ function normalizePhone(raw: string): string {
  * name (e.g. two orgs each with a group literally named "Group A" in
  * different cities), so the leaf name alone is ambiguous.
  */
-export default function MembersManage({ view = 'all', openEdit, openAdd, onEditDone }: { /** Which tool this panel shows: only "Add a member" (+ bulk upload), only the assign-to-kurel list, or both. */ view?: 'add' | 'assign' | 'all'; openEdit?: { id: string; n: number }; openAdd?: { n: number }; /** Called when an editor opened from the member page is saved or closed, so the page can take you back. */ onEditDone?: () => void }) {
+export default function MembersManage({ view = 'all', openEdit, openAdd, onEditDone, onAssign, onExport }: { /** Opens the assign-to-group page. */ onAssign?: () => void; /** Downloads the member list. */ onExport?: () => void; /** Which tool this panel shows: only "Add a member" (+ bulk upload), only the assign-to-kurel list, or both. */ view?: 'add' | 'assign' | 'all'; openEdit?: { id: string; n: number }; openAdd?: { n: number }; /** Called when an editor opened from the member page is saved or closed, so the page can take you back. */ onEditDone?: () => void }) {
   const editFromPage = useRef(false);
   const { t } = useLocale();
   const m18 = t.members;
@@ -1031,8 +1031,8 @@ export default function MembersManage({ view = 'all', openEdit, openAdd, onEditD
   return (
     <div>
       <nav className="am-tabs" aria-label={m18.title}>
-        {([['am-all-card', tx("Members"), Users], ['add-member-card', tx("Add Member"), UserPlus], ['am-bulk-card', tx("Bulk Upload"), Upload]] as const).map(([id, label, Icon], i) => (
-          <button type="button" key={id} className={i === 1 && view !== 'assign' ? 'on' : ''} onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}><Icon size={16} />{label}</button>
+        {([['am-all-card', tx("Members"), Users], ['add-member-card', tx("Add Member"), UserPlus], ['am-bulk-card', tx("Bulk Upload"), Upload], ['am-all-card', tx("Edit Members"), Pencil], ['assign', tx("Assignments"), Layers], ['am-bulk-card', tx("Import/Export"), ArrowLeftRight]] as const).map(([id, label, Icon], i) => (
+          <button type="button" key={label} className={i === 1 && view !== 'assign' ? 'on' : ''} onClick={() => (id === 'assign' ? onAssign?.() : document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }))}><Icon size={16} />{label}</button>
         ))}
       </nav>
 
@@ -1126,6 +1126,7 @@ export default function MembersManage({ view = 'all', openEdit, openAdd, onEditD
           <header className="am-head">
             <span className="am-ico alt" aria-hidden>↑</span>
             <div><h2>{m18.bulkTitle}</h2><p>{tx("Add many members at once from an Excel or CSV file.")}</p></div>
+            {onExport && <button type="button" className="btn btn-secondary am-exp" onClick={onExport}>{tx("Export the list")}</button>}
           </header>
 
           <ol className="am-steps">
