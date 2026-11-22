@@ -162,7 +162,7 @@ export default function LogisticsPage() {
   const { cities, locationOf } = useGroupHierarchy();
   const zonesRaw = useZones();
   const localZones = useCollection<{ name: string; cityId: string }>('localZones', []);
-  const tasks = useCollection<{ status: string; itemsDescription?: string; groupId?: string; assignedToName?: string }>('logisticsTasks', []);
+  const tasks = useCollection<{ status: string; itemsDescription?: string; groupId?: string; assignedToName?: string; resourceRequestId?: string }>('logisticsTasks', []);
   const rehearsals = useCollection<{ title: string; startAt: Timestamp; endAt: Timestamp; status: string; location?: { address?: string }; subGroupIds?: string[] }>('events', [where('kind', '==', 'rehearsal')], 'rh');
   const countryOpts = countries.map((c) => ({ value: c.id, label: c.name }));
   const cityOpts = cities.filter((c) => (!fCountry || c.parentGroupId === fCountry) && (!fZone || c.zoneId === fZone)).map((c) => ({ value: c.id, label: c.name }));
@@ -197,7 +197,7 @@ export default function LogisticsPage() {
     return { c, n: list.length, qty: list.reduce((a, i) => a + (i.quantity ?? 0), 0), low: list.filter((i) => i.quantity !== undefined && i.quantity <= 2).length };
   }).filter((r) => r.n > 0);
   const reqByCat = (Object.keys(CATEGORY) as Category[]).map((c) => ({ c, n: scopedReq.filter((r) => r.category === c).length })).filter((r) => r.n > 0).sort((a, b) => b.n - a.n).slice(0, 5);
-  const reqShown = reqTab === 'pending' ? scopedReq.filter((r) => r.stage.endsWith('_review')) : reqTab === 'approved' ? scopedReq.filter((r) => r.stage === 'approved') : reqTab === 'delivered' ? scopedReq.filter((r) => delivered.some((t) => t.groupId === r.groupId)) : scopedReq.filter((r) => returned.some((t) => t.groupId === r.groupId));
+  const reqShown = reqTab === 'pending' ? scopedReq.filter((r) => r.stage.endsWith('_review')) : reqTab === 'approved' ? scopedReq.filter((r) => r.stage === 'approved') : reqTab === 'delivered' ? scopedReq.filter((r) => delivered.some((t) => t.resourceRequestId === r.id)) : scopedReq.filter((r) => returned.some((t) => t.resourceRequestId === r.id));
   const invRows = rows.filter((i) => (!fCat || i.category === fCat));
   const stateOf = (i: Item) => (i.status === 'retired' ? 'retired' : i.quantity !== undefined && i.quantity <= 2 ? 'low' : 'ok');
   const fmtD = (ms: number) => (ms ? new Date(ms).toLocaleDateString(dateLocale(), { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
@@ -283,8 +283,8 @@ export default function LogisticsPage() {
               <CxTabs value={reqTab} onChange={setReqTab} items={[
                 { value: 'pending', label: tx("Pending"), count: scopedReq.filter((r) => r.stage.endsWith('_review')).length },
                 { value: 'approved', label: tx("Approved"), count: scopedReq.filter((r) => r.stage === 'approved').length },
-                { value: 'delivered', label: tx("Delivered"), count: delivered.length },
-                { value: 'returned', label: tx("Returned"), count: returned.length },
+                { value: 'delivered', label: tx("Delivered"), count: scopedReq.filter((r) => delivered.some((t) => t.resourceRequestId === r.id)).length },
+                { value: 'returned', label: tx("Returned"), count: scopedReq.filter((r) => returned.some((t) => t.resourceRequestId === r.id)).length },
               ]} />
               <div className="lg-reqs">
                 {reqShown.length === 0 && <p className="cx-empty">{tx("No requests yet.")}</p>}
