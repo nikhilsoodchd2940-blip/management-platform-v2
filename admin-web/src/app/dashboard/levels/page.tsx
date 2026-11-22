@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
-import { Award, BookOpen, Check, ChevronLeft, ChevronRight, Eye, Filter, Info, Layers, Pencil, Plus, RefreshCw, Repeat2, Search, ShieldCheck, Trash2, Users, UserPlus, X } from 'lucide-react';
+import { Award, BookOpen, Check, ChevronLeft, ChevronRight, Eye, MoreHorizontal, ServerCog, Filter, Info, Layers, Pencil, Plus, Repeat2, Search, ShieldCheck, Trash2, Users, UserPlus, X } from 'lucide-react';
 import { collection, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { onSnapshot } from '@/lib/firestore';
@@ -16,6 +16,8 @@ import Dropdown from '@/components/Dropdown';
 import { CountryName } from '@/components/CountryFlag';
 import { CxBanner, CxCard, CxStats } from '@/components/Cx';
 import { tx } from '@/lib/i18n/tr';
+import Link from 'next/link';
+import { academicYearLabel, academicYearOptions, currentAcademicStart } from '@/lib/academicYear';
 
 /** How many library books point at each level (live). */
 function useBookCounts() {
@@ -45,6 +47,8 @@ export default function LevelsPage() {
   const [city, setCity] = useState('');
   const [zone, setZone] = useState('');
   const [lvFilter, setLvFilter] = useState('');
+  const [year, setYear] = useState(String(currentAcademicStart()));
+  const [lvStatus, setLvStatus] = useState('');
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const [checked, setChecked] = useState<string[]>([]);
@@ -79,7 +83,7 @@ export default function LevelsPage() {
   const accessText = (l: Level) => (l.accessLevelIds.length === 0 ? tx("Own level only") : l.accessLevelIds.map((id) => byId[id]).filter(Boolean).sort((a, b) => a.rank - b.rank).map((x) => x.name).join(', '));
 
   const level = byId[sel];
-  const levelRows = levels.filter((l) => !lvFilter || l.id === lvFilter);
+  const levelRows = levels.filter((l) => (!lvFilter || l.id === lvFilter) && (!lvStatus || (lvStatus === 'filled' ? (kurelCount.m[l.id] ?? 0) > 0 : (kurelCount.m[l.id] ?? 0) === 0)));
 
   const inScope = (id: string) => {
     const loc = locationOf(id);
@@ -147,6 +151,7 @@ export default function LevelsPage() {
   return (
     <div className="px cx-page lv2">
       <CxBanner icon={<Layers size={30} />} title={tx("Comité Pédagogique — Academic Levels")} sub={tx("Levels determine which kurels, books and events each kurel can access.")}>
+        <Dropdown className="lv2-yr" label={tx("Academic Year")} value={year} onChange={setYear} options={academicYearOptions()} />
         <button type="button" className="cx-btn ghost" onClick={() => openAssign()}><UserPlus size={16} /> {tx("Assign kurels")}</button>
         <button type="button" className="cx-btn gold" onClick={() => { resetForm(); document.getElementById('lv-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); document.getElementById('lv-name')?.focus(); }}><Plus size={16} /> {tx("Create level")}</button>
       </CxBanner>
@@ -166,7 +171,9 @@ export default function LevelsPage() {
         <Dropdown label={tx("Country")} value={country} onChange={(v) => { setCountry(v); setCity(''); }} allLabel={tx("All countries")} options={countries.map((c) => ({ value: c.id, label: c.name }))} />
         <Dropdown label={tx("City")} value={city} onChange={setCity} allLabel={tx("All cities")} options={cities.filter((c) => !country || c.parentGroupId === country).map((c) => ({ value: c.id, label: c.name }))} />
         <Dropdown label={tx("Zone")} value={zone} onChange={setZone} allLabel={tx("All zones")} options={zones.filter((z) => !country || z.countryId === country).map((z) => ({ value: z.id, label: z.name }))} />
+        <Dropdown label={tx("Year")} value={year} onChange={setYear} options={academicYearOptions()} />
         <Dropdown label={tx("Level")} value={lvFilter} onChange={setLvFilter} allLabel={tx("All levels")} options={levels.map((l) => ({ value: l.id, label: l.name }))} />
+        <Dropdown label={tx("Status")} value={lvStatus} onChange={setLvStatus} allLabel={tx("All statuses")} options={[{ value: 'filled', label: tx("With kurels") }, { value: 'empty', label: tx("Empty") }]} />
         <label className="lv2-s"><Search size={16} /><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={tx("Search levels or kurels…")} /></label>
       </div>
 
@@ -217,9 +224,9 @@ export default function LevelsPage() {
               </div>
               <div className="lv2-tbl">
                 <table>
-                  <thead><tr><th><input type="checkbox" aria-label={tx("Select all")} checked={shown.length > 0 && shown.every((g) => checked.includes(g.id))} onChange={(e) => setChecked(e.target.checked ? shown.map((g) => g.id) : [])} /></th><th>{tx("Kurel Name")}</th><th>{tx("Country")}</th><th>{tx("City")}</th><th>{tx("Zone")}</th><th>{tx("Seats")}</th></tr></thead>
+                  <thead><tr><th><input type="checkbox" aria-label={tx("Select all")} checked={shown.length > 0 && shown.every((g) => checked.includes(g.id))} onChange={(e) => setChecked(e.target.checked ? shown.map((g) => g.id) : [])} /></th><th>{tx("Kurel Name")}</th><th>{tx("Country")}</th><th>{tx("City")}</th><th>{tx("Zone")}</th><th>{tx("Academic Year / Program")}</th><th aria-label={tx("Actions")} /></tr></thead>
                   <tbody>
-                    {shown.length === 0 && <tr><td colSpan={6} className="lv2-none">{tx("No kurel in this level with these filters.")}</td></tr>}
+                    {shown.length === 0 && <tr><td colSpan={7} className="lv2-none">{tx("No kurel in this level with these filters.")}</td></tr>}
                     {shown.map((g) => {
                       const loc = locationOf(g.id);
                       return (
@@ -229,7 +236,8 @@ export default function LevelsPage() {
                           <td><CountryName name={loc.country?.name} /></td>
                           <td>{loc.city?.name ?? '—'}</td>
                           <td>{g.zoneId && zoneName[g.zoneId] ? <span className="lv2-zone">{zoneName[g.zoneId]}</span> : '—'}</td>
-                          <td>{g.capacity ?? '—'}</td>
+                          <td>{academicYearLabel(year)}</td>
+                          <td><Link href={`/dashboard/groups?q=${encodeURIComponent(g.name)}`} className="lv2-kb" aria-label={`${tx("Open the profile")} ${g.name}`}><MoreHorizontal size={18} /></Link></td>
                         </tr>
                       );
                     })}
@@ -282,7 +290,7 @@ export default function LevelsPage() {
             )}
           </CxCard>
 
-          <CxCard icon={<ShieldCheck size={20} />} title={tx("How Levels Work / Access Rules")} right={<button type="button" className="lv2-rb" onClick={rebuild} disabled={rebuilding}><RefreshCw size={14} /> {rebuilding ? tx("Rebuilding…") : tx("Rebuild access")}</button>}>
+          <CxCard icon={<ShieldCheck size={20} />} title={tx("How Levels Work / Access Rules")} right={<button type="button" className="lv2-rb" title={tx("Rebuild access for every member from these rules")} onClick={rebuild} disabled={rebuilding}><ServerCog size={14} /> {rebuilding ? tx("Rebuilding…") : tx("Server Rules")}</button>}>
             <ul className="lv2-rules">
               <li><Check size={14} /> {tx("Levels are used by the Comité Pédagogique.")}</li>
               <li><Check size={14} /> {tx("Each kurel belongs to one level.")}</li>

@@ -91,7 +91,7 @@ export default function MembersPage() {
   const [kurelCount, setKurelCount] = useState('');
   const [alsoKurel, setAlsoKurel] = useState('');
   const [roleF, setRoleF] = useState('');
-  const moreCount = [zoneF, localF, roleF, kurelCount].filter(Boolean).length;
+  const moreCount = [zoneF, localF, roleF, kurelCount, kurelF, statusFilter].filter(Boolean).length;
   const scopes = useCollection<{ role: string; countryIds?: string[]; zoneIds?: string[]; cityIds?: string[]; groupIds?: string[] }>('adminScopes', []);
   const adminRoles = useCollection<{ isSuperAdmin?: boolean }>('adminRoles', []);
   const [profile, setProfile] = useState('');
@@ -377,30 +377,25 @@ export default function MembersPage() {
     <>
       <div className="px px-gestion-membres">
         <div className="content">
-          <CxBanner kicker="Direction du Conservatoire" title={tx("Member Management")} sub={tx("Profiles, statuses, assignments, capacities and activities of members across their kurels.")}>
-            <button type="button" className="cx-btn gold mm-add" onClick={() => { setManageView('add'); setEditRequest({ id: '', n: 0 }); setAddRequest((r) => ({ n: r.n + 1 })); setManageSignal((n) => n + 1); }}><UserPlus size={18} />{tx("Add a member")}</button>
-            <button type="button" className="cx-btn ghost-light" onClick={exportList}><Download size={16} />{tx("Export the list")}</button>
-            <button type="button" className="cx-btn ghost-light" onClick={() => setAssignOpen({ id: selected?.id ?? '' })}><Layers size={16} />{tx("Assign to a kurel")}</button>
-            <button type="button" className="cx-btn ghost-light" onClick={() => router.push('/dashboard/approvals')} title={tx("Review the registrations waiting for approval")}>{tx("Pending approvals")} <b>{fmt(pending)}</b></button>
-          </CxBanner>
+          <CxBanner kicker="Direction du Conservatoire" title={tx("Member Management")} />
 
           <div className="mm-stripe">
             <button type="button" className="tot" onClick={() => showList({})}><Users size={30} /><span><b>{fmt(everyone)}</b><small>{tx("Total members")}</small></span></button>
             <button type="button" onClick={() => showList({ status: 'active' })}><i className="dot g" /><span><b>{fmt(active)}</b><small>{tx("Active")}</small></span></button>
             <button type="button" onClick={() => showList({ status: 'suspended' })}><i className="dot y" /><span><b>{everyone !== null && active !== null && pending !== null ? fmt(Math.max(0, everyone - active - pending)) : '—'}</b><small>{tx("Inactive")}</small></span></button>
             <button type="button" onClick={() => router.push('/dashboard/approvals')}><i className="dot r" /><span><b>{fmt(pending)}</b><small>{tx("Pending")}</small></span></button>
+            <button type="button" className="cx-btn gold mm-add" onClick={() => { setManageView('add'); setEditRequest({ id: '', n: 0 }); setAddRequest((r) => ({ n: r.n + 1 })); setManageSignal((n) => n + 1); }}><UserPlus size={18} />{tx("Add Member")}</button>
           </div>
 
           <MemberCollective rows={shown.map((m) => ({ id: m.id, status: m.status, registered: m.registrationStatus === 'approved', hasPhoto: !!m.photoUrl, online: online(m), kurels: (memberships[m.id] ?? []).map((k) => k.groupId) }))} byId={byId} locationOf={locationOf} scoped={!!(appF || profile || presenceF || country || zoneF || cityF || localF || kurelF || roleF || statusFilter || kurelCount || search)} onCity={(id) => applyTile({ city: id })} onKurel={(id) => applyTile({ kurel: id })} onCountry={(id) => applyTile({ country: id })} onFilter={applyTile} />
 
           <section className="card filters">
-            <input type="search" placeholder={tx("Search by name or phone number")} value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input type="search" placeholder={tx("Search by name, ID, or phone number…")} value={search} onChange={(e) => setSearch(e.target.value)} />
             <Dropdown label={tx("Country")} value={country} onChange={(v) => { setCountry(v); setZoneF(''); setCityF(''); setLocalF(''); setKurelF(''); }} allLabel={tx("All countries")} options={countries.map((c) => ({ value: c.id, label: c.name }))} />
             <Dropdown label={tx("City")} value={cityF} onChange={(v) => { setCityF(v); setLocalF(''); setKurelF(''); }} allLabel={tx("All cities")} options={cities.filter((c) => (!country || c.parentGroupId === country) && (!zoneF || c.zoneId === zoneF)).map((c) => ({ value: c.id, label: c.name }))} />
+            {(moreOpen || moreCount > 0) && (<>
             <Dropdown label={tx("Kurel")} value={kurelF} onChange={setKurelF} allLabel={tx("All kurels")} options={activeLeafGroups.filter((g) => { const c = g.parentGroupId ? byId[g.parentGroupId] : undefined; return !!c && (!cityF || c.id === cityF) && (!zoneF || c.zoneId === zoneF) && (!country || c.parentGroupId === country) && (!localF || g.localZoneId === localF); }).map((g) => ({ value: g.id, label: `${g.name} (${byId[g.parentGroupId ?? '']?.name ?? ''})` }))} />
             <Dropdown label={tx("Status")} value={statusFilter} onChange={setStatusFilter} allLabel={tx("All statuses")} options={[{ value: 'active', label: tx("Active") }, { value: 'suspended', label: tx("Suspended") }]} />
-            <button type="button" className={`mm-more${moreOpen || moreCount > 0 ? ' on' : ''}`} onClick={() => setMoreOpen((v) => !v)} aria-expanded={moreOpen}>⚙ {tx("More filters")}{moreCount > 0 ? <em>{moreCount}</em> : null}</button>
-            {(moreOpen || moreCount > 0) && (<>
             <Dropdown label={tx("Zone")} value={zoneF} onChange={(v) => { setZoneF(v); setCityF(''); setLocalF(''); setKurelF(''); }} allLabel={tx("All zones")} options={(zoneRows ?? []).filter((z) => !country || z.countryId === country).map((z) => ({ value: z.id, label: z.name }))} />
             <Dropdown label={tx("Local zone")} value={localF} onChange={(v) => { setLocalF(v); setKurelF(''); }} allLabel={tx("All local zones")} options={(localZones ?? []).filter((z) => (cityF ? z.cityId === cityF : cities.some((c) => c.id === z.cityId && (!country || c.parentGroupId === country) && (!zoneF || c.zoneId === zoneF)))).map((z) => ({ value: (z as unknown as { id: string }).id, label: `${z.name}${cityF ? '' : ` · ${byId[z.cityId]?.name ?? ''}`}` }))} />
             <Dropdown label={tx("Role")} value={roleF} onChange={setRoleF} allLabel={tx("All roles")} options={Object.entries(ROLE_NAMES).map(([v, l]) => ({ value: v, label: l }))} />
@@ -431,7 +426,7 @@ export default function MembersPage() {
                   <h2>{tx("Member list")}</h2>
                   <p>{shown.length} {tx("member")}{shown.length === 1 ? '' : 's'} {tx("shown")}</p>
                 </div>
-                <div className="mm-ph"><span className="status">{tx("Live data")}</span><button type="button" className={`mm-fbtn${moreOpen || moreCount > 0 ? ' on' : ''}`} onClick={() => setMoreOpen((v) => !v)}><SlidersHorizontal size={15} />{tx("Filters")}</button><Dropdown label={tx("Sort")} value={sortBy} onChange={(v) => setSortBy((v || 'az') as 'az' | 'za' | 'id')} options={[{ value: 'az', label: tx("Name (A–Z)") }, { value: 'za', label: tx("Name (Z–A)") }, { value: 'id', label: tx("Member ID") }]} className="mm-sort" /><span className="mm-vt" role="group" aria-label={tx("View")}><button type="button" className={listView ? 'on' : ''} aria-pressed={listView} onClick={() => setListView(true)}><List size={17} /></button><button type="button" className={!listView ? 'on' : ''} aria-pressed={!listView} onClick={() => setListView(false)}><LayoutGrid size={17} /></button></span></div>
+                <div className="mm-ph"><span className="status">{tx("Live data")}</span><button type="button" className={`mm-fbtn${moreOpen || moreCount > 0 ? ' on' : ''}`} onClick={() => setMoreOpen((v) => !v)}><SlidersHorizontal size={15} />{tx("Filters")}</button><Dropdown label={tx("Sort")} value={sortBy} onChange={(v) => setSortBy((v || 'az') as 'az' | 'za' | 'id')} options={[{ value: 'az', label: tx("Name (A–Z)") }, { value: 'za', label: tx("Name (Z–A)") }, { value: 'id', label: tx("Member ID") }]} className="mm-sort" /><details className="mm-kb2"><summary aria-label={tx("More actions")}><MoreHorizontal size={17} /></summary><div className="mm-kbm"><button type="button" onClick={exportList}><Download size={15} />{tx("Export the list")}</button><button type="button" onClick={() => setAssignOpen({ id: selected?.id ?? '' })}><Layers size={15} />{tx("Assign to a kurel")}</button><button type="button" onClick={() => router.push('/dashboard/approvals')} title={tx("Review the registrations waiting for approval")}><UserPlus size={15} />{tx("Pending approvals")} <b>{fmt(pending)}</b></button></div></details><span className="mm-vt" role="group" aria-label={tx("View")}><button type="button" className={listView ? 'on' : ''} aria-pressed={listView} onClick={() => setListView(true)}><List size={17} /></button><button type="button" className={!listView ? 'on' : ''} aria-pressed={!listView} onClick={() => setListView(false)}><LayoutGrid size={17} /></button></span></div>
               </div>
               <div className={`members${listView ? '' : ' grid'}`}>
                 {(loading || (!!areaGroups && areaIds === null)) && <div className="empty" style={{ display: 'block' }}>{tx("Loading…")}</div>}

@@ -30,6 +30,8 @@ interface Item {
   category: Category;
   levelId?: string;
   quantity?: number;
+  total?: number;
+  inUse?: number;
   status: 'active' | 'retired';
 }
 interface Req {
@@ -85,6 +87,8 @@ export default function LogisticsPage() {
           category: d.data().category as Category,
           levelId: (d.data().levelId as string) || undefined,
           quantity: typeof d.data().quantityAvailable === 'number' ? (d.data().quantityAvailable as number) : undefined,
+          total: typeof d.data().quantityTotal === 'number' ? (d.data().quantityTotal as number) : undefined,
+          inUse: typeof d.data().quantityInUse === 'number' ? (d.data().quantityInUse as number) : undefined,
           status: (d.data().status as 'active' | 'retired') ?? 'active',
         }))
       )
@@ -162,7 +166,7 @@ export default function LogisticsPage() {
   const { cities, locationOf } = useGroupHierarchy();
   const zonesRaw = useZones();
   const localZones = useCollection<{ name: string; cityId: string }>('localZones', []);
-  const tasks = useCollection<{ status: string; itemsDescription?: string; groupId?: string; assignedToName?: string; resourceRequestId?: string }>('logisticsTasks', []);
+  const tasks = useCollection<{ status: string; itemsDescription?: string; groupId?: string; assignedToName?: string; resourceRequestId?: string; completedAt?: Timestamp; returnDueAt?: Timestamp }>('logisticsTasks', []);
   const rehearsals = useCollection<{ title: string; startAt: Timestamp; endAt: Timestamp; status: string; location?: { address?: string }; subGroupIds?: string[] }>('events', [where('kind', '==', 'rehearsal')], 'rh');
   const countryOpts = countries.map((c) => ({ value: c.id, label: c.name }));
   const cityOpts = cities.filter((c) => (!fCountry || c.parentGroupId === fCountry) && (!fZone || c.zoneId === fZone)).map((c) => ({ value: c.id, label: c.name }));
@@ -194,8 +198,10 @@ export default function LogisticsPage() {
   const hm = (t: Timestamp) => new Date(t.toMillis()).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
   const catRows = (Object.keys(CATEGORY) as Category[]).map((c) => {
     const list = items.filter((i) => i.status === 'active' && i.category === c);
-    return { c, n: list.length, qty: list.reduce((a, i) => a + (i.quantity ?? 0), 0), low: list.filter((i) => i.quantity !== undefined && i.quantity <= 2).length };
-  }).filter((r) => r.n > 0);
+    return { c, n: list.length, qty: list.reduce((a, i) => a + (i.quantity ?? 0), 0), used: list.reduce((a, i) => a + (i.inUse ?? 0), 0), low: list.filter((i) => i.quantity !== undefined && i.quantity <= 2).length };
+  }).sort((a, b) => b.n - a.n).slice(0, 5);
+  const nowMs = Date.now();
+  const overdue = (tasks ?? []).filter((t) => t.status === 'delivered' && t.returnDueAt && t.returnDueAt.toMillis() < nowMs && !t.completedAt).length;
   const reqByCat = (Object.keys(CATEGORY) as Category[]).map((c) => ({ c, n: scopedReq.filter((r) => r.category === c).length })).filter((r) => r.n > 0).sort((a, b) => b.n - a.n).slice(0, 5);
   const reqShown = reqTab === 'pending' ? scopedReq.filter((r) => r.stage.endsWith('_review')) : reqTab === 'approved' ? scopedReq.filter((r) => r.stage === 'approved') : reqTab === 'delivered' ? scopedReq.filter((r) => delivered.some((t) => t.resourceRequestId === r.id)) : scopedReq.filter((r) => returned.some((t) => t.resourceRequestId === r.id));
   const invRows = rows.filter((i) => (!fCat || i.category === fCat));
@@ -231,7 +237,7 @@ export default function LogisticsPage() {
             { label: tx("Sites tracked"), value: (localZones ?? []).length, sub: `${countries.length} ${tx("countries")} · ${cities.length} ${tx("cities")} · ${(zonesRaw ?? []).length} ${tx("zones")}`, icon: <MapPin size={18} />, tone: 'green', onClick: () => router.push('/dashboard/locations') },
             { label: tx("Total inventory items"), value: fmt(totalQty), sub: tx("Across all sites"), icon: <Package size={18} />, tone: 'amber', onClick: () => router.push('/dashboard/equipment') },
             { label: tx("Open requests"), value: fmt(scopedReq.filter((r) => r.stage.endsWith("_review")).length), sub: tx("Awaiting approval or delivery"), icon: <ClipboardList size={18} />, tone: 'violet', onClick: () => router.push('/dashboard/resource-requests') },
-            { label: tx("Rooms available today"), value: `${Math.max(roomNames.length - booked, 0)} / ${roomNames.length}`, sub: tx("Local zones with no rehearsal today"), icon: <CalendarDays size={18} />, tone: 'blue', onClick: () => router.push('/dashboard/rehearsals') },
+            { label: tx("Rooms available today"), value: `${Math.max(roomNames.length - booked, 0)} / ${roomNames.length}`, sub: tx("Rehearsal rooms"), icon: <CalendarDays size={18} />, tone: 'blue', onClick: () => router.push('/dashboard/rehearsals') },
             { label: tx("Active assignments"), value: fmt(activeAssign.length), sub: tx("Items currently in use"), icon: <Users size={18} />, tone: 'teal', onClick: () => setManageSignal((n) => n + 1) },
           ]} />
 
@@ -248,27 +254,32 @@ export default function LogisticsPage() {
 
           <CxCard icon={<Layers size={18} />} title={tx("Inventory by category")} sub={fLocal ? localOpts.find((o) => o.value === fLocal)?.label : fCity ? cities.find((c) => c.id === fCity)?.name : fZone ? zoneOpts.find((o) => o.value === fZone)?.label : fCountry ? countries.find((c) => c.id === fCountry)?.name : tx("Whole world")} right={<button type="button" className="cx-btn sm ghost" onClick={() => router.push('/dashboard/equipment')}>{tx("View full inventory")} <ChevronRight size={14} /></button>}>
             <div className="lg-cats">
-              {catRows.length === 0 && <p className="cx-empty">{tx("No equipment yet.")}</p>}
               {catRows.map((r) => (
                 <button type="button" key={r.c} className={`lg-cat${fCat === r.c ? ' on' : ''}`} onClick={() => setFCat(fCat === r.c ? '' : r.c)}>
                   <i><Boxes size={20} /></i><span>{tx(CATEGORY[r.c])}</span><b>{fmt(r.qty || r.n)}</b>
-                  <small>{r.n} {tx("items")}{r.low > 0 && <em> · {r.low} {tx("low stock")}</em>}</small>
+                  <small>{fmt(r.qty)} {tx("available")} · {fmt(r.used)} {tx("in use")}{r.low > 0 && <em> · {tx("Low stock")}</em>}</small>
                 </button>
               ))}
+              <button type="button" className="lg-cat" onClick={() => router.push('/dashboard/rehearsals')}>
+                <i><CalendarDays size={20} /></i><span>{tx("Rooms")}</span><b>{fmt(roomNames.length)}</b>
+                <small>{fmt(Math.max(roomNames.length - booked, 0))} {tx("available today")} · {fmt(booked)} {tx("booked")}</small>
+              </button>
             </div>
           </CxCard>
 
           <div className="cx-grid cx-g32 lg-main">
             <CxCard id="lg-inventory" dark icon={<Package size={18} />} title={tx("Site inventory")} sub={`${invRows.length} ${tx("items shown")}`} right={<button type="button" className="cx-btn sm ghost-light" onClick={() => router.push('/dashboard/equipment')}>{tx("Manage")}</button>}>
               <div className="cx-scroll"><table className="cx-table lg-table">
-                <thead><tr><th>{tx("Item name")}</th><th>{tx("Category")}</th><th>{tx("Qty available")}</th><th>{tx("Level")}</th><th>{tx("Status")}</th><th>{tx("Action")}</th></tr></thead>
+                <thead><tr><th>{tx("Item name")}</th><th>{tx("Category")}</th><th>{tx("Qty total")}</th><th>{tx("Available now")}</th><th>{tx("Assigned / In use")}</th><th>{tx("Level / Scope")}</th><th>{tx("Status")}</th><th>{tx("Action")}</th></tr></thead>
                 <tbody>
-                  {invRows.length === 0 && <tr><td colSpan={6} className="cx-empty">{tx("No equipment yet.")}</td></tr>}
+                  {invRows.length === 0 && <tr><td colSpan={8} className="cx-empty">{tx("No equipment yet.")}</td></tr>}
                   {invRows.slice(0, 12).map((i) => (
                     <tr key={i.id}>
                       <td className="lg-lnk" onClick={() => router.push('/dashboard/equipment')}><span className="lg-ico"><Package size={15} /></span><b>{i.name}</b></td>
                       <td className="lg-lnk" onClick={() => setFCat(i.category)}>{tx(CATEGORY[i.category] ?? i.category)}</td>
+                      <td className="lg-lnk" onClick={() => router.push('/dashboard/equipment')}>{i.total ?? (i.quantity !== undefined && i.inUse !== undefined ? i.quantity + i.inUse : '—')}</td>
                       <td className="lg-lnk" onClick={() => router.push('/dashboard/equipment')}>{i.quantity ?? '—'}</td>
+                      <td className="lg-lnk" onClick={() => router.push('/dashboard/equipment')}>{i.inUse ?? '—'}</td>
                       <td className="lg-lnk" onClick={() => router.push('/dashboard/levels')}>{i.levelId && levelById[i.levelId] ? <span className="lg-chip">{levelById[i.levelId].name}</span> : <span className="lg-chip">{tx("No level")}</span>}</td>
                       <td className="lg-lnk" onClick={() => setState(stateOf(i) === 'retired' ? 'retired' : stateOf(i) === 'low' ? 'low' : 'active')}>{stateOf(i) === 'retired' ? <CxPill tone="red" dot>{tx("Retired")}</CxPill> : stateOf(i) === 'low' ? <CxPill tone="amber" dot>{tx("Low stock")}</CxPill> : <CxPill tone="green" dot>{tx("Available")}</CxPill>}</td>
                       <td><button type="button" className="cx-btn sm" onClick={() => setManageSignal((n) => n + 1)}>{tx("Assign")}</button></td>
@@ -281,10 +292,10 @@ export default function LogisticsPage() {
             <CxCard id="lg-requests" dark icon={<ClipboardList size={18} />} title={tx("Requests & room bookings")} sub={tx("Requests, approvals, deliveries and rehearsal room reservations.")}>
               <div className="lg-rq-head"><b>{tx("Request queue")}</b><button type="button" className="lg-link" onClick={() => router.push('/dashboard/resource-requests')}>{tx("View all requests")} <ChevronRight size={13} /></button></div>
               <CxTabs value={reqTab} onChange={setReqTab} items={[
-                { value: 'pending', label: tx("Pending"), count: scopedReq.filter((r) => r.stage.endsWith('_review')).length },
-                { value: 'approved', label: tx("Approved"), count: scopedReq.filter((r) => r.stage === 'approved').length },
-                { value: 'delivered', label: tx("Delivered"), count: scopedReq.filter((r) => delivered.some((t) => t.resourceRequestId === r.id)).length },
-                { value: 'returned', label: tx("Returned"), count: scopedReq.filter((r) => returned.some((t) => t.resourceRequestId === r.id)).length },
+                { value: 'pending', label: `${tx("Pending")} (${scopedReq.filter((r) => r.stage.endsWith('_review')).length})` },
+                { value: 'approved', label: `${tx("Approved")} (${scopedReq.filter((r) => r.stage === 'approved').length})` },
+                { value: 'delivered', label: `${tx("Delivered")} (${scopedReq.filter((r) => delivered.some((t) => t.resourceRequestId === r.id)).length})` },
+                { value: 'returned', label: `${tx("Returned")} (${scopedReq.filter((r) => returned.some((t) => t.resourceRequestId === r.id)).length})` },
               ]} />
               <div className="lg-reqs">
                 {reqShown.length === 0 && <p className="cx-empty">{tx("No requests yet.")}</p>}
@@ -320,11 +331,11 @@ export default function LogisticsPage() {
           <div className="cx-grid cx-g3 lg-bottom">
             <CxCard id="lg-history" icon={<History size={18} />} title={tx("Recent allocations / usage history")} sub={tx("Traceability of equipment and room usage.")} right={<button type="button" className="lg-link" onClick={() => setManageSignal((n) => n + 1)}>{tx("View full history")} <ChevronRight size={13} /></button>}>
               <table className="cx-table">
-                <thead><tr><th>{tx("Item")}</th><th>{tx("Group / Requester")}</th><th>{tx("Site")}</th><th>{tx("Status")}</th></tr></thead>
+                <thead><tr><th>{tx("Item")}</th><th>{tx("Group / Requester")}</th><th>{tx("Site")}</th><th>{tx("Date returned")}</th><th>{tx("Status")}</th></tr></thead>
                 <tbody>
-                  {(tasks ?? []).length === 0 && <tr><td colSpan={4} className="cx-empty">{tx("No allocations yet.")}</td></tr>}
+                  {(tasks ?? []).length === 0 && <tr><td colSpan={5} className="cx-empty">{tx("No allocations yet.")}</td></tr>}
                   {(tasks ?? []).slice(0, 5).map((t) => { const l = t.groupId ? (locationOf(t.groupId) as { city?: { name: string } } | undefined) : undefined; return (
-                    <tr key={t.id} className="lg-lnk" onClick={() => setManageSignal((n) => n + 1)}><td><b>{t.itemsDescription || '—'}</b></td><td onClick={(e) => { e.stopPropagation(); router.push('/dashboard/groups'); }}>{t.groupId ? byId[t.groupId]?.name ?? '—' : '—'}</td><td onClick={(e) => { e.stopPropagation(); router.push('/dashboard/locations'); }}>{l?.city?.name ?? '—'}</td>
+                    <tr key={t.id} className="lg-lnk" onClick={() => setManageSignal((n) => n + 1)}><td><b>{t.itemsDescription || '—'}</b></td><td onClick={(e) => { e.stopPropagation(); router.push('/dashboard/groups'); }}>{t.groupId ? byId[t.groupId]?.name ?? '—' : '—'}</td><td onClick={(e) => { e.stopPropagation(); router.push('/dashboard/locations'); }}>{l?.city?.name ?? '—'}</td><td>{t.completedAt ? fmtD(t.completedAt.toMillis()) : '—'}</td>
                       <td><CxPill tone={t.status === 'completed' || t.status === 'delivered' ? 'green' : t.status === 'pending' ? 'amber' : 'blue'}>{tx(t.status)}</CxPill></td></tr>); })}
                 </tbody>
               </table>
@@ -332,9 +343,9 @@ export default function LogisticsPage() {
             <CxCard icon={<AlertTriangle size={18} />} title={tx("Priority alerts")} sub={tx("Items, rooms or tasks needing attention.")}>
               <div className="lg-alerts">
                 <div className="lg-lnk" onClick={() => { setState('low'); document.getElementById('lg-inventory')?.scrollIntoView({ behavior: 'smooth' }); }}><i><Package size={16} /></i><span><b>{tx("Low stock items")}</b><small>{low.length} {tx("items below threshold")}</small></span><em className="r">{low.length}</em></div>
-                <div className="lg-lnk" onClick={() => router.push('/dashboard/resource-requests')}><i><ClipboardList size={16} /></i><span><b>{tx("Requests awaiting a decision")}</b><small>{tx("Admin, zone lead or leadership")}</small></span><em className="r">{pending.length}</em></div>
-                <div className="lg-lnk" onClick={() => router.push('/dashboard/rehearsals')}><i><CalendarDays size={16} /></i><span><b>{tx("Rooms booked today")}</b><small>{booked} / {roomNames.length} {tx("rooms")}</small></span><em className="r">{booked}</em></div>
-                <div className="lg-lnk" onClick={() => setManageSignal((n) => n + 1)}><i><Truck size={16} /></i><span><b>{tx("Pending delivery tasks")}</b><small>{(tasks ?? []).filter((t) => t.status === 'pending').length} {tx("awaiting delivery")}</small></span><em className="r">{(tasks ?? []).filter((t) => t.status === 'pending').length}</em></div>
+                <div className="lg-lnk" onClick={() => setManageSignal((n) => n + 1)}><i><History size={16} /></i><span><b>{tx("Overdue returns")}</b><small>{overdue} {tx("items not returned on time")}</small></span><em className="r">{overdue}</em></div>
+                <div className="lg-lnk" onClick={() => router.push('/dashboard/rehearsals')}><i><CalendarDays size={16} /></i><span><b>{tx("Unavailable rooms")}</b><small>{booked} {tx("rooms fully booked today")}</small></span><em className="r">{booked}</em></div>
+                <div className="lg-lnk" onClick={() => setManageSignal((n) => n + 1)}><i><Truck size={16} /></i><span><b>{tx("Pending delivery tasks")}</b><small>{(tasks ?? []).filter((t) => t.status === 'pending').length} {tx("approved requests awaiting delivery")}</small></span><em className="r">{(tasks ?? []).filter((t) => t.status === 'pending').length}</em></div>
               </div>
             </CxCard>
             <CxCard icon={<BarChart3 size={18} />} title={tx("Most requested items")} sub={tx("Top categories by number of requests.")}>

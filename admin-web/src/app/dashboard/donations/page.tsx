@@ -241,7 +241,6 @@ export default function FinancePage() {
             <div className="fx-pa">
               <button type="button" className="fx-btn" onClick={() => document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' })}><BarChart3 size={16} />{tx("Detailed report")}</button>
               <Link href="/dashboard/donations/collection" className="fx-btn"><FileText size={16} />{tx("Collection plan")}</Link>
-              <button type="button" className="fx-btn" onClick={() => setManageSignal((n) => n + 1)}><Coins size={16} />{tx("Record a contribution")}</button>
               <button type="button" className="fx-btn green" onClick={() => setDialog('create')}><Plus size={16} />{tx("Create a program")}</button>
             </div>
           </div>
@@ -296,6 +295,7 @@ export default function FinancePage() {
               {heroTab === 'details' && (
                 <div className="fx-phases">
                   <div className="fx-pacts">
+                    <button type="button" onClick={() => setManageSignal((n) => n + 1)}>{tx("Record a contribution")}</button>
                     <button type="button" onClick={() => setDialog('edit')}>{tx("Edit the program")}</button>
                     <button type="button" onClick={() => updateFinancialProgram({ programId: program.id, status: program.status === 'open' ? 'closed' : 'open' }).then(() => notify(program.status === 'open' ? 'Program closed' : 'Program reopened', 'success')).catch((e: Error) => notify(e.message, 'error'))}>{program.status === 'open' ? tx("Close the program") : tx("Reopen the program")}</button>
                     <button type="button" disabled={program.status !== 'open'} onClick={() => setDialog('allocate')}>{tx("Allocate the envelope")}</button>

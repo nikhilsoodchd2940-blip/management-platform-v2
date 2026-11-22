@@ -5,6 +5,7 @@ import { collection, limit as fsLimit, orderBy, query, Timestamp } from 'firebas
 import { db } from '@/lib/firebase';
 import { onSnapshot } from '@/lib/firestore';
 import { fmt } from '@/lib/liveStats';
+import { useZones } from '@/lib/useZones';
 import { useGroupHierarchy } from '@/lib/useGroupHierarchy';
 import { useUserProfiles } from '@/lib/useUserNames';
 import { Avatar } from '@/components/MemberPicker';
@@ -38,6 +39,9 @@ export default function MessagingPage() {
   const [inChat, setInChat] = useState('');
   const [country, setCountry] = useState('');
   const [city, setCity] = useState('');
+  const [zoneF, setZoneF] = useState('');
+  const [groupF, setGroupF] = useState('');
+  const [typeF, setTypeF] = useState<'' | 'group' | 'broadcast'>('');
   const [shownN, setShownN] = useState(40);
 
   const [folder, setFolder] = useState<'all' | 'group' | 'broadcast' | 'scheduled' | 'templates'>('all');
@@ -61,13 +65,19 @@ export default function MessagingPage() {
       const l = locationOf(g.id);
       if (country && l.country?.id !== country) return false;
       if (city && l.city?.id !== city) return false;
+      if (zoneF && (g as { zoneId?: string }).zoneId !== zoneF) return false;
+      if (groupF && g.id !== groupF) return false;
+      if (typeF === 'broadcast') return false;
       return !search.trim() || g.name.toLowerCase().includes(search.trim().toLowerCase());
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [leafGroups, search, country, city]
+    [leafGroups, search, country, city, zoneF, groupF, typeF]
   );
   const countryOpts = useMemo(() => { const m = new Map<string, string>(); leafGroups.forEach((g) => { const c = locationOf(g.id).country; if (c) m.set(c.id, c.name); }); return Array.from(m, ([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label)); }, [leafGroups]); // eslint-disable-line react-hooks/exhaustive-deps
   const cityOpts = useMemo(() => { const m = new Map<string, string>(); leafGroups.forEach((g) => { const l = locationOf(g.id); if (l.city && (!country || l.country?.id === country)) m.set(l.city.id, l.city.name); }); return Array.from(m, ([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label)); }, [leafGroups, country]); // eslint-disable-line react-hooks/exhaustive-deps
+  const zonesRaw = useZones() as unknown as { id: string; name: string }[];
+  const zoneOpts = (zonesRaw ?? []).map((z) => ({ value: z.id, label: z.name }));
+  const groupOpts = leafGroups.map((g) => ({ value: g.id, label: g.name }));
   const selected = leafGroups.find((g) => g.id === selectedId) ?? leafGroups[0];
 
   useEffect(() => setLimit(PAGE), [selected?.id]);
@@ -156,6 +166,9 @@ export default function MessagingPage() {
           <div className="cc-dd">
             <Dropdown label={tx("Country")} value={country} onChange={(v) => { setCountry(v); setCity(''); setShownN(40); }} allLabel={tx("All countries")} options={countryOpts} />
             <Dropdown label={tx("City")} value={city} onChange={(v) => { setCity(v); setShownN(40); }} allLabel={tx("All cities")} options={cityOpts} />
+            <Dropdown label={tx("Zone")} value={zoneF} onChange={(v) => { setZoneF(v); setShownN(40); }} allLabel={tx("All zones")} options={zoneOpts} />
+            <Dropdown label={tx("Group")} value={groupF} onChange={(v) => { setGroupF(v); setShownN(40); }} allLabel={tx("All groups")} options={groupOpts} />
+            <Dropdown label={tx("Type")} value={typeF} onChange={(v) => { setTypeF(v as '' | 'group' | 'broadcast'); setShownN(40); }} allLabel={tx("All types")} options={[{ value: 'group', label: tx("Group chats") }, { value: 'broadcast', label: tx("Broadcasts") }]} />
           </div>
           <nav className="cc-folders">
             {folders.map((f) => (
@@ -231,6 +244,7 @@ export default function MessagingPage() {
                 <button type="button" key={k} disabled={!on} title={on ? '' : tx("Not available yet")} className={scope === k ? 'on' : ''} onClick={() => on && setScope(k as 'group' | 'all')}>{ic}<span>{tx(l)}</span>{scope === k && <Check size={12} className="cc-ck" />}</button>
               ))}
             </div>
+            <div className="cc-sel"><span>{tx("Selected members")}</span><b>{scope === 'all' ? fmt(leafGroups.reduce((a, g) => a + ((g as { capacity?: number }).capacity ?? 0), 0)) : selected ? fmt((selected as { capacity?: number }).capacity ?? 0) : 0}</b></div>
           </div>
           <div className="cc-box" id="cc-bc">
             <h4><Megaphone size={16} />{tx("Quick broadcast")}</h4><small>{tx("Send an announcement to a selected audience.")}</small>

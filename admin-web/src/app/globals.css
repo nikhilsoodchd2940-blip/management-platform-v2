@@ -10237,3 +10237,40 @@ a.lnk,.lnk a{color:inherit;text-decoration:none}a.lnk:hover{color:#0b5b3f;text-d
 .px-finance.fx .fx-k.dark .fx-kt{flex:1}
 @media(max-width:1100px){.px-finance.fx .fx-progs{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.px-finance.fx .fx-progs{grid-template-columns:minmax(0,1fr)}}
+/* ui151 Levels: Year/Status filters, Academic Year banner dropdown, row menu */
+.lv2-filters{grid-template-columns:auto repeat(6,minmax(0,1fr)) minmax(0,1.3fr)}
+.lv2-filters .dd{min-height:48px;padding:6px 10px}
+.lv2 .lv2-yr{min-width:170px;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.45);color:#fff}
+.lv2 .lv2-yr .dd-cap{color:#d7ecdf}.lv2 .lv2-yr .dd-val{color:#fff}.lv2 .lv2-yr svg{color:#fff}
+.lv2-kb{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;color:#13241b}.lv2-kb:hover{background:#eaf5ef}
+@media(max-width:1250px){.lv2-filters{grid-template-columns:repeat(3,minmax(0,1fr))}.lv2-filters>b{grid-column:1/-1}}
+@media(max-width:700px){.lv2-filters{grid-template-columns:1fr}}
+/* ui151 Members: Add Member in the stripe, actions menu in the list header */
+.mm-stripe{grid-template-columns:1.25fr repeat(3,1fr) auto}
+.mm-stripe button.mm-add{background:linear-gradient(#fff3cf,#f6dc90);border:1.5px solid #e2b64a;color:#3b2a00;font-weight:800;font-size:.95rem;justify-content:center;white-space:nowrap}
+.mm-stripe button.mm-add:hover{background:linear-gradient(#fff6d9,#f9e3a4)}
+@media(max-width:1000px){.mm-stripe{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mm-kb2{position:relative}
+.mm-kb2>summary{list-style:none;cursor:pointer;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid #dfe9e3;background:#fff;color:#13241b}
+.mm-kb2>summary::-webkit-details-marker{display:none}.mm-kb2[open]>summary{background:#eaf5ef}
+.mm-kbm{position:absolute;right:0;top:44px;z-index:30;display:grid;min-width:230px;padding:6px;border:1px solid #dfe9e3;border-radius:14px;background:#fff;box-shadow:0 14px 30px rgba(8,54,42,.2)}
+.mm-kbm button{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;font-weight:700;font-size:.88rem;color:#13241b}
+.mm-kbm button:hover{background:#eaf5ef}.mm-kbm b{margin-left:auto;padding:1px 8px;border-radius:99px;background:#d4efdf;color:#0b5d3b;font-size:.76rem}
+/* ui151 Library: filters row, artist column, row menu, selection bar */
+.lb-f{grid-template-columns:repeat(5,minmax(0,1fr)) auto}
+.lb-f .lb-adv{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:0 16px;min-height:50px;border-radius:14px;border:1.5px solid #bcd9c9;background:#eef8f2;color:#0b5d3b;font-weight:800;font-size:.86rem;white-space:nowrap}
+.lb-f .lb-adv.on{background:#0b5d3b;color:#fff;border-color:#0b5d3b}
+.lb-f .lb-f2{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.lb-ti span{display:grid;gap:1px}.lb-ti small{font-size:.72rem;color:#5d6e66;font-weight:600}
+.lb-art{display:inline-flex;align-items:center;gap:6px;font-size:.84rem}
+.lb-t td:first-child,.lb-t th:first-child{width:36px;padding-right:0}
+.lb-kb{position:relative}.lb-kb>summary{list-style:none;cursor:pointer;display:grid;place-items:center;width:30px;height:30px;border-radius:8px;color:#13241b}
+.lb-kb>summary::-webkit-details-marker{display:none}.lb-kb>summary:hover,.lb-kb[open]>summary{background:#eaf5ef}
+.lb-kb>div{position:absolute;right:0;top:34px;z-index:30;display:grid;min-width:150px;padding:6px;border:1px solid #dfe9e3;border-radius:12px;background:#fff;box-shadow:0 12px 26px rgba(8,54,42,.2)}
+.lb-kb>div a{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-weight:700;font-size:.84rem;color:#13241b}.lb-kb>div a:hover{background:#eaf5ef}
+.lb-pick{display:flex;align-items:center;gap:10px;margin:0 18px 8px;padding:8px 14px;border-radius:12px;background:#eaf5ef}
+.lb-pick button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:99px;border:1.5px solid #0b5d3b;font-weight:800;font-size:.8rem;color:#0b5d3b}
+@media(max-width:1100px){.lb-f{grid-template-columns:1fr 1fr}.lb-f .lb-f2{grid-template-columns:1fr}}
+
+/* ui151 Messaging + Logistics */
+.cc-sel{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:8px 10px;border:1px solid #e6e2d3;border-radius:8px;font-size:.82rem;color:#5b6b63}.cc-sel b{color:#12372a}

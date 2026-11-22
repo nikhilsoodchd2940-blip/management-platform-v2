@@ -292,7 +292,7 @@ export default function KurelsPage() {
               <button type="button" className="stat" onClick={() => { clearAll(); toDirectory(); }}><span>{tx("Groups")}</span><strong>{fmt(activeLeafGroups.length)}</strong><small>{tx("Show all of them ›")}</small></button>
               <button type="button" className="stat" onClick={() => setGeoOpen('country')}><span>{tx("Countries")}</span><strong>{fmt(countries.length)}</strong><small>{tx("Filter by country ›")}</small></button>
               <button type="button" className="stat" onClick={() => setGeoOpen('city')}><span>{tx("Cities")}</span><strong>{fmt(cities.length)}</strong><small>{tx("Filter by city ›")}</small></button>
-              <Link href="/dashboard/members" className="stat"><span>{tx("Members")}</span><strong>{fmt(totalMembers)}</strong><small>{activeLeafGroups.length ? Math.round(totalMembers / activeLeafGroups.length) : 0} {tx("per kurel · open the list ›")}</small></Link>
+              <Link href="/dashboard/members" className="stat"><span>{tx("Members")}</span><strong>{fmt(totalMembers)}</strong><small>{tx("Explore the list ›")}</small></Link>
               <button type="button" className={`stat${full ? ' warn' : ''}`} disabled={!full} onClick={() => { setAlertQ(''); setAlertKey('full'); }}><span>{tx("At capacity")}</span><strong>{fmt(full)}</strong><small>{full ? tx("See which ›") : tx("None")}</small></button>
               <button type="button" className={`stat${noLevel ? ' warn' : ''}`} disabled={!noLevel} onClick={() => { setAlertQ(''); setAlertKey('level'); }}><span>{tx("Without a level")}</span><strong>{fmt(noLevel)}</strong><small>{noLevel ? tx("See which ›") : tx("None")}</small></button>
             </div>
@@ -305,7 +305,6 @@ export default function KurelsPage() {
             <Dropdown label={tx("Country")} value={country} onChange={(v) => { setCountry(v); setZone(''); setCity(''); }} allLabel="All countries" options={countries.map((c) => ({ value: c.id, label: c.name }))} />
             <Dropdown label={tx("Zone")} value={zone} onChange={(v) => { setZone(v); setCity(''); }} allLabel="All zones" options={(zones ?? []).filter((z) => !country || z.countryId === country).map((z) => ({ value: z.id, label: z.name }))} />
             <Dropdown label={tx("City")} value={city} onChange={setCity} allLabel="All cities" options={cities.filter((c) => (!country || c.parentGroupId === country) && (!zone || c.zoneId === zone)).map((c) => ({ value: c.id, label: c.name }))} />
-            <Dropdown label={tx("Level")} value={level} onChange={setLevel} allLabel="All levels" options={[...levels.map((l) => ({ value: l.id, label: l.name })), { value: '__none__', label: tx("No level") }]} />
             <Dropdown label={tx("Capacity")} value={capacity} onChange={setCapacity} allLabel="All capacities" options={[{ value: 'normal', label: tx("Available") }, { value: 'warning', label: tx("Nearly full") }, { value: 'full', label: tx("At capacity") }]} />
           </section>
 
