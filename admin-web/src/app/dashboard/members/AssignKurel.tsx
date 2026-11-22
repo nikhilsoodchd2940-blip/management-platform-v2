@@ -79,8 +79,8 @@ export default function AssignKurel({ members, headcount, initialId, onClose }: 
 
   if (!mounted) return null;
   return createPortal(
-    <div className="manage-page akp" role="dialog" aria-modal="true" aria-label={tx("Assign to a kurel")}>
-      <div className="manage-page-bar"><strong>{tx("Assign to a kurel")}</strong><button type="button" className="manage-close" onClick={onClose}>{tx("Close")}</button></div>
+    <div className="manage-page akp" role="dialog" aria-modal="true" aria-label={tx("Assign to a Group")}>
+      <div className="manage-page-bar"><strong>{tx("Assign to a Group")}</strong><button type="button" className="manage-close" onClick={onClose}>{tx("Close")}</button></div>
       <div className="manage-page-body ak-body">
         <section className="ak-col">
           <header><span className="ak-n">1</span><div><b>{tx("Choose the member")}</b><small>{tx("Search by name or member ID")}</small></div></header>
@@ -88,23 +88,23 @@ export default function AssignKurel({ members, headcount, initialId, onClose }: 
             <input type="search" placeholder={tx("Search a member")} value={mq} onChange={(e) => setMq(e.target.value)} autoFocus={!pick} />
             <Dropdown label={tx("Country")} value={mCountry} onChange={(v) => { setMCountry(v); setMCity(''); }} allLabel={tx("All countries")} options={countries.map((c) => ({ value: c.id, label: c.name }))} />
             <Dropdown label={tx("City")} value={mCity} onChange={setMCity} allLabel={tx("All cities")} options={cities.filter((c) => !mCountry || c.parentGroupId === mCountry).map((c) => ({ value: c.id, label: c.name }))} />
-            <Dropdown label={tx("Kurel")} value={mGroup} onChange={setMGroup} allLabel={tx("All kurels")} options={activeLeafGroups.map((g) => ({ value: g.id, label: g.name }))} />
-            <Dropdown label={tx("Kurels per member")} value={mState} onChange={setMState} allLabel={tx("Any number of kurels")} options={[{ value: 'none', label: tx("Without a kurel") }, { value: 'one', label: tx("1 kurel") }, { value: 'multi', label: tx("2 kurels or more") }]} />
+            <Dropdown label={tx("Group")} value={mGroup} onChange={setMGroup} allLabel={tx("All groups")} options={activeLeafGroups.map((g) => ({ value: g.id, label: g.name }))} />
+            <Dropdown label={tx("Groups per member")} value={mState} onChange={setMState} allLabel={tx("Any number of kurels")} options={[{ value: 'none', label: tx("Without a kurel") }, { value: 'one', label: tx("1 kurel") }, { value: 'multi', label: tx("2 kurels or more") }]} />
           </div>
           <div className="ak-list">
             {people.map((m) => (
               <button type="button" key={m.id} className={`ak-person${pick === m.id ? ' on' : ''}`} onClick={() => setPick(m.id)}>
                 <img alt="" src={m.photoUrl || DEFAULT_MEMBER_PHOTO} />
-                <span><b>{m.name || tx("(no name)")}</b><small>{m.memberId || '—'} · {m.kurels.length + (added[m.id]?.length ?? 0)} {tx("kurels")}</small></span>
+                <span><b>{m.name || tx("(no name)")}</b><small>{m.memberId || '—'} · {m.kurels.length + (added[m.id]?.length ?? 0)} {tx("group")}</small></span>
               </button>
             ))}
             {people.length === 0 && <div className="mm-empty">{tx("No member matches.")}</div>}
           </div>
         </section>
         <section className="ak-col wide">
-          <header><span className="ak-n">2</span><div><b>{person ? `${tx("Assign")} ${person.name}` : tx("Choose the kurel")}</b><small>{person ? tx("Press Assign on the kurel you want") : tx("Pick a member first")}</small></div></header>
+          <header><span className="ak-n">2</span><div><b>{person ? `${tx("Assign")} ${person.name}` : tx("Choose the group")}</b><small>{person ? tx("Select the group you want to assign this member to.") : tx("Pick a member first")}</small></div></header>
           <div className="ak-filters">
-            <input type="search" placeholder={tx("Search a kurel or city")} value={kq} onChange={(e) => setKq(e.target.value)} />
+            <input type="search" placeholder={tx("Search a group or city")} value={kq} onChange={(e) => setKq(e.target.value)} />
             <Dropdown label={tx("Country")} value={country} onChange={(v) => { setCountry(v); setCity(''); }} allLabel={tx("All countries")} options={countries.map((c) => ({ value: c.id, label: c.name }))} />
             <Dropdown label={tx("City")} value={city} onChange={setCity} allLabel={tx("All cities")} options={cities.filter((c) => !country || c.parentGroupId === country).map((c) => ({ value: c.id, label: c.name }))} />
           </div>
@@ -126,7 +126,7 @@ export default function AssignKurel({ members, headcount, initialId, onClose }: 
                 </article>
               );
             })}
-            {kurels.length === 0 && <div className="mm-empty">{tx("No kurel matches.")}</div>}
+            {kurels.length === 0 && <div className="mm-empty">{tx("No group matches.")}</div>}
           </div>
         </section>
       </div>

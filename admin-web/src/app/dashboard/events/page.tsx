@@ -39,7 +39,7 @@ import LiveMonitor from './LiveMonitor';
 import MyPerformances from './MyPerformances';
 import { useMyScope } from '@/lib/useMyScope';
 import EditEvent from './EditEvent';
-import { CxBanner } from '@/components/Cx';
+import { CxHead } from '@/components/Cx';
 import { CalendarDays } from 'lucide-react';
 import { tx, dateLocale } from '@/lib/i18n/tr';
 
@@ -330,9 +330,9 @@ export default function EventsPage() {
     <>
       <div className="px px-planning-evenements">
         <div className="content">
-          <CxBanner icon={<CalendarDays size={26} />} kicker={tx("Event Planning")} title={tx("Event planning and operations")} sub={tx("Prepare, run and document every event, even when it covers several sites.")}>
-            <button type="button" className="cx-btn gold" onClick={() => setManageSignal((n) => n + 1)}>{isGroupAdmin ? tx("Propose an event") : tx("Create an event")}</button>
-          </CxBanner>
+          <CxHead icon={<CalendarDays size={26} />} kicker={tx("Direction Conservatoire")} title={tx("Event planning and operations")} sub={tx("Prepare, run and document every event, even when it covers several sites.")}>
+            <button type="button" className="cx-btn green" onClick={() => setManageSignal((n) => n + 1)}>{isGroupAdmin ? tx("Propose an event") : tx("Create an event")}</button>
+          </CxHead>
 
           <section className="card command">
             <div className="command-head">

@@ -86,12 +86,12 @@ export default function ProgramForm({ onClose, edit }: { onClose: () => void; ed
         <header><div><h2>{edit ? `Edit · ${edit.name}` : tx("Create a program")}</h2><p>{edit ? tx("Change the details, the dates and the phases.") : tx("Fill the sections from top to bottom.")}</p></div><button type="button" aria-label={tx("Close")} onClick={onClose}>×</button></header>
         <div className="fm-body">
           <section className="fm-sec">
-            <h3>{tx("1 · What is it for")}</h3>
+            <h3><i>1</i>{tx("What is it for")}<small>{tx("Give your program a clear name and description.")}</small></h3>
             <label className="fm-f">{tx("Name")}<input value={name} onChange={(e) => setName(e.target.value)} /></label>
             <label className="fm-f">{tx("Description")}<textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
           </section>
           <section className="fm-sec">
-            <h3>{tx("2 · Amount and dates")}</h3>
+            <h3><i>2</i>{tx("Amount and dates")}<small>{tx("Define the amount to collect, currency, recurrence, and period.")}</small></h3>
             <div className="fm-goal">
               <label className="fm-f">{tx("Total to collect")}<input type="number" min={0} step="any" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder={tx("Add amount")} /></label>
               <div className="fm-cur" role="group" aria-label={tx("Currency")}>{CURRENCIES.map((c) => <button type="button" key={c} className={c === currency ? 'on' : ''} disabled={!!edit && c !== currency} onClick={() => setCurrency(c)}>{c}</button>)}</div>
@@ -114,7 +114,7 @@ export default function ProgramForm({ onClose, edit }: { onClose: () => void; ed
             </div>
           </section>
           <section className="fm-sec">
-            <h3>{tx("3 · Phases")}</h3>
+            <h3><i>3</i>{tx("Phases")}</h3>
             <label className="fm-sw"><input type="checkbox" checked={usePhases} onChange={(e) => setUsePhases(e.target.checked)} /><span><b>{tx("Collect in phases")}</b><small>{usePhases ? tx("Each phase has its own amount and dates. Phase 2 opens once phase 1 is complete or its end date has passed.") : `No phase: the whole ${goalNum > 0 ? fmt(goalNum) : 'amount'} is collected at once.`}</small></span></label>
             {usePhases && (
               <div className="fm-phs">
@@ -138,11 +138,20 @@ export default function ProgramForm({ onClose, edit }: { onClose: () => void; ed
           </section>
           {!edit && (
             <section className="fm-sec">
-              <h3>{tx("4 · Who gets it")}</h3>
+              <h3><i>4</i>{tx("Who gets it")}<small>{tx("Choose the recipients of this program.")}</small></h3>
               <div className="fm-cur wide" role="group" aria-label={tx("Who gets it")}><button type="button" className={all ? 'on' : ''} onClick={() => setAll(true)}>{tx("All kurels")}</button><button type="button" className={!all ? 'on' : ''} onClick={() => setAll(false)}>{tx("Choose kurels")}</button></div>
               {all ? <p className="fm-note">{tx("Every kurel takes part. Later you can allocate the envelope by country, city, local zone or kurel.")}</p> : <KurelPicker selected={kurels} onChange={setKurels} height={200} />}
             </section>
           )}
+          <section className="fm-psum">
+            <div><b>{tx("Program summary")}</b><small>{tx("Here's what will be created.")}</small></div>
+            <dl>
+              <div><dt>{tx("Program name")}</dt><dd>{name.trim() || '—'}</dd></div>
+              <div><dt>{tx("Total amount")}</dt><dd>{goalNum > 0 ? fmt(goalNum) : '—'}</dd></div>
+              <div><dt>{tx("Recurrence")}</dt><dd>{tx(REC_LABEL[rec])}</dd></div>
+              <div><dt>{tx("Recipients")}</dt><dd>{all ? tx("All kurels") : `${kurels.length} ${tx("kurels")}`}</dd></div>
+            </dl>
+          </section>
         </div>
         <footer>{err && <span className="fm-err">{err}</span>}<button type="button" className="fm-ghost" onClick={onClose}>{tx("Cancel")}</button><button type="button" className="fm-go" disabled={busy} onClick={save}>{busy ? tx("Saving…") : edit ? tx("Save the changes") : tx("Create the program")}</button></footer>
       </div>

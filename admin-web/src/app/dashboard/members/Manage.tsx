@@ -33,6 +33,7 @@ import {
   setPrimaryGroup as setPrimaryGroupFn,
 } from '@/lib/functions';
 import { useLocale } from '@/lib/i18n/LocaleContext';
+import { Upload, UserPlus, Users } from 'lucide-react';
 import { tx } from '@/lib/i18n/tr';
 
 interface GroupRow {
@@ -1029,7 +1030,11 @@ export default function MembersManage({ view = 'all', openEdit, openAdd, onEditD
 
   return (
     <div>
-      <h1 style={{ fontSize: '1.4rem', marginBottom: '1.25rem' }}>{m18.title}</h1>
+      <nav className="am-tabs" aria-label={m18.title}>
+        {([['am-all-card', tx("Members"), Users], ['add-member-card', tx("Add Member"), UserPlus], ['am-bulk-card', tx("Bulk Upload"), Upload]] as const).map(([id, label, Icon], i) => (
+          <button type="button" key={id} className={i === 1 && view !== 'assign' ? 'on' : ''} onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}><Icon size={16} />{label}</button>
+        ))}
+      </nav>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {/* Right column: Add member + Bulk upload, stacked together so
@@ -1117,7 +1122,7 @@ export default function MembersManage({ view = 'all', openEdit, openAdd, onEditD
         </form>
 
         {/* Bulk upload via CSV/Excel */}
-        <div className="card am-bulk">
+        <div className="card am-bulk" id="am-bulk-card">
           <header className="am-head">
             <span className="am-ico alt" aria-hidden>↑</span>
             <div><h2>{m18.bulkTitle}</h2><p>{tx("Add many members at once from an Excel or CSV file.")}</p></div>
@@ -1276,7 +1281,7 @@ export default function MembersManage({ view = 'all', openEdit, openAdd, onEditD
         )}
         {/* All members, multi-select */}
         {view !== 'add' && (
-        <div className="card mm-all">
+        <div className="card mm-all" id="am-all-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
             <h2 style={{ fontSize: '1rem', margin: 0 }}>{m18.allMembers}</h2>
             <input

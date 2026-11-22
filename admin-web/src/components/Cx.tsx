@@ -149,3 +149,16 @@ export function CxSteps({ steps, active }: { steps: { icon: ReactNode; label: st
     </ol>
   );
 }
+
+/** Light page header (icon, title, subtitle, actions on the right) used where the client design has a white header. */
+export function CxHead({ icon, kicker, title, sub, children }: { icon?: ReactNode; kicker?: string; title: string; sub?: string; children?: ReactNode }) {
+  return (
+    <header className="cx-lhead">
+      <div className="cx-lh-t">
+        {icon && <i aria-hidden>{icon}</i>}
+        <div>{kicker && <small>{kicker}</small>}<h1>{title}</h1>{sub && <p>{sub}</p>}</div>
+      </div>
+      {children && <div className="cx-lh-a">{children}</div>}
+    </header>
+  );
+}

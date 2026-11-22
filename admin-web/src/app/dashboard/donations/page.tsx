@@ -22,8 +22,7 @@ import { notify } from '@/lib/notify';
 import { useGroupHierarchy } from '@/lib/useGroupHierarchy';
 import ManageToggle from '../../px/ManageToggle';
 import FinanceManage from './Manage';
-import { CxBanner } from '@/components/Cx';
-import { Wallet } from 'lucide-react';
+import { BarChart3, CheckCircle2, Clock, Coins, FileText, Info, Layers, Plus } from 'lucide-react';
 import { tx, dateLocale } from '@/lib/i18n/tr';
 
 type Method = 'wave' | 'orange_money' | 'cash';
@@ -206,11 +205,25 @@ export default function FinancePage() {
       <div className="px px-index fn-top"><section className="view active"><CommandHero title={tx("Finance command center")} subtitle={tx("Programs, collections and contributions across the Conservatory.")} /></section></div>
       <div className="px px-finance">
         <div className="content">
-          <CxBanner icon={<Wallet size={26} />} kicker={tx("Finance")} title={tx("Financial programs")} sub={tx("Create a program, allocate it, follow every contribution until its validation.")}>
-            <button type="button" className="cx-btn ghost-light" onClick={() => document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' })}>{tx("Detailed report")}</button>
-            <Link href="/dashboard/donations/collection" className="cx-btn ghost-light">{tx("Collection plan ›")}</Link>
-            <button type="button" className="cx-btn gold" onClick={() => setDialog('create')}>{tx("+ Create a program")}</button>
-          </CxBanner>
+          <div className="fn-ovh">
+            <div className="fn-ovh-t"><i><Layers size={22} /></i><div><h2>{tx("Financial overview")}</h2><span className="cx-pill gold">{program?.name ?? tx("All programs")}</span></div></div>
+            <p className="fn-ovh-n"><Info size={14} />{tx("Tracking and follow-up only — this platform does not collect money.")}</p>
+          </div>
+          <div className="fn-ovs">
+            <button type="button" className="fn-ovc dark" onClick={() => setProgFilter('open')}><i><Layers size={20} /></i><span>{tx("Active programs")}</span><b>{programs.filter((x) => x.status === 'open').length}</b><small>{programs.filter((x) => x.status === 'open').length} {tx("open")} · {programs.filter((x) => x.status === 'closed').length} {tx("closed")}</small></button>
+            <div className="fn-ovc"><i><Coins size={20} /></i><span>{tx("Total to collect")}</span><b>{money(program?.goalAmountCents ?? 0)}</b></div>
+            <div className="fn-ovc ok"><i><CheckCircle2 size={20} /></i><span>{tx("Collected so far")}</span><b>{money(paid)}</b><small>{rate}% {tx("of total")}</small></div>
+            <div className="fn-ovc warn"><i><Clock size={20} /></i><span>{tx("Pending / awaiting validation")}</span><b>{money(Math.max(0, (program?.goalAmountCents ?? 0) - paid))}</b><small>{100 - Math.min(rate, 100)}% {tx("of total")}</small></div>
+            <div className="fn-ovc"><i><FileText size={20} /></i><span>{tx("Proofs to check")}</span><b>{review.length}</b><small>{review.length ? money(reviewAmount) + ' ' + tx("awaiting") : tx("No pending proofs")}</small></div>
+          </div>
+          <div className="fn-ph">
+            <div className="fn-ovh-t"><i><Layers size={22} /></i><div><h2>{tx("Financial programs")}</h2><p>{tx("Browse and manage all financial programs. Select a program to see its full overview.")}</p></div></div>
+            <div className="fn-ph-a">
+              <button type="button" className="cx-btn" onClick={() => document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' })}><BarChart3 size={15} />{tx("Detailed report")}</button>
+              <Link href="/dashboard/donations/collection" className="cx-btn"><FileText size={15} />{tx("Collection plan")}</Link>
+              <button type="button" className="cx-btn green" onClick={() => setDialog('create')}><Plus size={15} />{tx("Create a program")}</button>
+            </div>
+          </div>
 
           <section className="fn-plist">
             <header>
@@ -377,6 +390,7 @@ export default function FinancePage() {
             </section>
           </div>
 
+          <div className="cx-grid cx-g21 fn-cmpgrid">
           <section className="fn-cmp">
             <header>
               <div><h2>{tx("Comparative progress")}</h2><p>{tx("What each")} {groupBy} {tx("has paid, against what it was given. Rank 1 is the highest progress.")}</p></div>
@@ -428,6 +442,17 @@ export default function FinancePage() {
               );
             })()}
           </section>
+            <section className="fn-card fn-sum">
+              <header><div><h2><Info size={16} /> {tx("Program summary")}</h2></div></header>
+              <dl>
+                <div><dt>{tx("Total to collect")}</dt><dd>{money(program?.goalAmountCents ?? 0)}</dd></div>
+                <div><dt>{tx("Number of assignments")}</dt><dd>{allocs.length} {tx("groups (kurels)")}</dd></div>
+                <div><dt>{tx("Assignment levels")}</dt><dd>{tx("Country, City, Zone, Group (Kurel), Member")}</dd></div>
+                <div><dt>{tx("Program period")}</dt><dd>{program?.startMs ? dateOf(program.startMs) : '—'} – {program?.endMs ? dateOf(program.endMs) : '—'}</dd></div>
+                <div><dt>{tx("Status")}</dt><dd><span className={`fn-pill${program?.status === 'open' ? '' : ' warn'}`}>{program?.status === 'open' ? tx("Open") : tx("Closed")}</span></dd></div>
+              </dl>
+            </section>
+          </div>
 
           <section className="fn-reg" id="register">
             <div className="fn-reg-head">
@@ -468,6 +493,7 @@ export default function FinancePage() {
               </table>
             </div>
           </section>
+          <p className="fn-foot"><Info size={15} /><b>{tx("Conservatoire — Financial tracking and follow-up only.")}</b> {tx("Tracks assigned amounts, paid amounts, pending amounts and validation/proof status. It does not process or collect payments.")}</p>
         </div>
       </div>
 

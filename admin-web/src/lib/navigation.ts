@@ -65,7 +65,7 @@ export const TOOLS_NAV: NavItem[] = [
   { href: '/dashboard/resource-requests', labelKey: 'resourceRequests', icon: 'logistics', requires: 'requests' },
   { href: '/dashboard/banners', labelKey: 'banners', icon: 'library', requires: 'content' },
   { href: '/dashboard/popups', labelKey: 'popups', icon: 'messages', requires: 'content' },
-  { href: '/dashboard/announcements', labelKey: 'announcements', icon: 'messages', requires: 'content' },
+  { href: '/dashboard/communications', labelKey: 'announcements', icon: 'messages', requires: 'content' },
   { href: '/dashboard/integrations', labelKey: 'integrations', icon: 'access', requires: 'integrations' },
   { href: '/dashboard/settings', labelKey: 'settings', icon: 'administration', requires: 'groups' },
   { href: '/dashboard/languages', labelKey: 'languages', icon: 'messages', requires: 'superAdmin' },
@@ -82,7 +82,7 @@ export const NAV_GROUPS: { key: string; label: string; icon: string; hrefs: stri
   { key: 'events', label: 'Events & performance', icon: 'attendance', hrefs: ['/dashboard/events', '/dashboard/event-books', '/dashboard/rehearsals', '/dashboard/performance-history', '/dashboard/reports', '/dashboard/evaluations'] },
   { key: 'learning', label: 'Learning', icon: 'pedagogy', hrefs: ['/dashboard/levels', '/dashboard/programme-pedagogique', '/dashboard/library', '/dashboard/audio'] },
   { key: 'resources', label: 'Resources & finance', icon: 'finance', hrefs: ['/dashboard/donations', '/dashboard/logistics', '/dashboard/equipment', '/dashboard/resource-requests'] },
-  { key: 'comms', label: 'Communication', icon: 'messages', hrefs: ['/dashboard/messagerie', '/dashboard/announcements', '/dashboard/popups', '/dashboard/banners'] },
+  { key: 'comms', label: 'Communication', icon: 'messages', hrefs: ['/dashboard/messagerie', '/dashboard/communications', '/dashboard/announcements', '/dashboard/popups', '/dashboard/banners'] },
   { key: 'system', label: 'System', icon: 'access', hrefs: ['/dashboard/role-access', '/dashboard/integrations', '/dashboard/settings', '/dashboard/languages', '/dashboard/help'] },
 ];
 

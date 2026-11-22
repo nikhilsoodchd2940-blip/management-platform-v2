@@ -24,8 +24,8 @@ import { useZones } from '@/lib/useZones';
 import AllKurels from './AllKurels';
 import { HubOverview, HubSection, HUB_TABS, useKurelHub, type HubTab } from './KurelHub';
 import CreateKurel from './CreateKurel';
-import { CxBanner, CxStats } from '@/components/Cx';
-import { Layers } from 'lucide-react';
+import { CxHead } from '@/components/Cx';
+import { Globe2, Layers } from 'lucide-react';
 import { tx } from '@/lib/i18n/tr';
 
 interface Counts {
@@ -252,11 +252,11 @@ export default function KurelsPage() {
     <>
       <div className="px px-kurels">
         <div className="content">
-          <CxBanner icon={<Layers size={26} />} kicker={tx("Group Management")} title={tx("Kurel management")} sub={`${tx("Capacities, assignments, management teams and operations of the")} ${fmt(activeLeafGroups.length)} ${tx("kurels.")}`}>
+          <CxHead icon={<Layers size={26} />} title={tx("Group Management")} sub={`${tx("Capacities, assignments, management teams and operations of the")} ${fmt(activeLeafGroups.length)} ${tx("kurels.")}`}>
             <div className="hb-seg kv-switch" role="tablist"><button type="button" role="tab" aria-selected={view === 'kurels'} className={view === 'kurels' ? 'on' : ''} onClick={() => setView('kurels')}>{tx("Kurels")}</button><button type="button" role="tab" aria-selected={view === 'report'} className={view === 'report' ? 'on' : ''} onClick={() => setView('report')}>{tx("All kurels report")}</button></div>
-            <button type="button" className="cx-btn ghost-light" onClick={exportStatus}>{tx("Export the status")}</button>
-            <button type="button" className="cx-btn gold" onClick={() => setCreateOpen(true)}>{tx("Create a kurel")}</button>
-          </CxBanner>
+            <button type="button" className="cx-btn" onClick={exportStatus}>{tx("Export the status")}</button>
+            <button type="button" className="cx-btn green" onClick={() => setCreateOpen(true)}>{tx("Create a kurel")}</button>
+          </CxHead>
 
 
           {view === 'report' && (
@@ -268,12 +268,12 @@ export default function KurelsPage() {
           <section className="card command">
             <div className="command-head">
               <div>
-                <h2>{tx("Live worldwide view")}</h2>
+                <h2><Globe2 size={22} /> {tx("Live worldwide view")}</h2>
                 <p>{tx("Select a figure to see what is behind it.")}</p>
               </div>
             </div>
             <div className="stats">
-              <button type="button" className="stat" onClick={() => { clearAll(); toDirectory(); }}><span>{tx("Kurels")}</span><strong>{fmt(activeLeafGroups.length)}</strong><small>{tx("Show all of them ›")}</small></button>
+              <button type="button" className="stat" onClick={() => { clearAll(); toDirectory(); }}><span>{tx("Groups")}</span><strong>{fmt(activeLeafGroups.length)}</strong><small>{tx("Show all of them ›")}</small></button>
               <button type="button" className="stat" onClick={() => setGeoOpen('country')}><span>{tx("Countries")}</span><strong>{fmt(countries.length)}</strong><small>{tx("Filter by country ›")}</small></button>
               <button type="button" className="stat" onClick={() => setGeoOpen('city')}><span>{tx("Cities")}</span><strong>{fmt(cities.length)}</strong><small>{tx("Filter by city ›")}</small></button>
               <Link href="/dashboard/members" className="stat"><span>{tx("Members")}</span><strong>{fmt(totalMembers)}</strong><small>{activeLeafGroups.length ? Math.round(totalMembers / activeLeafGroups.length) : 0} {tx("per kurel · open the list ›")}</small></Link>
@@ -297,7 +297,12 @@ export default function KurelsPage() {
           <div className="workspace">
             <section className="card panel" id="kurel-directory">
               <div className="panel-head">
-                <div><h2>{tx("Kurel directory")}</h2><p>{rows.length} {tx("of")} {activeLeafGroups.length} {tx("kurels · select one to open it")}</p></div>
+                <div><h2>{tx("Group Directory")}</h2><p>{rows.length} {tx("of")} {activeLeafGroups.length} {tx("groups · select one to open it")}</p></div>
+              </div>
+              <div className="gd-chips">
+                {([['', tx("All groups"), activeLeafGroups.length, ''], ['full', tx("At capacity"), full, 'red'], ['normal', tx("Available"), activeLeafGroups.filter((g) => capState(g) === 'normal').length, 'green'], ['warning', tx("Nearly full"), activeLeafGroups.filter((g) => capState(g) === 'warning').length, 'amber']] as const).map(([k, l, n, tone]) => (
+                  <button type="button" key={k} className={`${tone}${capacity === k ? ' on' : ''}`} onClick={() => setCapacity(k)}>{l} ({n})</button>
+                ))}
               </div>
               <div className="kurel-scroll"><div className="kurel-list">
                 {rows.map((g) => {
@@ -308,10 +313,11 @@ export default function KurelsPage() {
                       <span className="kurel-code" style={palette(g.name)}>{code(g.name)}</span>
                       <div><strong>{g.name}{g.special && <span className="star" title={tx("Special kurel")}> ★</span>}</strong><span>{[loc.city?.name, loc.country?.name].filter(Boolean).join(' · ')}</span></div>
                       <span className="kr-meta"><span className="kr-pill perm"><b>{total(g.id)}</b> {tx("permanent")}</span><span className="kr-pill sub"><b>{counts[g.id]?.substitutes ?? 0}</b> {(counts[g.id]?.substitutes ?? 0) === 1 ? tx("substitute") : tx("substitutes")}</span><span className="kr-pill team"><b>{teamFilled(g.id)}/6</b> {tx("team")}</span><em className={`kr-st ${st}`}>{stateLabel(st)}</em></span>
+                      <span className={`gd-st ${st}`}>{stateLabel(st)}</span><span className="gd-go" aria-hidden>›</span>
                     </button>
                   );
                 })}
-                {rows.length === 0 && <div className="empty" style={{ display: 'block' }}>{tx("No kurel matches the criteria.")}</div>}
+                {rows.length === 0 && <div className="empty" style={{ display: 'block' }}>{tx("No group matches the criteria.")}</div>}
               </div>
               </div>
             </section>
