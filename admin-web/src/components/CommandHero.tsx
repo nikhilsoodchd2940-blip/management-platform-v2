@@ -31,10 +31,11 @@ function ClockWeather({ zone }: { zone?: ClockZone }) {
 }
 
 /** The green header used on the dashboard and on the finance page: title, global search and the four world clocks with their weather. */
-export default function CommandHero({ title, subtitle }: { title: string; subtitle: string }) {
+export default function CommandHero({ title, subtitle, variant }: { title: string; subtitle: string; variant?: 'finance' }) {
   const router = useRouter();
   const { countries, cities, activeLeafGroups } = useGroupHierarchy();
   const [now, setNow] = useState(() => Date.now());
+  const [stamp, setStamp] = useState(() => Date.now());
   useEffect(() => {
     const h = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(h);
@@ -94,14 +95,16 @@ export default function CommandHero({ title, subtitle }: { title: string; subtit
               <h1>{title}</h1>
               <p>{subtitle}</p>
             </div>
-            <span className="demo-pill">{tx("Live data · Firebase")}</span>
+            {variant === 'finance' ? (
+              <span className="demo-pill fn-live"><i aria-hidden />{tx("Live data")} · {tx("Updated")} {Math.max(0, Math.floor((now - stamp) / 60000)) === 0 ? tx("just now") : `${Math.floor((now - stamp) / 60000)} min ${tx("ago")}`}<button type="button" aria-label={tx("Refresh")} onClick={() => { setStamp(Date.now()); router.refresh(); }}>↻</button></span>
+            ) : <span className="demo-pill">{tx("Live data · Firebase")}</span>}
           </div>
           <div className="global-search">
             <div className="search-shell">
               <span>⌕</span>
               <input
                 type="search"
-                placeholder={tx("Search a member, kurel, city or country…")}
+                placeholder={variant === 'finance' ? tx("Search a member, group, city, country or program…") : tx("Search a member, kurel, city or country…")}
                 aria-label={tx("Global search")}
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
@@ -126,7 +129,7 @@ export default function CommandHero({ title, subtitle }: { title: string; subtit
               ))}
             </div>
           </div>
-          <div className="world-clocks">
+          <div className="world-clocks" hidden={variant === 'finance'}>
             {[0, 1, 2, 3].map((i) => {
               const zone = clocks[i];
               const t = zone ? clockText(zone) : null;

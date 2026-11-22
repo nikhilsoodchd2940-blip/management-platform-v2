@@ -116,10 +116,24 @@ export async function builtIn(l: Lang): Promise<StringMap> {
   return bundles[l] ?? {};
 }
 
+const ciCache: Record<string, { src: Record<string, string>; map: Map<string, string> }> = {};
+/** Same text with different capital letters (Title Case headings) still finds its translation. */
+function ciFind(key: string): string | undefined {
+  const src = bundles[lang];
+  if (!src) return undefined;
+  let c = ciCache[lang];
+  if (!c || c.src !== src) {
+    const map = new Map<string, string>();
+    for (const k of Object.keys(src)) { const low = k.toLowerCase(); if (!map.has(low)) map.set(low, src[k]); }
+    c = ciCache[lang] = { src, map };
+  }
+  return c.map.get(key.toLowerCase());
+}
+
 function lookup(key: string): string | undefined {
   const o = overrides[lang]?.[key];
   if (o !== undefined && o !== '') return o;
-  return bundles[lang]?.[key];
+  return bundles[lang]?.[key] ?? ciFind(key);
 }
 
 /** Text written directly in a screen. The English wording is the key. */

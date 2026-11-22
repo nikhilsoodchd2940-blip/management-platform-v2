@@ -25,7 +25,7 @@ import AllKurels from './AllKurels';
 import { HubOverview, HubSection, HUB_TABS, useKurelHub, type HubTab } from './KurelHub';
 import CreateKurel from './CreateKurel';
 import { CxHead } from '@/components/Cx';
-import { Globe2, Layers } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe2, Layers, Search, Users } from 'lucide-react';
 import { tx } from '@/lib/i18n/tr';
 
 interface Counts {
@@ -150,7 +150,23 @@ export default function KurelsPage() {
     [activeLeafGroups, search, country, zone, city, level, capacity, kind, focus, counts, teams, locationOf]
   );
   // The chosen kurel stays chosen while the list is filtered, so the banner never jumps to another one.
-  const selected = activeLeafGroups.find((g) => g.id === selectedId) ?? rows[0];
+  const DIR_N = 5;
+  const [dirQ, setDirQ] = useState('');
+  const [dirSort, setDirSort] = useState<'az' | 'za' | 'members' | 'fullest'>('az');
+  const [dirPage, setDirPage] = useState(1);
+  const dirRows = useMemo(() => {
+    const t = dirQ.trim().toLowerCase();
+    const list = rows.filter((g) => !t || `${g.name} ${locationOf(g.id).city?.name ?? ''} ${locationOf(g.id).country?.name ?? ''}`.toLowerCase().includes(t));
+    const ratio = (g: (typeof rows)[number]) => (g.capacity ? total(g.id) / (g.capacity as number) : -1);
+    return [...list].sort((a, b) => dirSort === 'za' ? b.name.localeCompare(a.name) : dirSort === 'members' ? total(b.id) - total(a.id) || a.name.localeCompare(b.name) : dirSort === 'fullest' ? ratio(b) - ratio(a) || a.name.localeCompare(b.name) : a.name.localeCompare(b.name));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, dirQ, dirSort, counts, locationOf]);
+  const dirPages = Math.max(1, Math.ceil(dirRows.length / DIR_N));
+  const dirPageC = Math.min(dirPage, dirPages);
+  const dirPageRows = dirRows.slice((dirPageC - 1) * DIR_N, dirPageC * DIR_N);
+  const pageList = (cur: number, n: number) => (n <= 6 ? Array.from({ length: n }, (_, i) => i + 1) : [...new Set([1, 2, 3, cur - 1, cur, cur + 1, n].filter((x) => x >= 1 && x <= n))].sort((a, b) => a - b).reduce<number[]>((acc, x) => { if (acc.length && x - acc[acc.length - 1] > 1) acc.push(0); acc.push(x); return acc; }, []));
+
+  const selected = activeLeafGroups.find((g) => g.id === selectedId) ?? dirRows[0];
   const zones = useZones();
   const selLoc = selected ? locationOf(selected.id) : {};
   const selCounts = selected ? counts[selected.id] : undefined;
@@ -252,10 +268,10 @@ export default function KurelsPage() {
     <>
       <div className="px px-kurels">
         <div className="content">
-          <CxHead icon={<Layers size={26} />} title={tx("Group Management")} sub={`${tx("Capacities, assignments, management teams and operations of the")} ${fmt(activeLeafGroups.length)} ${tx("kurels.")}`}>
-            <div className="hb-seg kv-switch" role="tablist"><button type="button" role="tab" aria-selected={view === 'kurels'} className={view === 'kurels' ? 'on' : ''} onClick={() => setView('kurels')}>{tx("Kurels")}</button><button type="button" role="tab" aria-selected={view === 'report'} className={view === 'report' ? 'on' : ''} onClick={() => setView('report')}>{tx("All kurels report")}</button></div>
+          <CxHead icon={<Layers size={26} />} title={tx("Group Management")} sub={`${tx("Capacities, assignments, management teams and operations of the")} ${fmt(activeLeafGroups.length)} ${tx("groups.")}`}>
+            <div className="hb-seg kv-switch" role="tablist"><button type="button" role="tab" aria-selected={view === 'kurels'} className={view === 'kurels' ? 'on' : ''} onClick={() => setView('kurels')}>{tx("Groups")}</button><button type="button" role="tab" aria-selected={view === 'report'} className={view === 'report' ? 'on' : ''} onClick={() => setView('report')}>{tx("All groups report")}</button></div>
             <button type="button" className="cx-btn" onClick={exportStatus}>{tx("Export the status")}</button>
-            <button type="button" className="cx-btn green" onClick={() => setCreateOpen(true)}>{tx("Create a kurel")}</button>
+            <button type="button" className="cx-btn green" onClick={() => setCreateOpen(true)}>{tx("Create a group")}</button>
           </CxHead>
 
 
@@ -284,8 +300,8 @@ export default function KurelsPage() {
 
 
           <section className="card filters">
-            <input type="search" placeholder={tx("Search a kurel, city or country")} value={search} onChange={(e) => setSearch(e.target.value)} />
-            <Dropdown label={tx("Type")} value={kind} onChange={setKind} allLabel="All kurels" options={[{ value: 'special', label: tx("★ Special kurels") }, { value: 'regular', label: tx("Regular kurels") }]} />
+            <input type="search" placeholder={tx("Search a group, city or country…")} value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Dropdown label={tx("Types")} value={kind} onChange={setKind} allLabel="All kurels" options={[{ value: 'special', label: tx("★ Special kurels") }, { value: 'regular', label: tx("Regular kurels") }]} />
             <Dropdown label={tx("Country")} value={country} onChange={(v) => { setCountry(v); setZone(''); setCity(''); }} allLabel="All countries" options={countries.map((c) => ({ value: c.id, label: c.name }))} />
             <Dropdown label={tx("Zone")} value={zone} onChange={(v) => { setZone(v); setCity(''); }} allLabel="All zones" options={(zones ?? []).filter((z) => !country || z.countryId === country).map((z) => ({ value: z.id, label: z.name }))} />
             <Dropdown label={tx("City")} value={city} onChange={setCity} allLabel="All cities" options={cities.filter((c) => (!country || c.parentGroupId === country) && (!zone || c.zoneId === zone)).map((c) => ({ value: c.id, label: c.name }))} />
@@ -304,21 +320,34 @@ export default function KurelsPage() {
                   <button type="button" key={k} className={`${tone}${capacity === k ? ' on' : ''}`} onClick={() => setCapacity(k)}>{l} ({n})</button>
                 ))}
               </div>
+              <div className="gd2-tools">
+                <label className="gd2-s"><Search size={16} aria-hidden /><input type="search" placeholder={tx("Search a group…")} value={dirQ} onChange={(e) => { setDirQ(e.target.value); setDirPage(1); }} aria-label={tx("Search")} /></label>
+                <Dropdown label={tx("Sort")} value={dirSort} onChange={(v) => { setDirSort((v || 'az') as typeof dirSort); setDirPage(1); }} allLabel={tx("Name (A–Z)")} options={[{ value: 'za', label: tx("Name (Z–A)") }, { value: 'members', label: tx("Most members") }, { value: 'fullest', label: tx("Fullest first") }]} className="gd2-dd" />
+              </div>
+              <div className="gd2-h"><span>{tx("Group")}</span><span>{tx("Members")}</span><span>{tx("Structure")}</span><span>{tx("Status")}</span><span /></div>
               <div className="kurel-scroll"><div className="kurel-list">
-                {rows.map((g) => {
+                {dirPageRows.map((g) => {
                   const loc = locationOf(g.id);
                   const st = capState(g);
                   return (
-                    <button type="button" key={g.id} className={`kurel-row${selected?.id === g.id ? ' active' : ''}`} onClick={() => setSelectedId(g.id)}>
-                      <span className="kurel-code" style={palette(g.name)}>{code(g.name)}</span>
-                      <div><strong>{g.name}{g.special && <span className="star" title={tx("Special kurel")}> ★</span>}</strong><span>{[loc.city?.name, loc.country?.name].filter(Boolean).join(' · ')}</span></div>
-                      <span className="kr-meta"><span className="kr-pill perm"><b>{total(g.id)}</b> {tx("permanent")}</span><span className="kr-pill sub"><b>{counts[g.id]?.substitutes ?? 0}</b> {(counts[g.id]?.substitutes ?? 0) === 1 ? tx("substitute") : tx("substitutes")}</span><span className="kr-pill team"><b>{teamFilled(g.id)}/6</b> {tx("team")}</span><em className={`kr-st ${st}`}>{stateLabel(st)}</em></span>
-                      <span className={`gd-st ${st}`}>{stateLabel(st)}</span><span className="gd-go" aria-hidden>›</span>
+                    <button type="button" key={g.id} className={`kurel-row gd2r${selected?.id === g.id ? ' active' : ''}`} onClick={() => setSelectedId(g.id)}>
+                      <span className="gd2-g"><span className="kurel-code" style={palette(g.name)}>{code(g.name)}</span>
+                      <span className="gd2-n"><strong>{g.name}{g.special && <span className="star" title={tx("Special group")}> ★</span>}</strong><small>{[loc.city?.name, loc.country?.name].filter(Boolean).join(' • ')}</small></span></span>
+                      <span className="gd2-m"><Users size={16} aria-hidden /><b>{total(g.id)}</b></span>
+                      <span className="gd2-st2"><Layers size={16} aria-hidden />{counts[g.id]?.substitutes ?? 0} {tx("sub")} • {teamFilled(g.id)}/6</span>
+                      <span className={`gd-st ${st}`}>{stateLabel(st)}</span><span className="gd-go" aria-hidden><ChevronRight size={18} /></span>
                     </button>
                   );
                 })}
                 {rows.length === 0 && <div className="empty" style={{ display: 'block' }}>{tx("No group matches the criteria.")}</div>}
               </div>
+              </div>
+              <div className="gd2-pg"><span>{dirRows.length ? (dirPageC - 1) * DIR_N + 1 : 0}–{Math.min(dirPageC * DIR_N, dirRows.length)} {tx("of")} {dirRows.length} {tx("groups")}</span>
+                {dirPages > 1 && <nav aria-label={tx("Pages")}>
+                  <button type="button" aria-label={tx("Previous")} disabled={dirPageC <= 1} onClick={() => setDirPage(dirPageC - 1)}><ChevronLeft size={16} /></button>
+                  {pageList(dirPageC, dirPages).map((n, i) => n === 0 ? <i key={`g${i}`}>…</i> : <button type="button" key={n} className={n === dirPageC ? 'on' : ''} onClick={() => setDirPage(n)}>{n}</button>)}
+                  <button type="button" aria-label={tx("Next")} disabled={dirPageC >= dirPages} onClick={() => setDirPage(dirPageC + 1)}><ChevronRight size={16} /></button>
+                </nav>}
               </div>
             </section>
 

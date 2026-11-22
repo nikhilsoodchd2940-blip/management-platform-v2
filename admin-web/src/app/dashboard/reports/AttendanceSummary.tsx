@@ -101,9 +101,9 @@ export default function AttendanceSummary({ focus = '', onFocus, extras }: { foc
     <>
       <CxStats items={[
         { label: tx("Present"), value: dash(`${total.present} / ${total.expected}`), badge: att.loading ? undefined : `${pct(total.present, total.expected)}%`, icon: <CheckCircle2 size={24} />, tone: 'green', onClick: () => setF('present') },
-        { label: tx("Late (counted absent)"), value: dash(total.late), badge: att.loading ? undefined : `${pct(total.late, total.expected)}%`, icon: <Clock size={24} />, tone: 'amber', onClick: () => setF('late') },
-        { label: tx("Excused absences"), value: dash(`${total.leave} / ${total.expected}`), badge: att.loading ? undefined : `${pct(total.leave, total.expected)}%`, icon: <Mail size={24} />, tone: 'blue', onClick: () => setF('leave') },
-        { label: tx("Unexcused absences"), value: dash(`${total.absent} / ${total.expected}`), badge: att.loading ? undefined : `${pct(total.absent, total.expected)}%`, icon: <XCircle size={24} />, tone: 'red', onClick: () => setF('absent') },
+        { label: tx("Late"), value: dash(total.late), badge: att.loading ? undefined : `${pct(total.late, total.expected)}%`, icon: <Clock size={24} />, tone: 'amber', onClick: () => setF('late') },
+        { label: tx("Excused Absences"), value: dash(`${total.leave} / ${total.expected}`), badge: att.loading ? undefined : `${pct(total.leave, total.expected)}%`, icon: <Mail size={24} />, tone: 'blue', onClick: () => setF('leave') },
+        { label: tx("Unexcused Absences"), value: dash(`${total.absent} / ${total.expected}`), badge: att.loading ? undefined : `${pct(total.absent, total.expected)}%`, icon: <XCircle size={24} />, tone: 'red', onClick: () => setF('absent') },
       ]} />
 
       <section className="cx-filters at-filters">
@@ -129,10 +129,10 @@ export default function AttendanceSummary({ focus = '', onFocus, extras }: { foc
             </ul>
           </div>
         </CxCard>
-        <CxCard icon={<BarChart3 size={22} />} title={tx("Attendance trend (last 7 days)")}>
+        <CxCard icon={<BarChart3 size={22} />} title={tx("Attendance Trend (Last 7 Days)")}>
           <CxLine labels={extras.labels} values={extras.values} />
         </CxCard>
-        <CxCard tone="amber" icon={<Calendar size={22} />} title={tx("Published events")} sub={tx("Events that record attendance")}>
+        <CxCard tone="amber" icon={<Calendar size={22} />} title={tx("Published Events")} sub={tx("Events that record attendance")}>
           <div className="at-pub">
             <CxDonut size={118} big={extras.events ?? '—'} label={tx("Events")} slices={[{ value: 1, color: '#1f9d63' }]} />
             <div><p><CheckCircle2 size={18} /><b>{extras.week}</b><span>{tx("Check-ins this week")}</span></p><p><Calendar size={18} /><b>{extras.today}</b><span>{tx("Check-ins today")}</span></p></div>
@@ -141,15 +141,15 @@ export default function AttendanceSummary({ focus = '', onFocus, extras }: { foc
       </div>
 
       <CxTabs value={tab} onChange={(v) => { setTab(v as typeof tab); setPage(1); }} items={[
-        { value: 'session', label: tx("By session"), icon: <ListChecks size={20} />, count: sorted.length },
-        { value: 'group', label: tx("By group"), icon: <Users size={20} /> },
-        { value: 'location', label: tx("By location"), icon: <MapPin size={20} /> },
+        { value: 'session', label: tx("By Session"), icon: <ListChecks size={20} />, count: sorted.length },
+        { value: 'group', label: tx("By Group"), icon: <Users size={20} /> },
+        { value: 'location', label: tx("By Location"), icon: <MapPin size={20} /> },
         { value: 'stats', label: tx("Statistics"), icon: <BarChart3 size={20} /> },
-        { value: 'published', label: tx("Published events"), icon: <Calendar size={20} /> },
+        { value: 'published', label: tx("Published Events"), icon: <Calendar size={20} /> },
       ]} />
 
       {tab === 'session' && (
-        <CxCard id="att-table" dark icon={<ListChecks size={22} />} title={<>{tx("Session attendance")} <span className="cx-pill grey at-n">{sorted.length}</span></>} sub={tx("Members present compared with the total expected for events and rehearsal sessions.")}
+        <CxCard id="att-table" dark icon={<ListChecks size={22} />} title={<>{tx("Session Attendance")} <span className="cx-pill grey at-n">{sorted.length}</span></>} sub={tx("Members present compared with the total expected for events and rehearsal sessions.")}
           right={<Dropdown label={tx("Sort by")} value={order} onChange={(v) => setOrder((v || 'new') as typeof order)} allLabel={tx("Date (Newest)")} options={[{ value: 'old', label: tx("Date (Oldest)") }, { value: 'rate', label: tx("Rate (best first)") }]} className="loc-dd" />}>
           <p className="kt-note at-note">{tx("A late member counts as absent but may sit and observe. Present + Leave + Absent always equals Expected. Only sessions that have started are counted")}{list.length > 60 ? tx("; the 60 most recent are shown") : ''}.</p>
           {events === null ? <p className="kt-empty">{tx("Loading…")}</p> : sorted.length === 0 ? <p className="kt-empty">{tx("No session matches these filters.")}</p> : single ? (
@@ -196,7 +196,7 @@ export default function AttendanceSummary({ focus = '', onFocus, extras }: { foc
       )}
 
       {tab === 'group' && (
-        <CxCard dark icon={<Users size={22} />} title={tx("Attendance by group")} sub={tx("Attendance rate and member count, for sessions of a single group.")}>
+        <CxCard dark icon={<Users size={22} />} title={tx("Attendance by Group")} sub={tx("Attendance rate and member count, for sessions of a single group.")}>
           {byGroup.length === 0 && <p className="kt-empty">{tx("No group has attendance yet.")}</p>}
           <ul className="at-groups">{byGroup.slice(0, 15).map((g, i) => { const r = pct(g.present, g.expected); return (
             <li key={g.id}><b>{i + 1}</b><CxInitials name={g.name} /><span><strong>{g.name}</strong><small>{g.expected} {tx("expected")}</small></span><CxBar pct={r} tone={r >= 70 ? 'green' : r >= 30 ? 'amber' : 'red'} thick /><em>{r}%</em></li>
@@ -226,7 +226,7 @@ export default function AttendanceSummary({ focus = '', onFocus, extras }: { foc
       )}
 
       {tab === 'published' && (
-        <CxCard dark icon={<Calendar size={22} />} title={tx("Published events")} sub={tx("Events that record attendance")}>
+        <CxCard dark icon={<Calendar size={22} />} title={tx("Published Events")} sub={tx("Events that record attendance")}>
           <ul className="at-groups">{rowsX.slice(0, 20).map((r) => (
             <li key={r.id}><span className="at-pin"><Calendar size={18} /></span><span><strong>{r.e.title}</strong><small>{formatInZone(r.startMs, r.geos[0]?.tz ?? 'UTC')} · {r.city}</small></span><CxBar pct={rate(r)} thick /><em>{r.sum.present}/{r.sum.expected}</em></li>
           ))}</ul>
@@ -234,13 +234,13 @@ export default function AttendanceSummary({ focus = '', onFocus, extras }: { foc
       )}
 
       <div className="cx-grid cx-g32 at-bottom">
-        <CxCard dark icon={<Users size={22} />} title={tx("Attendance by group")} sub={tx("Attendance rate and member count (Top 5)")}>
+        <CxCard dark icon={<Users size={22} />} title={tx("Attendance by Group")} sub={tx("Attendance rate and member count (Top 5)")}>
           {byGroup.length === 0 && <p className="kt-empty">{tx("No group has attendance yet.")}</p>}
           <ul className="at-groups">{byGroup.slice(0, 5).map((g, i) => { const r = pct(g.present, g.expected); return (
             <li key={g.id}><b>{i + 1}</b><CxInitials name={g.name} /><span><strong>{g.name}</strong><small>{g.expected} {tx("expected")}</small></span><CxBar pct={r} tone={r >= 70 ? 'green' : r >= 30 ? 'amber' : 'red'} thick /><em>{r}%</em></li>
           ); })}</ul>
         </CxCard>
-        <CxCard icon={<Target size={22} />} title={tx("Key takeaways")}>
+        <CxCard icon={<Target size={22} />} title={tx("Key Takeaways")}>
           <div className="at-take ok"><CheckCircle2 size={28} /><span><b>{tx("Full attendance")}</b><small>{full} {tx("sessions recorded full attendance.")}</small></span></div>
           <div className="at-take go"><ArrowUpRight size={28} /><span><b>{tx("Attendance rate")}</b><small>{overall}% {tx("overall")} ({total.present} {tx("of")} {total.expected} {tx("members")}).</small></span></div>
           <div className="at-take bad"><XCircle size={28} /><span><b>{tx("Absences")}</b><small>{pct(total.absent, total.expected)}% ({total.absent} {tx("members")}) – {tx("needs follow-up.")}</small></span></div>

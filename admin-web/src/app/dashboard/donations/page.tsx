@@ -203,7 +203,7 @@ export default function FinancePage() {
 
   return (
     <>
-      <div className="px px-index fn-top"><section className="view active"><CommandHero title={tx("Finance command center")} subtitle={tx("Programs, collections and contributions across the Conservatory.")} /></section></div>
+      <div className="px px-index fn-top"><section className="view active"><CommandHero variant="finance" title={tx("Finance command center")} subtitle={tx("Programs, collections and contributions across the Conservatory.")} /></section></div>
       <div className="px px-finance">
         <div className="content">
           <div className="fn-ovh">

@@ -51,14 +51,14 @@ export default function AttendanceReportPage() {
     <>
       <div className="px px-index">
         <div className="zp cx-page at-page">
-          <CxBanner icon={<CalendarCheck size={26} />} kicker={tx("Reports")} title={tx("Attendance report")} sub={tx("Visual tracking of sessions, punctuality and absences by group, event and period.")}>
+          <CxBanner icon={<CalendarCheck size={26} />} kicker={tx("Reports")} title={tx("Attendance Report")} sub={tx("Visual tracking of sessions, punctuality and absences by group, event and period.")}>
             <button className="cx-btn ghost-light" type="button" onClick={() => window.print()}><Download size={16} />{tx("Export")}</button>
-            <button className="cx-btn gold" type="button" onClick={() => setManageSignal((n) => n + 1)}><Calendar size={16} />{tx("Attendance by event")}</button>
+            <button className="cx-btn gold" type="button" onClick={() => setManageSignal((n) => n + 1)}><Calendar size={16} />{tx("Attendance by Event")}</button>
           </CxBanner>
           <div id="att-summary"><AttendanceSummary focus={focus} onFocus={setFocus} extras={{ labels, values: perDay.map((d) => d.n), events, week, today }} /></div>
         </div>
       </div>
-      <ManageToggle title={tx("Attendance by event")} openSignal={manageSignal}>
+      <ManageToggle title={tx("Attendance by Event")} openSignal={manageSignal}>
         <ReportsManage />
       </ManageToggle>
     </>

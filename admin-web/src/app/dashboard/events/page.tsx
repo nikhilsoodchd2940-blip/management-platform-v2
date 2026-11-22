@@ -40,7 +40,7 @@ import MyPerformances from './MyPerformances';
 import { useMyScope } from '@/lib/useMyScope';
 import EditEvent from './EditEvent';
 import { CxHead } from '@/components/Cx';
-import { CalendarDays } from 'lucide-react';
+import { ArrowRight, CalendarDays, CheckCircle2, ChevronDown, Clock, MapPin, Pencil, Users, UserCog } from 'lucide-react';
 import { tx, dateLocale } from '@/lib/i18n/tr';
 
 interface EventRow {
@@ -396,11 +396,11 @@ export default function EventsPage() {
                         <div className="ev-body">
                           <div className="ev-top"><strong>{e.title}</strong><span className={`ev-pill p-${cls}`}>{ph}</span></div>
                           <div className="ev-meta">
-                            <span>🕒 {new Date(e.startMs).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' })} – {new Date(e.endMs).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' })}</span>
-                            <span>👥 {e.groupIds.length} {tx("kurel")}{e.groupIds.length === 1 ? '' : 's'}</span>
+                            <span><Clock size={14} aria-hidden /> {new Date(e.startMs).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' })} – {new Date(e.endMs).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' })}</span>
+                            <span className="ev-gp"><Users size={14} aria-hidden /> {e.groupIds.length} {tx("group")}{e.groupIds.length === 1 ? '' : 's'}</span>
                             {e.seriesId && <button type="button" className="ev-series" onClick={(ev) => { ev.stopPropagation(); setSeriesId(e.seriesId as string); }}>{tx("↻ Recurring")}</button>}
                           </div>
-                          {e.location && <div className="ev-place">📍 {e.location}</div>}
+                          {e.location && <div className="ev-place"><MapPin size={14} aria-hidden /> {e.location}</div>}
                         </div>
                       </article>
                     </div>
@@ -408,6 +408,7 @@ export default function EventsPage() {
                 })}
                 {rows.length === 0 && <div className="empty" style={{ display: 'block' }}>{events.length === 0 ? tx("No events yet.") : tx("No event matches.")}</div>}
               </div>
+              <button type="button" className="ev-all" onClick={() => { setStatusFilter(''); setSearch(''); document.querySelector('#scheduled-events .ev-list')?.scrollTo({ top: 0, behavior: 'smooth' }); }}>{tx("View all events")} <ArrowRight size={16} aria-hidden /></button>
             </section>
 
             <article className="card detail ws">
@@ -415,22 +416,22 @@ export default function EventsPage() {
                 <>
                   <header className="ws-hero">
                     <div className="ws-title">
-                      <span className="ws-kind">{selected.groupIds.length > 1 ? tx("Main group event") : tx("Kurel event")}{selected.seriesId ? tx(" · Recurring") : ''}</span>
+                      <span className="ws-kind">{selected.groupIds.length > 1 ? tx("Main group event") : tx("Group event")}{selected.seriesId ? tx(" · Recurring") : ''}</span>
                       <h2>{selected.title}</h2>
                       <p>{new Date(selected.startMs).toLocaleString(dateLocale(), { dateStyle: 'full', timeStyle: 'short' })} → {new Date(selected.endMs).toLocaleString(dateLocale(), { dateStyle: 'medium', timeStyle: 'short' })}</p>
                     </div>
                     <span className={`ev-pill big p-${phase(selected).toLowerCase().replace(' ', '-')}`}>{phase(selected)}</span>
                   </header>
                   <div className="ws-actions">
-                    <Link href={`/dashboard/events/${selected.id}`} className="ws-primary">{isGroupAdmin ? tx("Event plan") : tx("Event plan and attendance")}</Link>
-                    {!isGroupAdmin && selected.status !== 'cancelled' && <button type="button" onClick={() => setEditId(selected.id)}>{tx("Edit event")}</button>}
-                    {!isGroupAdmin && selected.status !== 'cancelled' && <button type="button" onClick={() => setSiteDialog(true)}>{tx("Assign a supervisor")}</button>}
+                    <Link href={`/dashboard/events/${selected.id}`} className="ws-primary"><CalendarDays size={17} aria-hidden />{isGroupAdmin ? tx("Event plan") : tx("Event plan and attendance")}</Link>
+                    {!isGroupAdmin && selected.status !== 'cancelled' && <button type="button" onClick={() => setEditId(selected.id)}><Pencil size={16} aria-hidden />{tx("Edit event")}</button>}
+                    {!isGroupAdmin && selected.status !== 'cancelled' && <button type="button" onClick={() => setSiteDialog(true)}><UserCog size={16} aria-hidden />{tx("Assign a supervisor")}</button>}
                     {!isGroupAdmin && selected.status === 'cancelled' && <button type="button" onClick={() => act('restore', selected.id)}>{tx("Bring this event back")}</button>}
                     {!isGroupAdmin && selected.status === 'draft' && <button type="button" onClick={() => setCheckId(selected.id)}>{tx("Publish")}</button>}
                     {selected.seriesId && <button type="button" onClick={() => setSeriesId(selected.seriesId as string)}>{tx("See the series")}</button>}
                     {!isGroupAdmin && (
                       <details className="ws-more">
-                        <summary>{tx("More")}</summary>
+                        <summary>{tx("More")} <ChevronDown size={16} aria-hidden /></summary>
                         <div>
                           {selected.status !== 'cancelled' && <button type="button" className="danger" onClick={() => act('cancel', selected.id)}>{tx("Cancel this event")}</button>}
                           {selected.status !== 'published' && <button type="button" className="danger" onClick={() => removeEvent(selected.id, selected.title)}>{tx("Delete this event")}</button>}
@@ -452,10 +453,10 @@ export default function EventsPage() {
                     {tab === 'overview' && (
                       <>
                         <div className="ws-ovtop"><div className="ws-kpis">
-                          <button type="button" className="ws-kpi" onClick={() => setOvp('kurels')}><span>{tx("Kurels")}</span><b>{selected.groupIds.length}</b><em>{tx("See details")}</em></button>
-                          <button type="button" className="ws-kpi" onClick={() => setOvp('duration')}><span>{tx("Duration")}</span><b>{durationText(selected.startMs, selected.endMs)}</b><em>{tx("See details")}</em></button>
-                          <button type="button" className="ws-kpi" onClick={() => setOvp('checked')}><span>{tx("Checked in")}</span><b>{fmt(checked)} / {fmt(present)}</b><em>{tx("See details")}</em></button>
-                          <button type="button" className="ws-kpi" onClick={() => setOvp('places')}><span>{tx("Places")}</span><b>{selected.sites.length || 1}</b><em>{tx("See details")}</em></button>
+                          <button type="button" className="ws-kpi" onClick={() => setOvp('kurels')}><span><Users size={20} aria-hidden />{tx("Groups")}</span><b>{selected.groupIds.length}</b><em>{tx("See details")}</em></button>
+                          <button type="button" className="ws-kpi" onClick={() => setOvp('duration')}><span><Clock size={20} aria-hidden />{tx("Duration")}</span><b>{durationText(selected.startMs, selected.endMs)}</b><em>{tx("See details")}</em></button>
+                          <button type="button" className="ws-kpi" onClick={() => setOvp('checked')}><span><CheckCircle2 size={20} aria-hidden />{tx("Checked in")}</span><b>{fmt(checked)} / {fmt(present)}</b><em>{tx("See details")}</em></button>
+                          <button type="button" className="ws-kpi" onClick={() => setOvp('places')}><span><MapPin size={20} aria-hidden />{tx("Places")}</span><b>{selected.sites.length || 1}</b><em>{tx("See details")}</em></button>
                         </div>
                         <div className="ws-wx"><WeatherPlaces dateMs={selected.startMs} places={selected.sites.length ? selected.sites.map((x) => ({ id: x.id, name: x.name, lat: x.lat, lng: x.lng })) : [{ name: selected.location.split(',')[0] || selected.title, lat: selected.lat, lng: selected.lng }]} /></div></div>
                         <EventDayPlanner part="places" eventId={selected.id} startMs={selected.startMs} endMs={selected.endMs} sites={selected.sites} shifts={selected.shifts} groupIds={selected.groupIds} groupName={(g) => byId[g]?.name ?? g} cityName={(g) => locationOf(g).city?.name ?? ''} />

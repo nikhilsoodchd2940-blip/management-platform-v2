@@ -159,7 +159,7 @@ export default function EventBooksPage() {
           </div>
 
           <form className="eb2-bar" onSubmit={(e) => { e.preventDefault(); apply(d); }}>
-            <label className="eb2-search"><Search size={18} aria-hidden /><input type="search" placeholder={tx("Search a book or an artist")} value={d.q} onChange={(e) => setD({ ...d, q: e.target.value })} aria-label={tx("Search")} />{d.q && <button type="button" aria-label={tx("Clear")} onClick={() => { const n = { ...d, q: '' }; setD(n); if (f.q) apply(n); }}><X size={16} /></button>}</label>
+            <label className="eb2-search"><Search size={18} aria-hidden /><input type="search" placeholder={tx("Search for a book or an artist…")} value={d.q} onChange={(e) => setD({ ...d, q: e.target.value })} aria-label={tx("Search")} />{d.q && <button type="button" aria-label={tx("Clear")} onClick={() => { const n = { ...d, q: '' }; setD(n); if (f.q) apply(n); }}><X size={16} /></button>}</label>
             <Dropdown label={tx("Artist")} value={d.artist} onChange={(v) => setD({ ...d, artist: v })} allLabel={`${tx("All artists")} · ${artists.length}`} options={artists.map((a) => ({ value: a, label: a }))} className="eb2-dd" />
             <Dropdown label={tx("Level")} value={d.level} onChange={(v) => setD({ ...d, level: v })} allLabel={`${tx("All levels")} · ${all.length}`} options={[...levels.map((l) => ({ value: l.id, label: `${l.name} · ${levelCount(l.id)}` })), ...(all.some((b) => !b.levelId) ? [{ value: 'none', label: `${tx("Every level")} · ${all.filter((b) => !b.levelId).length}` }] : [])]} className="eb2-dd" />
             <Dropdown label={tx("Duration")} value={d.dur} onChange={(v) => setD({ ...d, dur: v })} allLabel={tx("All durations")} options={DUR.map((x) => ({ value: x.v, label: tx(x.label) }))} className="eb2-dd" />
@@ -180,7 +180,7 @@ export default function EventBooksPage() {
               {shown.length === 0 ? <p className="kt-empty">{tx("No book matches.")}</p> : (
                 <div className="eb2-scroll">
                   <table className="eb2-table">
-                    <thead><tr>{head(0, 'title', tx("Book"))}{head(1, 'artist', tx("Artist"))}{head(2, 'level', tx("Level"))}{head(3, 'duration', tx("Duration"))}{!readOnly && head(4, 'actions', tx("Actions"), false)}</tr></thead>
+                    <thead><tr>{head(0, 'title', tx("Book title"))}{head(1, 'artist', tx("Artist"))}{head(2, 'level', tx("Level"))}{head(3, 'duration', tx("Duration"))}{!readOnly && head(4, 'actions', tx("Actions"), false)}</tr></thead>
                     <tbody>
                       {rows.map((b) => {
                         const pal = zonePal(b.levelId ? levelIx(b.levelId) : 1);
@@ -313,7 +313,7 @@ function ImportBooks({ onClose, onDone }: { onClose: () => void; onDone: () => v
             </div>
             <div className="eb-prev">
               <table>
-                <thead><tr><th>{tx("Line")}</th><th>{tx("Book")}</th><th>{tx("Artist")}</th><th>{tx("Level")}</th><th>{tx("Duration")}</th><th>{tx("Result")}</th></tr></thead>
+                <thead><tr><th>{tx("Line")}</th><th>{tx("Book title")}</th><th>{tx("Artist")}</th><th>{tx("Level")}</th><th>{tx("Duration")}</th><th>{tx("Result")}</th></tr></thead>
                 <tbody>
                   {res.rows.map((r) => (
                     <tr key={r.row} className={`s-${r.status}`}>

@@ -184,10 +184,10 @@ export default function WelfarePage() {
         ]} />
         <div className="cx-grid cx-g32">
           <form className="cx-card so-form" id="welfare-form" onSubmit={submitForm}>
-            <header><i><Send size={22} /></i><div><h2>{tx("Submit a request")}</h2><p>{tx("The manager of the chosen kurel receives it directly.")}</p></div><div className="cx-hr"><span className="cx-pill green" ><i />{tx("On behalf of a member")}</span></div></header>
+            <header><i><Send size={22} /></i><div><h2>{tx("Submit a request")}</h2><p>{tx("The manager of the chosen group receives it directly.")}</p></div><div className="cx-hr"><span className="cx-pill green" ><i />{tx("On behalf of a member")}</span></div></header>
             <div className="cx-cb">
               <div className="cx-two">
-                <Dropdown label={tx("Kurel concerned")} value={formGroup} onChange={(v) => { setFormGroup(v); setForm({ ...form, userId: '' }); }} allLabel={tx("Choose a kurel")} options={activeLeafGroups.map((g) => ({ value: g.id, label: g.name }))} />
+                <Dropdown label={tx("Group concerned")} value={formGroup} onChange={(v) => { setFormGroup(v); setForm({ ...form, userId: '' }); }} allLabel={tx("Choose a group")} options={activeLeafGroups.map((g) => ({ value: g.id, label: g.name }))} />
                 <Dropdown label={tx("Member")} value={form.userId} onChange={(v) => setForm({ ...form, userId: v })} allLabel={tx("Choose a member")} options={members.map((m) => ({ value: m.id, label: m.name }))} />
               </div>
               <div className="cx-two">
@@ -195,7 +195,7 @@ export default function WelfarePage() {
                 <label className="cx-field">{tx("Date concerned")}<input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></label>
                 <label className="cx-field">{tx("Time concerned")}<input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} /></label>
               </div>
-              <label className="cx-field">{tx("Explanation of the request")}<textarea required rows={4} placeholder={tx("Describe the situation.")} value={form.text} onChange={(e) => setForm({ ...form, text: e.target.value })} /></label>
+              <label className="cx-field">{tx("Explanation of the request")}<textarea required rows={4} placeholder={tx("Describe the situation…")} value={form.text} onChange={(e) => setForm({ ...form, text: e.target.value })} /></label>
               <div className="so-act"><span className="cx-note"><Info size={16} />{tx("Members follow the status and the answer from their account.")}</span><button className="cx-btn green" type="submit" disabled={busy || !formGroup || !form.userId || !form.category}><Send size={16} />{tx("Send to the manager")}</button></div>
             </div>
           </form>
@@ -211,7 +211,7 @@ export default function WelfarePage() {
           right={<Dropdown label={tx("Status")} value={filter} onChange={setFilter} allLabel={tx("All statuses")} options={[{ value: 'pending', label: tx("Under review") }, { value: 'approved', label: tx("Resolved") }, { value: 'rejected', label: tx("Rejected") }]} />}>
           <div className="cx-scroll">
             <table className="cx-table dk so-table">
-              <thead><tr><th>{tx("Reference")}</th><th>{tx("Member")}</th><th>{tx("Category")}</th><th>{tx("Kurel")}</th><th>{tx("Date / time")}</th><th>{tx("Status")}</th><th>{tx("Manager action")}</th></tr></thead>
+              <thead><tr><th>{tx("Reference")}</th><th>{tx("Member")}</th><th>{tx("Category")}</th><th>{tx("Group")}</th><th>{tx("Date / time")}</th><th>{tx("Status")}</th><th>{tx("Manager action")}</th></tr></thead>
               <tbody>
                 {rows.length === 0 && <tr><td colSpan={7}><span className="cx-empty"><Inbox size={36} /><b>{tx("No requests yet.")}</b></span></td></tr>}
                 {rows.map((r) => (

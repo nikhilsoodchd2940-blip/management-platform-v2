@@ -20,7 +20,7 @@ import FormDialog from '@/components/FormDialog';
 import { Admissions, RenewalCard, TransferTools } from './Pipeline';
 import { tx, dateLocale } from '@/lib/i18n/tr';
 import { CxBanner, CxCard, CxStats, CxSteps, CxTabs } from '@/components/Cx';
-import { BarChart3, Calendar, ClipboardCheck, FileText, FlaskConical, FolderOpen, GraduationCap, Inbox, Layers, MapPin, MessageCircle, Phone, Plus, RefreshCw, ScrollText, ShieldCheck, Users, Wifi, Check } from 'lucide-react';
+import { Filter, Search, BarChart3, Calendar, ClipboardCheck, FileText, FlaskConical, FolderOpen, GraduationCap, Inbox, Layers, MapPin, MessageCircle, Phone, Plus, RefreshCw, ScrollText, ShieldCheck, Users, Wifi, Check } from 'lucide-react';
 
 interface Pending { id: string; displayName: string; memberId: string; phone: string; email: string; photoUrl: string; createdMs: number }
 interface PhoneRequest { id: string; memberId: string; requestedPhone: string; note: string; createdMs: number }
@@ -52,6 +52,7 @@ export default function AdministrationPage() {
   const [loaded, setLoaded] = useState(false);
   const [phoneRequests, setPhoneRequests] = useState<PhoneRequest[]>([]);
   const [search, setSearch] = useState('');
+  const [showF, setShowF] = useState(false);
   const [country, setCountry] = useState('');
   const [idFilter, setIdFilter] = useState('');
   const [photoFilter, setPhotoFilter] = useState('');
@@ -162,7 +163,7 @@ export default function AdministrationPage() {
       ]} />
 
       {tab === 'registrations' && (
-        <Pane icon={<FileText size={22} />} title={tx("Registration files")} note={`${rows.length} of ${pending.length} shown. Click a name for the profile, a row for the checks.`}
+        <Pane icon={<FileText size={22} />} title={tx("Registration Files")} note={`${rows.length} of ${pending.length} shown. Click a name for the profile, a row for the checks.`}
           right={picked.length > 0 ? (
             <>
               <button type="button" className="ap-btn ok" disabled={busy} onClick={() => approve(picked)}>{tx("Approve")} {picked.length} {tx("selected")}</button>
@@ -171,18 +172,21 @@ export default function AdministrationPage() {
             </>
           ) : undefined}>
           <div className="ap-bar">
-            <input type="search" placeholder={tx("Name, member ID, phone or email")} value={search} onChange={(e) => setSearch(e.target.value)} />
+            <label className="ap-srch"><Search size={17} aria-hidden /><input type="search" placeholder={tx("Search a candidate, member ID…")} value={search} onChange={(e) => setSearch(e.target.value)} /></label>
+            <button type="button" className={`ap-fbtn${showF || country || idFilter || photoFilter || waitFilter ? " on" : ""}`} aria-expanded={showF} onClick={() => setShowF(!showF)}><Filter size={16} aria-hidden />{tx("Filters")}</button>
+            {(showF || country || idFilter || photoFilter || waitFilter) && <>
             <Dropdown label={tx("Country")} value={country} onChange={setCountry} allLabel="All countries" options={countries.map((c) => ({ value: c.id, label: c.name }))} />
             <Dropdown label={tx("Member ID")} value={idFilter} onChange={setIdFilter} allLabel="Any" options={[{ value: 'with', label: tx("Provided") }, { value: 'without', label: tx("Missing") }]} />
             <Dropdown label={tx("Photo")} value={photoFilter} onChange={setPhotoFilter} allLabel="Any" options={[{ value: 'with', label: tx("Provided") }, { value: 'without', label: tx("Missing") }]} />
             <Dropdown label={tx("Waiting")} value={waitFilter} onChange={setWaitFilter} allLabel="Any time" options={[{ value: 'week', label: tx("7 days or more") }, { value: 'new', label: tx("Less than 7 days") }]} />
+            </>}
           </div>
           <div className="ap-twrap">
             <table className="ap-table">
               <thead>
                 <tr>
                   <th className="ck"><input type="checkbox" aria-label={tx("Select all")} checked={allShownPicked} onChange={() => setPicked(allShownPicked ? [] : rows.map((r) => r.id))} /></th>
-                  <th>{head('name', 'Candidate')}</th><th>{head('id', 'Member ID')}</th><th>{tx("Contact")}</th><th>{tx("Kurel")}</th><th>{tx("Checks")}</th><th>{head('date', 'Received')}</th><th className="act">{tx("Actions")}</th>
+                  <th>{head('name', 'Candidate')}</th><th>{head('id', 'Member ID')}</th><th>{tx("Contact")}</th><th>{tx("Group")}</th><th>{tx("Checks")}</th><th>{head('date', 'Received')}</th><th className="act">{tx("Actions")}</th>
                 </tr>
               </thead>
               <tbody>

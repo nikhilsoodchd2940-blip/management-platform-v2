@@ -149,13 +149,13 @@ export default function EvaluationPage() {
   return (
     <div className="px px-index">
       <div className="zp cx-page ev-page">
-        <CxBanner icon={<ClipboardCheck size={26} />} kicker={tx("Pedagogy")} title={tx("Evaluation report")} sub={tx("Comprehensive evaluation of members, groups, zones, attendance and overall activities.")}>
+        <CxBanner icon={<ClipboardCheck size={26} />} kicker={tx("Pedagogy")} title={tx("Evaluation Report")} sub={tx("Comprehensive evaluation of members, groups, zones, attendance and overall activities.")}>
           <Dropdown label={tx("Period type")} value={periodType} onChange={(v) => setPeriodType(v as 'monthly' | 'semester')} options={[{ value: 'monthly', label: tx("Monthly") }, { value: 'semester', label: tx("Half-yearly") }]} className="lm-dd ev-dd" />
           <button className="cx-btn gold" type="button" onClick={() => setDialog('new')}><Plus size={18} />{tx("New evaluation")}</button>
         </CxBanner>
 
         <CxStats items={[
-          { label: tx("Completed evaluations"), value: fmt(rowsRaw === null ? null : current.length), icon: <ClipboardCheck size={24} />, tone: 'green', onClick: () => setStageF('') },
+          { label: tx("Completed Evaluations"), value: fmt(rowsRaw === null ? null : current.length), icon: <ClipboardCheck size={24} />, tone: 'green', onClick: () => setStageF('') },
           { label: tx("Pending"), value: fmt(rowsRaw === null ? null : pending.length), icon: <Hourglass size={24} />, tone: 'amber', onClick: () => setStage('pending') },
           { label: tx("Approved"), value: fmt(rowsRaw === null ? null : approvedNow.length), badge: current.length ? `${Math.round((approvedNow.length / current.length) * 1000) / 10}%` : undefined, icon: <CheckCircle2 size={24} />, tone: 'green', onClick: () => setStage('approved') },
           { label: tx("Returned"), value: fmt(rowsRaw === null ? null : returned.length), icon: <Undo2 size={24} />, tone: 'red', onClick: () => setStage('returned') },
@@ -163,16 +163,16 @@ export default function EvaluationPage() {
 
         <CxTabs value={tab} onChange={(v) => setTab(v as typeof tab)} items={[
           { value: 'overall', label: tx("Overall"), icon: <Users size={20} /> },
-          { value: 'member', label: tx("By member"), icon: <UserRound size={20} /> },
-          { value: 'group', label: tx("By group"), icon: <Users size={20} /> },
-          { value: 'zone', label: tx("By zone"), icon: <Layers size={20} /> },
+          { value: 'member', label: tx("By Member"), icon: <UserRound size={20} /> },
+          { value: 'group', label: tx("By Group"), icon: <Users size={20} /> },
+          { value: 'zone', label: tx("By Zone"), icon: <Layers size={20} /> },
           { value: 'attendance', label: tx("Attendance"), icon: <Calendar size={20} /> },
           { value: 'activities', label: tx("Activities"), icon: <BarChart3 size={20} /> },
         ]} />
 
         {tab === 'overall' && (<>
           <div className="cx-grid cx-g2">
-            <CxCard icon={<Award size={22} />} title={tx("Overall performance")} sub={tx("Weighted average of all evaluation criteria for the period.")} right={<span className="cx-pill amber">{period}</span>}>
+            <CxCard icon={<Award size={22} />} title={tx("Overall Performance")} sub={tx("Weighted average of all evaluation criteria for the period.")} right={<span className="cx-pill amber">{period}</span>}>
               <div className="ev-overall">
                 <CxDonut size={170} big={<>{overall === null ? '—' : overall}<small className="ev-of"> / 20</small></>} label={overall === null ? undefined : <><b className="ev-pc">{Math.round((overall / 20) * 100)}%</b><span className="ev-grade">{grade(overall)}</span></>} slices={[{ value: overall ?? 0, color: '#1f9d63' }, { value: 20 - (overall ?? 0), color: '#e6ece8' }]} />
                 <ul className="ev-crit">
@@ -180,17 +180,17 @@ export default function EvaluationPage() {
                 </ul>
               </div>
             </CxCard>
-            <CxCard icon={<TrendingUp size={22} />} title={tx("Performance trend")} sub={tx("Overall average score over time.")}>
+            <CxCard icon={<TrendingUp size={22} />} title={tx("Performance Trend")} sub={tx("Overall average score over time.")}>
               {trend.length === 0 ? <p className="kt-empty">{tx("No evaluation yet.")}</p> : <CxLine labels={trend.map((t) => MON[Number(t.k.slice(5, 7)) - 1] ?? t.k)} values={trend.map((t) => t.v)} min={0} max={20} />}
             </CxCard>
           </div>
           <div className="cx-grid cx-g32">
-            <CxCard icon={<BarChart3 size={22} />} title={tx("Results by criterion")} sub={tx("Average score and ranking for the current period.")}>
+            <CxCard icon={<BarChart3 size={22} />} title={tx("Results by Criterion")} sub={tx("Average score and ranking for the current period.")}>
               <table className="cx-table ev-crit-t"><thead><tr><th>{tx("Criterion")}</th><th>{tx("Average (/20)")}</th><th>{tx("Achievement")}</th></tr></thead>
                 <tbody>{CRITERIA.map((c) => { const v = mean(current, c.key); return <tr key={c.key}><td><b>{tx(c.label)}</b></td><td>{v === null ? '—' : v}</td><td><span className="ev-ach"><CxBar pct={((v ?? 0) / 20) * 100} tone="gold" thick /><em>{v === null ? '—' : `${Math.round((v / 20) * 1000) / 10}%`}</em></span></td></tr>; })}</tbody></table>
             </CxCard>
             <div className="ev-side">
-              <CxCard icon={<Layers size={22} />} title={tx("Approval flow")} sub={`${tx("Progress of the")} ${periodType === 'monthly' ? tx("monthly") : tx("half-yearly")} ${tx("period")}`}>
+              <CxCard icon={<Layers size={22} />} title={tx("Approval Flow")} sub={`${tx("Progress of the")} ${periodType === 'monthly' ? tx("monthly") : tx("half-yearly")} ${tx("period")}`}>
                 <div className="ev-flow">
                   <button type="button" className="ok" onClick={() => setStage('approved')}><CheckCircle2 size={20} /><small>{tx("Submitted")}</small><b>{current.length}</b></button><i>→</i>
                   <button type="button" className="warn" onClick={() => setStage('pending')}><Hourglass size={20} /><small>{tx("In review")}</small><b>{current.filter((r) => r.stage.startsWith('pending')).length}</b></button><i>→</i>
@@ -198,7 +198,7 @@ export default function EvaluationPage() {
                   <button type="button" className="bad" onClick={() => setStage('returned')}><Undo2 size={20} /><small>{tx("Returned")}</small><b>{current.filter((r) => r.stage === 'returned').length}</b></button>
                 </div>
               </CxCard>
-              <CxCard icon={<Calendar size={22} />} title={tx("Attendance & activities overview")}>
+              <CxCard icon={<Calendar size={22} />} title={tx("Attendance & Activities Overview")}>
                 <div className="cx-two">
                   <div className="ev-mini"><small>{tx("Attendance score")}</small><b>{mean(current, 'attendance') ?? '—'} / 20</b></div>
                   <div className="ev-mini warm"><small>{tx("Discipline score")}</small><b>{mean(current, 'discipline') ?? '—'} / 20</b></div>
@@ -213,7 +213,7 @@ export default function EvaluationPage() {
         {tab === 'zone' && <CxCard dark icon={<Layers size={22} />} title={tx("Results by city and zone")} sub={tx("Average over every evaluation of the area.")}>{rank(byZoneAgg)}</CxCard>}
         {tab === 'attendance' && <CxCard dark icon={<Calendar size={22} />} title={tx("Attendance score by group")} sub={tx("Average of the attendance criterion.")}>{rank([...byGroupAgg].sort((a, b) => b.att - a.att), true)}</CxCard>}
 
-        <CxCard dark id="ev-circuit" icon={<Users size={22} />} title={tx("Evaluations in the circuit")} sub={tx("Pedagogy president → kurel leader → central approval. Members see a result only once it is approved.")}
+        <CxCard dark id="ev-circuit" icon={<Users size={22} />} title={tx("Evaluations in the Circuit")} sub={tx("Pedagogy president → kurel leader → central approval. Members see a result only once it is approved.")}
           right={<>
             <label className="cx-search ev-s"><Search size={16} /><input type="search" placeholder={tx("Search a member or an evaluator")} value={q} onChange={(e) => setQ(e.target.value)} /></label>
             <Dropdown label={tx("Group")} value={grpF} onChange={setGrpF} allLabel={tx("All groups")} options={groupsUsed.map((g) => ({ value: g, label: byId[g]?.name ?? '' }))} className="loc-dd" />

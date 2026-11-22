@@ -44,6 +44,7 @@ export default function PerformanceHistoryPage() {
   const [q, setQ] = useState('');
   const [openG, setOpenG] = useState('');
   const [inner, setInner] = useState<'perf' | 'stats' | 'fb'>('perf');
+  const [allPerf, setAllPerf] = useState(false);
   const [tab, setTab] = useState<'group' | 'location' | 'year' | 'stats'>('group');
   const [order, setOrder] = useState<'perf' | 'name'>('perf');
   const router = useRouter();
@@ -85,7 +86,7 @@ export default function PerformanceHistoryPage() {
 
   return (
     <main className="fx2-page zp cx-page ph-page">
-      <CxBanner icon={<Archive size={26} />} kicker={tx("Archive")} title={tx("Performance history")} sub={tx("Each group's past events, chosen audio or books, dates, status, approval record, feedback and instructions for next time.")}>
+      <CxBanner icon={<Archive size={26} />} kicker={tx("Archive")} title={tx("Performance History")} sub={tx("Each group's past events, chosen audio or books, dates, status, approval record, feedback and instructions for next time.")}>
         <button type="button" className="cx-btn ghost-light" onClick={exportCsv}><Download size={16} />{tx("Export")}</button>
         <button type="button" className="cx-btn gold" onClick={() => router.push('/dashboard/events')}><Plus size={18} />{tx("Add a record")}</button>
       </CxBanner>
@@ -94,7 +95,7 @@ export default function PerformanceHistoryPage() {
         { label: tx("Performances"), value: base.length, icon: <Mic size={24} />, tone: 'dark', onClick: () => { setPerf(''); setApr(''); } },
         { label: tx("Completed"), value: nCompleted, badge: `${pct(nCompleted, base.length)}%`, icon: <CheckCircle2 size={24} />, tone: 'green', onClick: () => setPerf(perf === 'completed' ? '' : 'completed') },
         { label: tx("Approved"), value: nApproved, badge: `${pct(nApproved, base.length)}%`, icon: <CheckCircle2 size={24} />, tone: 'green', onClick: () => setApr(apr === 'approved' ? '' : 'approved') },
-        { label: tx("With feedback"), value: nFeedback, badge: `${pct(nFeedback, base.length)}%`, icon: <MessageCircle size={24} />, tone: 'amber' },
+        { label: tx("With Feedback"), value: nFeedback, badge: `${pct(nFeedback, base.length)}%`, icon: <MessageCircle size={24} />, tone: 'amber' },
       ]} />
 
       <section className="cx-filters ph-filters">
@@ -109,9 +110,9 @@ export default function PerformanceHistoryPage() {
       </section>
 
       <CxTabs value={tab} onChange={(v) => setTab(v as typeof tab)} items={[
-        { value: 'group', label: tx("By group"), icon: <Users size={20} /> },
-        { value: 'location', label: tx("By location"), icon: <MapPin size={20} /> },
-        { value: 'year', label: tx("By year"), icon: <Calendar size={20} /> },
+        { value: 'group', label: tx("By Group"), icon: <Users size={20} /> },
+        { value: 'location', label: tx("By Location"), icon: <MapPin size={20} /> },
+        { value: 'year', label: tx("By Year"), icon: <Calendar size={20} /> },
         { value: 'stats', label: tx("Statistics"), icon: <BarChart3 size={20} /> },
       ]} />
 
@@ -122,17 +123,17 @@ export default function PerformanceHistoryPage() {
             <ul className="at-leg">
               <li><i style={{ background: '#1f9d63' }} />{tx("Completed")}<b>{nCompleted} ({pct(nCompleted, base.length)}%)</b></li>
               <li><i style={{ background: '#3b82f6' }} />{tx("Approved")}<b>{nApproved} ({pct(nApproved, base.length)}%)</b></li>
-              <li><i style={{ background: '#e0a21b' }} />{tx("With feedback")}<b>{nFeedback} ({pct(nFeedback, base.length)}%)</b></li>
+              <li><i style={{ background: '#e0a21b' }} />{tx("With Feedback")}<b>{nFeedback} ({pct(nFeedback, base.length)}%)</b></li>
               <li><i style={{ background: '#b9c6bf' }} />{tx("Not started")}<b>{nNotStarted} ({pct(nNotStarted, base.length)}%)</b></li>
             </ul>
           </div>
         </CxCard>
-        <CxCard icon={<Calendar size={22} />} title={tx("Performances by year")}>
+        <CxCard icon={<Calendar size={22} />} title={tx("Performances by Year")}>
           {years.length === 0 ? <p className="kt-empty">{tx("No performance recorded for these filters.")}</p> : (
             <div className="cx-vbars">{years.map(([y, n], i) => <div key={y}><b>{n}</b><u><s className={i === years.length - 1 ? 'gold' : ''} style={{ height: `${(n / Math.max(1, ...years.map((x) => x[1]))) * 100}%` }} /></u><span>{y}</span></div>)}</div>
           )}
         </CxCard>
-        <CxCard tone="amber" icon={<Trophy size={22} />} title={tx("Most active groups")}>
+        <CxCard tone="amber" icon={<Trophy size={22} />} title={tx("Most Active Groups")}>
           <ol className="ph-top3">{top3.map((g, i) => <li key={g.gid}><b>{i + 1}</b><strong>{g.name}</strong><em>{g.n}</em></li>)}{top3.length === 0 && <li className="ev-none">—</li>}</ol>
         </CxCard>
       </div>
@@ -143,7 +144,7 @@ export default function PerformanceHistoryPage() {
         </CxCard>
       )}
       {tab === 'year' && (
-        <CxCard dark icon={<Calendar size={22} />} title={tx("Performances by year")}>
+        <CxCard dark icon={<Calendar size={22} />} title={tx("Performances by Year")}>
           <ul className="at-groups">{[...years].reverse().map(([y, n], i) => <li key={y}><b>{i + 1}</b><span className="at-pin"><Calendar size={18} /></span><span><strong>{y}</strong></span><CxBar pct={(n / Math.max(1, ...years.map((x) => x[1]))) * 100} thick /><em>{n}</em></li>)}</ul>
         </CxCard>
       )}
@@ -158,7 +159,7 @@ export default function PerformanceHistoryPage() {
           right={<Dropdown label={tx("Sort by")} value={order} onChange={(v) => setOrder((v || 'perf') as typeof order)} allLabel={tx("Most performances")} options={[{ value: 'name', label: tx("Name (A-Z)") }]} className="loc-dd" />}>
           {slots === null ? <p>{tx("Loading…")}</p> : groupStats.length === 0 ? <p className="kt-empty">{tx("No performance recorded for these filters.")}</p> : (
             <div className="ph-groups">
-              <div className="ph-gh"><span>{tx("Group")}</span><span>{tx("Location")}</span><span>{tx("Performances")}</span><span>{tx("Completed")}</span><span>{tx("Approved")}</span><span>{tx("With feedback")}</span><span /></div>
+              <div className="ph-gh"><span>{tx("Group")}</span><span>{tx("Location")}</span><span>{tx("Performances")}</span><span>{tx("Completed")}</span><span>{tx("Approved")}</span><span>{tx("With Feedback")}</span><span /></div>
               {groupStats.map((g) => {
                 const open = openG === g.gid;
                 return (
@@ -182,7 +183,7 @@ export default function PerformanceHistoryPage() {
                         {inner === 'perf' && (
                           <div className="cx-scroll"><table className="cx-table ph-t">
                             <thead><tr><th>{tx("Date")}</th><th>{tx("Event")}</th><th>{tx("Location")}</th><th>{tx("Material")}</th><th>{tx("Duration")}</th><th>{tx("Status")}</th><th>{tx("Approval")}</th><th /></tr></thead>
-                            <tbody>{g.list.map((s) => { const st = STATUS[s.performanceStatus ?? 'scheduled']; const sl = SELECTION_LABEL[selOf(s.id)?.status ?? 'none']; return (
+                            <tbody>{(allPerf ? g.list : g.list.slice(0, 5)).map((s) => { const st = STATUS[s.performanceStatus ?? 'scheduled']; const sl = SELECTION_LABEL[selOf(s.id)?.status ?? 'none']; return (
                               <tr key={s.id}>
                                 <td><span className="at-loc"><Calendar size={15} />{formatInZone(tsMs(s.startAt), s.timeZone)}</span></td>
                                 <td><Link href={`/dashboard/events/${s.eventId}`} className="lnk"><strong>{titleOf(s.eventId)}</strong></Link></td>
@@ -192,9 +193,10 @@ export default function PerformanceHistoryPage() {
                                 <td><CxPill tone={st.cls === 'ok' ? 'green' : st.cls === 'warn' ? 'amber' : 'green'}>{tx(st.text)}</CxPill></td>
                                 <td><CxPill tone={sl.cls === 'ok' ? 'green' : sl.cls === 'warn' ? 'amber' : sl.cls === 'bad' ? 'red' : 'grey'}>{tx(sl.text)}</CxPill></td>
                                 <td><Link className="cx-btn sm" href={`/dashboard/events/${s.eventId}`} title={tx("Open the event plan")}><Eye size={15} /></Link></td>
-                              </tr>); })}</tbody></table></div>
+                              </tr>); })}</tbody></table>
+                            <div className="ph-more"><span>{tx("Showing")} {allPerf ? g.list.length : Math.min(5, g.list.length)} {tx("of")} {g.list.length} {tx("performances")}</span>{g.list.length > 5 && <button type="button" onClick={() => setAllPerf(!allPerf)}>{allPerf ? tx("Show fewer") : tx("View all performances")} →</button>}</div></div>
                         )}
-                        {inner === 'stats' && <div className="at-stats"><div><b>{g.n}</b><span>{tx("Performances")}</span></div><div><b>{pct(g.done, g.n)}%</b><span>{tx("Completed")}</span></div><div><b>{pct(g.appr, g.n)}%</b><span>{tx("Approved")}</span></div><div><b>{pct(g.fb, g.n)}%</b><span>{tx("With feedback")}</span></div></div>}
+                        {inner === 'stats' && <div className="at-stats"><div><b>{g.n}</b><span>{tx("Performances")}</span></div><div><b>{pct(g.done, g.n)}%</b><span>{tx("Completed")}</span></div><div><b>{pct(g.appr, g.n)}%</b><span>{tx("Approved")}</span></div><div><b>{pct(g.fb, g.n)}%</b><span>{tx("With Feedback")}</span></div></div>}
                         {inner === 'fb' && (
                           <ul className="ph-rem">
                             {g.list.flatMap((s) => (remarks ?? []).filter((r) => r.slotId === s.id).map((r) => <li key={r.id} className={r.kind === 'instruction' ? 'ins' : ''}><em>{r.kind === 'instruction' ? tx("Instruction for next time: ") : tx("Feedback: ")}</em>{r.text} <small>({r.authorName}, {titleOf(s.eventId)})</small></li>))}
