@@ -10318,3 +10318,15 @@ a.lnk,.lnk a{color:inherit;text-decoration:none}a.lnk:hover{color:#0b5b3f;text-d
 .px-index .dx-grid:not(.dk-row) .dx-card>footer{padding:12px 18px;border-top:3px solid #d9a21b}
 .px-index .dx-grid:not(.dk-row) .dx-card>footer span{display:flex;align-items:center;gap:8px}.px-index .dx-card>footer svg{color:#f1c24b}
 .px-index .dx-ct>footer span:first-child{padding-right:18px;border-right:1px solid rgba(255,255,255,.35)}
+
+/* ui155 Dashboard headers: forest green, rounded white body, mosque only on Action Items */
+.px-index .dx-grid:not(.dk-row) .dx-card>header{background:linear-gradient(105deg,#093a1c 0%,#0d4a26 100%);padding:14px 18px 26px;min-height:92px;align-items:center;overflow:visible}
+.px-index .dx-grid:not(.dk-row) .dx-card>header::before{content:"";position:absolute;left:8px;right:8px;bottom:0;height:16px;background:#fff;border-radius:16px 16px 0 0;z-index:0}
+.px-index .dx-grid:not(.dk-row) .dx-card>header::after{display:none}
+.px-index .dx-grid:not(.dk-row) .dx-card:first-child>header::after{display:block;left:auto;right:76px;top:14px;bottom:20px;width:120px;opacity:.55;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 60'><g fill='%2358a56a' fill-opacity='.45'><rect x='4' y='18' width='4' height='42'/><path d='M3 18l3-8 3 8z'/><rect x='24' y='40' width='72' height='20'/><path d='M34 40q0-14 12-14t12 14z'/><path d='M48 40q0-26 12-26t12 26z'/><rect x='59' y='2' width='2' height='10'/><path d='M72 40q0-14 12-14t12 14z'/><rect x='112' y='22' width='4' height='38'/><path d='M111 22l3-8 3 8z'/></g></svg>") center bottom/contain no-repeat}
+.px-index .dx-grid:not(.dk-row) .dx-card>header h2{font-size:1.75rem;font-weight:700;letter-spacing:0}
+.px-index .dx-grid:not(.dk-row) .dx-hi svg{width:36px;height:36px;fill:currentColor;fill-opacity:.2;stroke-width:2.2}
+.px-index .dx-grid:not(.dk-row) .dx-card>header .dx-more{border:2px solid #f1c24b;border-radius:99px;padding:6px 18px;background:rgba(0,0,0,.18);font-size:.95rem}
+.px-index .dx-grid:not(.dk-row) .dx-card>header+*{margin-top:4px}
+.px-index .dx-grid:not(.dk-row) .dx-card>footer{background:linear-gradient(105deg,#093a1c,#0d4a26)}
+.px-index .dx-grid:not(.dk-row) .dx-stack .ok,.px-index .dx-grid:not(.dk-row) .dx-bars .ok{background:#2ea043}
