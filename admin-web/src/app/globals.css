@@ -10330,3 +10330,47 @@ a.lnk,.lnk a{color:inherit;text-decoration:none}a.lnk:hover{color:#0b5b3f;text-d
 .px-index .dx-grid:not(.dk-row) .dx-card>header+*{margin-top:4px}
 .px-index .dx-grid:not(.dk-row) .dx-card>footer{background:linear-gradient(105deg,#093a1c,#0d4a26)}
 .px-index .dx-grid:not(.dk-row) .dx-stack .ok,.px-index .dx-grid:not(.dk-row) .dx-bars .ok{background:#2ea043}
+
+/* ui156 Dashboard cards: second pass against the client mock-up and blank layout */
+.px-index .dx-grid:not(.dk-row) .dx-card{height:600px;border:1px solid #dfe8e1;border-bottom:4px solid #d9a21b;border-radius:22px}
+.px-index .dx-grid:not(.dk-row) .dx-card>header h2{font-size:1.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-index .dx-grid:not(.dk-row) .dx-card>header p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-index .dx-grid:not(.dk-row) .dx-card>header>div{min-width:0}
+.px-index .dx-grid:not(.dk-row) .dx-card>header .dx-more{padding:6px 16px;font-size:.92rem;flex:none}
+.px-index .dx-grid:not(.dk-row) .dx-card:nth-child(1) .dx-hi svg{fill-opacity:.18;stroke-width:2.4}
+.px-index .dx-grid:not(.dk-row) .dx-card:nth-child(2) .dx-hi svg,.px-index .dx-grid:not(.dk-row) .dx-card:nth-child(3) .dx-hi svg{fill-opacity:.9;stroke-width:1.6}
+/* Action items: flat rows with dividers */
+.px-index .dx-grid:not(.dk-row) .dx-queue{gap:0;padding-bottom:10px}
+.px-index .dx-grid:not(.dk-row) .dx-queue button{border:0;border-radius:0;box-shadow:none;background:#fff;border-bottom:1px solid #edf1ee;padding:6px 8px}
+.px-index .dx-grid:not(.dk-row) .dx-queue li:last-child button,.px-index .dx-grid:not(.dk-row) .dx-queue button.soft{border-bottom:0}
+.px-index .dx-grid:not(.dk-row) .dx-qi{width:44px;height:44px;background:#e6f6ec;color:#0f7a3c;border-radius:12px;box-shadow:0 2px 5px rgba(8,54,42,.12)}
+.px-index .dx-grid:not(.dk-row) .dx-qi svg{width:24px;height:24px;fill-opacity:.85}
+.px-index .dx-grid:not(.dk-row) .dx-queue b{font-size:1.06rem;font-weight:800}.px-index .dx-grid:not(.dk-row) .dx-queue small{font-size:.82rem}
+.px-index .dx-grid:not(.dk-row) .dx-queue em{width:40px;height:40px;border-radius:50%;background:#d9f2e4;color:#0f7a3c}.px-index .dx-queue em svg{width:22px;height:22px;stroke-width:3.2}
+.px-index .dx-grid:not(.dk-row) .dx-queue button.on em,.px-index .dx-grid:not(.dk-row) .dx-queue button.soft.on em{background:#e0392b;color:#fff;width:34px;height:34px;font-size:1rem}
+.px-index .dx-grid:not(.dk-row) .dx-queue button.soft.on{border-radius:14px;margin:3px 0;padding:8px 12px;border:1px solid #f0d27a;box-shadow:0 2px 6px rgba(160,110,0,.15)}
+.px-index .dx-grid:not(.dk-row) .dx-queue button.soft.on .dx-qi{background:#f7e3a0;color:#7a4a00}
+.px-index .dx-grid:not(.dk-row) .dx-qg{width:22px;height:22px;stroke-width:2.6;color:#5a4a1a}
+/* Groups */
+.px-index .dx-grid:not(.dk-row) .dx-legend span{padding:12px 6px;border-radius:14px;font-size:.84rem;font-weight:600;color:#1d2b24}
+.px-index .dx-grid:not(.dk-row) .dx-legend b{color:#13241b!important;font-size:1.75rem}
+.px-index .dx-grid:not(.dk-row) .dx-legend svg{width:26px;height:26px;fill:currentColor;fill-opacity:.85;stroke-width:1.6}
+.px-index .dx-legend .ok svg{color:#1f9d3f}.px-index .dx-legend .warn svg{color:#a15c00;fill-opacity:.3}.px-index .dx-legend .full svg{color:#d8352a}.px-index .dx-legend .none svg{color:#6f7c85;fill-opacity:.4}
+.px-index .dx-grid:not(.dk-row) .dx-card .dx-bars li{height:44px;padding:6px 4px;grid-template-columns:minmax(0,40%) minmax(0,1fr) auto}
+.px-index .dx-grid:not(.dk-row) .dx-bars u{height:14px}
+.px-index .dx-grid:not(.dk-row) .dx-bars em{font-size:.95rem;font-weight:800}.px-index .dx-bars em svg{width:18px;height:18px;stroke-width:3}
+.px-index .dx-grid:not(.dk-row) .dx-card:nth-child(2)>footer{background:#fff;color:#13241b;border-top:1px solid #e3ebe5;padding:12px 18px;justify-content:space-between}
+.px-index .dx-grid:not(.dk-row) .dx-card:nth-child(2)>footer b{color:#13241b}.px-index .dx-card:nth-child(2)>footer svg{color:#0f7a3c}
+/* Members by country */
+.px-index .dx-ct .dx-tabs button{padding:9px 16px;font-size:.95rem;background:transparent;box-shadow:none}
+.px-index .dx-ct .dx-tabs button:not(.on){background:#fff;box-shadow:0 2px 6px rgba(8,54,42,.12)}
+.px-index .dx-ct .dx-tabs button.on{box-shadow:0 2px 6px rgba(8,54,42,.3)}
+.px-index .dx-ct .dx-tabs svg{fill:currentColor;fill-opacity:.9}
+.px-index .dx-ct .dx-bars li{height:52px!important;padding:4px 10px!important;background:#fff;border:0!important;border-bottom:1px solid #edf1ee!important;grid-template-columns:minmax(0,42%) minmax(0,1fr) auto}
+.px-index .dx-ct .dx-bars li>span.dx-cn{text-transform:capitalize;font-weight:800}
+.px-index .dx-ct .dx-cn .cfn{align-items:center}
+.px-index .dx-ct .dx-cn .cf{width:48px!important;height:34px!important;border-radius:5px!important}
+.px-index .dx-ct .dx-cn small{padding-left:58px;margin-top:-4px}
+.px-index .dx-ct .dx-bars em{font-size:1.05rem}
+.px-index .dx-grid:not(.dk-row) .dx-ct>footer{margin:0 12px 12px!important;border-radius:16px;border-top:0;border-bottom:4px solid #d9a21b;padding:12px 14px;justify-content:space-around}
+.px-index .dx-ct>footer svg{fill:currentColor;fill-opacity:.9;width:26px;height:26px}
