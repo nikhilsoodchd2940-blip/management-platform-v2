@@ -20,7 +20,6 @@ import { Avatar } from '@/components/MemberPicker';
 import { PersonLink, ViewProfile } from '@/components/MemberProfile';
 import { tx } from '@/lib/i18n/tr';
 import { CountryName } from '@/components/CountryFlag';
-import { Check, ChevronRight, ClipboardList, Users, Globe2, BookOpen, Layers, UserPlus, CalendarCheck, Phone, Gavel, Hourglass, Inbox } from 'lucide-react';
 
 interface EventRow {
   id: string;
@@ -31,6 +30,7 @@ interface EventRow {
   kind?: string;
   groupCount: number;
   recurring: boolean;
+  run: string[];
 }
 
 
@@ -80,14 +80,15 @@ export default function DashboardPage() {
         if (d.data().status !== 'active') return;
         const gid = d.data().groupId as string;
         const uid = d.data().userId as string;
-        next[gid] = (next[gid] ?? 0) + 1;
+        // Same rule as the Groups page: substitutes do not take a seat.
+        if (!(d.data().substitute === true && d.data().role !== 'host')) next[gid] = (next[gid] ?? 0) + 1;
         if (uid) (per[uid] ??= []).includes(gid) || per[uid].push(gid);
       });
       setHeadcount(next);
       setMemberGroups(per);
     });
   }, []);
-  const [cTab, setCTab] = useState<'country' | 'group' | 'multi'>('country');
+  const [cTab, setCTab] = useState<'country' | 'multi'>('country');
   const [mgQ, setMgQ] = useState('');
   const [mgLimit, setMgLimit] = useState(20);
 
@@ -107,6 +108,7 @@ export default function DashboardPage() {
             kind: ((x.subGroupIds as string[]) ?? []).length > 1 ? 'main_group' : 'group',
             groupCount: ((x.subGroupIds as string[]) ?? []).length,
             recurring: !!x.seriesId,
+            run: Object.values((x.liveRun as Record<string, { state?: string }> | undefined) ?? {}).map((r) => r.state ?? ''),
           };
         })
       );
@@ -114,11 +116,12 @@ export default function DashboardPage() {
   }, []);
 
   const eventStats = useMemo(() => {
-    const live = events.filter((e) => e.status === 'published');
+    // Same phases as the Events page, so both screens always agree.
+    const phase = (e: EventRow) => (e.status === 'cancelled' ? 'Cancelled' : e.status === 'draft' ? 'Draft' : e.run.length > 0 && e.run.every((r) => r === 'ended') ? 'Finished' : e.run.some((r) => r === 'running' || r === 'paused') ? 'In progress' : e.endMs < now ? 'Finished' : e.startMs <= now ? 'In progress' : 'Upcoming');
     return {
-      ongoing: live.filter((e) => e.startMs <= now && e.endMs >= now).length,
-      upcoming: live.filter((e) => e.startMs > now).length,
-      today: live.filter((e) => new Date(e.startMs).toDateString() === new Date(now).toDateString()).length,
+      ongoing: events.filter((e) => phase(e) === 'In progress').length,
+      upcoming: events.filter((e) => phase(e) === 'Upcoming').length,
+      today: events.filter((e) => phase(e) !== 'Draft' && phase(e) !== 'Cancelled' && new Date(e.startMs).toDateString() === new Date(now).toDateString()).length,
       drafts: events.filter((e) => e.status === 'draft').length,
     };
   }, [events, now]);
@@ -129,6 +132,7 @@ export default function DashboardPage() {
     const state = (r: (typeof rows)[number]) => (r.cap === undefined ? 'none' : r.n >= r.cap ? 'full' : r.n >= r.cap * 0.9 ? 'warning' : 'normal');
     const count = { normal: 0, warning: 0, full: 0, none: 0 };
     rows.forEach((r) => { count[state(r)]++; });
+    const over = rows.filter((r) => r.cap !== undefined && r.n > r.cap).length;
     const ratio = (r: (typeof rows)[number]) => (r.cap ? r.n / r.cap : -1);
     const fullest = [...rows].sort((a, b) => ratio(b) - ratio(a) || b.n - a.n || a.name.localeCompare(b.name));
     const byCountry = new Map<string, { members: number; kurels: number }>();
@@ -139,7 +143,7 @@ export default function DashboardPage() {
     rows.forEach((r) => { const c = byCountry.get(r.country) ?? { members: 0, kurels: 0 }; c.members = seen.get(r.country)?.size ?? 0; c.kurels += 1; byCountry.set(r.country, c); });
     countries.forEach((c) => { if (!byCountry.has(c.name)) byCountry.set(c.name, { members: 0, kurels: 0 }); });
     const countryRows = Array.from(byCountry.entries()).map(([name, v]) => ({ name, ...v })).sort((a, b) => b.members - a.members || b.kurels - a.kurels || a.name.localeCompare(b.name));
-    return { total: rows.length, members: everyone.size, memberships: rows.reduce((n, r) => n + r.n, 0), noLevel: rows.filter((r) => !r.levelId).length, empty: rows.filter((r) => r.n === 0).length, count, fullest, countryRows };
+    return { over, total: rows.length, members: everyone.size, memberships: rows.reduce((n, r) => n + r.n, 0), noLevel: rows.filter((r) => !r.levelId).length, empty: rows.filter((r) => r.n === 0).length, count, fullest, countryRows };
   }, [activeLeafGroups, headcount, memberGroups, locationOf, countries]);
   const groupName = useMemo(() => Object.fromEntries(activeLeafGroups.map((g) => [g.id, g.name])) as Record<string, string>, [activeLeafGroups]);
   const multi = useMemo(() => Object.entries(memberGroups)
@@ -181,14 +185,14 @@ export default function DashboardPage() {
   const dash = (n: number | null) => fmt(n);
   const liveIds = new Set(activeLeafGroups.map((g) => g.id));
   const booksToApprove = submittedBooks === null ? null : submittedBooks.filter((r) => liveIds.has(r.groupId)).length;
-  const queue: { label: string; hint: string; n: number | null | 'error'; href: string; icon: React.ReactNode; soft?: boolean }[] = [
-    { label: tx("Member List Approvals"), hint: tx("Submitted by group managers"), n: listsWaiting, href: '/dashboard/events#member-lists', icon: <Users size={22} /> },
-    { label: tx("Performance Books Approvals"), hint: tx("Selected by the groups"), n: booksToApprove, href: '/dashboard/events#book-approvals', icon: <BookOpen size={22} /> },
-    { label: tx("Suggested Books Approvals"), hint: tx("Not yet in the event books"), n: suggestionsWaiting, href: '/dashboard/events#book-suggestions', icon: <Layers size={22} /> },
-    { label: tx("Registration Approvals"), hint: tx("New membership requests"), n: pendingRegistrations, href: '/dashboard/approvals#registrations', icon: <UserPlus size={22} /> },
-    { label: tx("Event & Absence Requests"), hint: tx("Awaiting your response"), n: eventRequests === null && absenceRequests === null ? null : (eventRequests ?? 0) + (absenceRequests ?? 0), href: '/dashboard/requests#all-requests', icon: <CalendarCheck size={22} /> },
-    { label: tx("Phone Number Updates"), hint: tx("Members changing their number"), n: phoneRequests, href: '/dashboard/approvals#phone-changes', icon: <Phone size={22} />, soft: true },
-    { label: tx("Open Disciplinary Cases"), hint: tx("Not closed yet"), n: openCases, href: '/dashboard/disciplinary#cases', icon: <Gavel size={22} />, soft: true },
+  const queue: { label: string; hint: string; n: number | null | 'error'; href: string }[] = [
+    { label: tx("Member List Approvals"), hint: tx("Submitted by group managers"), n: listsWaiting, href: '/dashboard/events#member-lists' },
+    { label: tx("Performance Books Approvals"), hint: tx("Selected by the groups"), n: booksToApprove, href: '/dashboard/events#book-approvals' },
+    { label: tx("Suggested Books Approvals"), hint: tx("Not yet in the event books"), n: suggestionsWaiting, href: '/dashboard/events#book-suggestions' },
+    { label: tx("Registration Approvals"), hint: tx("New membership requests"), n: pendingRegistrations, href: '/dashboard/approvals#registrations' },
+    { label: tx("Event & Absence Requests"), hint: tx("Awaiting your response"), n: eventRequests === null && absenceRequests === null ? null : (eventRequests ?? 0) + (absenceRequests ?? 0), href: '/dashboard/requests#all-requests' },
+    { label: tx("Phone Number Updates"), hint: tx("Members changing their phone number"), n: phoneRequests, href: '/dashboard/approvals#phone-changes' },
+    { label: tx("Open Disciplinary Cases"), hint: tx("Not yet closed"), n: openCases, href: '/dashboard/disciplinary#cases' },
   ];
   const toDo = queue.reduce((n, q) => n + (typeof q.n === 'number' ? q.n : 0), 0);
   const pct = (n: number, d: number) => (d ? Math.max(2, Math.round((n / d) * 100)) : 0);
@@ -208,15 +212,13 @@ export default function DashboardPage() {
 
         <div className={`dx-grid${cTab === 'multi' ? ' dx-tall' : ''}`}>
           <section className="card dx-card">
-            <header><i className="dx-hi"><ClipboardList size={26} /></i><div><h2>{tx("Action Items")}</h2><p>{toDo > 0 ? `${toDo} item${toDo === 1 ? '' : 's'} waiting for your response` : tx("Everything is answered")}</p></div><span className={`dx-badge${toDo > 0 ? ' hot' : ''}`}>{toDo}</span></header>
+            <header><div><h2>{tx("Action Items")}</h2><p>{toDo > 0 ? `${toDo} item${toDo === 1 ? '' : 's'} waiting for your response` : tx("Everything is answered")}</p></div><span className={`dx-badge${toDo > 0 ? ' hot' : ''}`}>{toDo}</span></header>
             <ul className="dx-queue">
               {queue.map((q) => (
                 <li key={q.label}>
-                  <button type="button" className={`${typeof q.n === 'number' && q.n > 0 ? 'on' : q.n === 'error' ? 'err' : ''}${q.soft ? ' soft' : ''}`} onClick={() => router.push(q.href)}>
-                    <i className="dx-qi" aria-hidden>{q.icon}</i>
+                  <button type="button" className={typeof q.n === 'number' && q.n > 0 ? 'on' : q.n === 'error' ? 'err' : ''} onClick={() => router.push(q.href)}>
                     <span><b>{q.label}</b><small>{q.hint}</small></span>
-                    <em title={q.n === 'error' ? tx("Could not be loaded. Open the page to see why.") : undefined}>{q.n === null ? '…' : q.n === 'error' ? '!' : q.n > 0 ? q.n : <Check size={18} strokeWidth={3} />}</em>
-                    {typeof q.n === 'number' && q.n > 0 && <ChevronRight size={18} className="dx-qg" aria-hidden />}
+                    <em title={q.n === 'error' ? tx("Could not be loaded. Open the page to see why.") : undefined}>{q.n === null ? '…' : q.n === 'error' ? '!' : q.n > 0 ? q.n : '✓'}</em>
                   </button>
                 </li>
               ))}
@@ -224,45 +226,37 @@ export default function DashboardPage() {
           </section>
 
           <section className="card dx-card">
-            <header><i className="dx-hi"><Users size={26} /></i><div><h2>{tx("Groups")}</h2><p>{tx("All")} {kurels.total} {tx("groups, fullest first")}</p></div><button type="button" className="dx-more" onClick={() => router.push('/dashboard/groups')}>{tx("Open →")}</button></header>
+            <header><div><h2>{tx("Kurels")}</h2><p>{tx("All")} {kurels.total} {tx("kurels, fullest first")}</p></div><button type="button" className="dx-more" onClick={() => router.push('/dashboard/groups')}>{tx("Open →")}</button></header>
             <div className="dx-stack" aria-hidden>
               <i className="ok" style={{ width: seg(kurels.count.normal) }} /><i className="warn" style={{ width: seg(kurels.count.warning) }} /><i className="full" style={{ width: seg(kurels.count.full) }} /><i className="none" style={{ width: seg(kurels.count.none) }} />
             </div>
             <div className="dx-legend">
-              <span className="ok"><Users size={20} /><b>{kurels.count.normal}</b> {tx("Available")}</span><span className="warn"><Hourglass size={20} /><b>{kurels.count.warning}</b> {tx("Nearly Full")}</span><span className="full"><Users size={20} /><b>{kurels.count.full}</b> {tx("At Capacity")}</span><span className="none"><Layers size={20} /><b>{kurels.count.none}</b> {tx("No Limit")}</span>
+              <span className="ok"><b>{kurels.count.normal}</b> {tx("Available")}</span><span className="warn"><b>{kurels.count.warning}</b> {tx("Nearly full")}</span><span className="full"><b>{kurels.count.full}</b> {tx("At capacity")}{kurels.over > 0 && <small> · {kurels.over} {tx("over capacity")}</small>}</span><span className="none"><b>{kurels.count.none}</b> {tx("No limit")}</span>
             </div>
             <ul className="dx-bars">
               {kurels.fullest.map((k) => (
-                <li key={k.id} className="dx-click" role="link" tabIndex={0} onClick={() => router.push('/dashboard/groups')}><span title={k.name}>{k.name}</span><u><s className={k.cap === undefined ? 'none' : k.n >= k.cap ? 'full' : k.n >= k.cap * 0.9 ? 'warn' : 'ok'} style={{ width: `${k.cap === undefined ? (k.n ? 100 : 0) : k.n ? pct(k.n, k.cap) : 0}%` }} /></u><em>{k.cap === undefined ? k.n : `${k.n}/${k.cap}`}<ChevronRight size={16} aria-hidden /></em></li>
+                <li key={k.id}><span title={k.name}>{k.name}</span><u><s className={k.cap === undefined ? 'none' : k.n >= k.cap ? 'full' : k.n >= k.cap * 0.9 ? 'warn' : 'ok'} style={{ width: `${k.cap === undefined ? (k.n ? 100 : 0) : k.n ? pct(k.n, k.cap) : 0}%` }} /></u><em>{k.cap === undefined ? k.n : `${k.n}/${k.cap}`}</em></li>
               ))}
               {kurels.fullest.length === 0 && <li className="dx-none">{tx("No kurel yet.")}</li>}
             </ul>
-            <footer><span><Layers size={18} /><b>{kurels.noLevel}</b> {tx("without a level")}</span><span><Inbox size={18} /><b>{kurels.empty}</b> {tx("empty")}</span></footer>
+            <footer><span><b>{kurels.noLevel}</b> {tx("without a level")}</span><span><b>{kurels.empty}</b> {tx("empty")}</span></footer>
           </section>
 
           <section className="card dx-card dx-ct">
-            <header><i className="dx-hi"><Globe2 size={26} /></i><div><h2>{cTab === 'multi' ? tx("Members in several groups") : tx("Members by Country")}</h2><p>{cTab !== 'multi' ? `All ${kurels.countryRows.length} countries, most members first` : `${multi.length} different member${multi.length === 1 ? ' is' : 's are'} in two or more kurels. Each is counted once.`}</p></div><button type="button" className="dx-more" onClick={() => { const cid = countries.find((c) => c.name === mgCountry)?.id; const q = new URLSearchParams(); if (cTab === 'multi') { q.set('kurels', mgTab === 'two' ? '2' : mgTab === 'three' ? '3' : mgTab === 'cross' ? 'cross' : 'multi'); if (mgPair) { q.set('kurel', mgPair[0]); q.set('also', mgPair[1]); } else if (mgKurel) q.set('kurel', mgKurel); if (cid) q.set('country', cid); } router.push(`/dashboard/members${q.toString() ? `?${q}` : ''}`); }}>{cTab === 'multi' ? tx("Open the list →") : tx("Open →")}</button></header>
+            <header><div><h2>{cTab === 'country' ? tx("Members by Country") : tx("Members in several groups")}</h2><p>{cTab === 'country' ? `All ${kurels.countryRows.length} countries, most members first` : `${multi.length} different member${multi.length === 1 ? ' is' : 's are'} in two or more kurels. Each is counted once.`}</p></div><button type="button" className="dx-more" onClick={() => { const cid = countries.find((c) => c.name === mgCountry)?.id; const q = new URLSearchParams(); if (cTab === 'multi') { q.set('kurels', mgTab === 'two' ? '2' : mgTab === 'three' ? '3' : mgTab === 'cross' ? 'cross' : 'multi'); if (mgPair) { q.set('kurel', mgPair[0]); q.set('also', mgPair[1]); } else if (mgKurel) q.set('kurel', mgKurel); if (cid) q.set('country', cid); } router.push(`/dashboard/members${q.toString() ? `?${q}` : ''}`); }}>{cTab === 'multi' ? tx("Open the list →") : tx("Open →")}</button></header>
             <div className="dx-tabs" role="tablist" aria-label={tx("View")}>
-              <button type="button" role="tab" aria-selected={cTab === 'country'} className={cTab === 'country' ? 'on' : ''} onClick={() => setCTab('country')}><Users size={16} />{tx("By Country")}</button>
-              <button type="button" role="tab" aria-selected={cTab === 'group'} className={cTab === 'group' ? 'on' : ''} onClick={() => setCTab('group')}><Users size={16} />{tx("By Group")}<em>{kurels.total}</em></button>
-              {cTab === 'multi' && <button type="button" role="tab" aria-selected className="on" onClick={() => setCTab('multi')}>{tx("In several groups")}<em>{multi.length}</em></button>}
+              <button type="button" role="tab" aria-selected={cTab === 'country'} className={cTab === 'country' ? 'on' : ''} onClick={() => setCTab('country')}>{tx("By country")}</button>
+              <button type="button" role="tab" aria-selected={cTab === 'multi'} className={cTab === 'multi' ? 'on' : ''} onClick={() => setCTab('multi')}>{tx("In several groups")}<em>{multi.length}</em></button>
             </div>
-            {cTab === 'group' ? (
-              <ul className="dx-bars">
-                {[...kurels.fullest].sort((a, b) => b.n - a.n || a.name.localeCompare(b.name)).map((g) => (
-                  <li key={g.id} className="dx-click" role="link" tabIndex={0} onClick={() => router.push('/dashboard/groups')}><span className="dx-cn">{g.name}<small>{g.country}</small></span><u><s className="ok" style={{ width: `${g.n ? pct(g.n, kurels.fullest.reduce((m, x) => Math.max(m, x.n), 1)) : 0}%` }} /></u><em>{g.n}</em></li>
-                ))}
-                {kurels.fullest.length === 0 && <li className="dx-none">{tx("No data yet.")}</li>}
-              </ul>
-            ) : cTab === 'country' ? (
+            {cTab === 'country' ? (
               <>
                 <ul className="dx-bars">
                   {kurels.countryRows.map((c) => (
-                    <li key={c.name} className="dx-click" role="link" tabIndex={0} title={`Open the members of ${c.name}`} onClick={() => { const id = countries.find((x) => x.name === c.name)?.id; router.push(id ? `/dashboard/members?country=${id}` : '/dashboard/members'); }} onKeyDown={(e) => { if (e.key === 'Enter') (e.currentTarget as HTMLElement).click(); }}><span className="dx-cn"><CountryName name={c.name} size={30} /><small>{c.kurels} {tx("group")}{c.kurels === 1 ? '' : 's'}</small></span><u><s className="ok" style={{ width: `${c.members ? pct(c.members, kurels.countryRows[0]?.members || 1) : 0}%` }} /></u><em>{c.members}</em></li>
+                    <li key={c.name} className="dx-click" role="link" tabIndex={0} title={`Open the members of ${c.name}`} onClick={() => { const id = countries.find((x) => x.name === c.name)?.id; router.push(id ? `/dashboard/members?country=${id}` : '/dashboard/members'); }} onKeyDown={(e) => { if (e.key === 'Enter') (e.currentTarget as HTMLElement).click(); }}><span><CountryName name={c.name} /><small>{c.kurels} {tx("kurel")}{c.kurels === 1 ? '' : 's'}</small></span><u><s className="ok" style={{ width: `${c.members ? pct(c.members, kurels.countryRows[0]?.members || 1) : 0}%` }} /></u><em>{c.members}</em></li>
                   ))}
                   {kurels.countryRows.length === 0 && <li className="dx-none">{tx("No data yet.")}</li>}
                 </ul>
-                <footer><span><Users size={20} /><b>{fmt(kurels.members)}</b> {tx("members")}</span><span><Globe2 size={20} /><b>{countries.length}</b> {countries.length === 1 ? tx("country") : tx("countries")}</span></footer>
+                <footer><span><b>{fmt(kurels.members)}</b> {tx("members")}</span><span><b>{countries.length}</b> {countries.length === 1 ? tx("country") : tx("countries")}</span></footer>
               </>
             ) : (
               <div className="dx-mbody">

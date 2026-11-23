@@ -1,6 +1,7 @@
 'use client';
 
 import '../../px/gestion-membres.css';
+import { useAuth } from '@/context/AuthContext';
 import { useEffect, useMemo, useState } from 'react';
 import { collection, getDocs, limit as fsLimit, orderBy, query, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -26,8 +27,6 @@ import { notify } from '@/lib/notify';
 import AccessDialog from '@/components/AccessDialog';
 import { DEFAULT_MEMBER_PHOTO } from '@/components/MemberPicker';
 import { tx, dateLocale } from '@/lib/i18n/tr';
-import { CxBanner } from '@/components/Cx';
-import { Users, UserPlus, IdCard, MapPin, MessageCircle, MoreHorizontal, SlidersHorizontal, List, LayoutGrid, Download, Layers } from 'lucide-react';
 
 interface MemberRow {
   id: string;
@@ -58,8 +57,8 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(true);
   const [pageSize, setPageSize] = useState(PAGE);
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('');
   const [roleFor, setRoleFor] = useState('');
-  const [listView, setListView] = useState(true);
   const [chatFor, setChatFor] = useState<null | { id: string; name: string; photoUrl: string }>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState<null | { id: string }>(null);
@@ -91,12 +90,15 @@ export default function MembersPage() {
   const [kurelCount, setKurelCount] = useState('');
   const [alsoKurel, setAlsoKurel] = useState('');
   const [roleF, setRoleF] = useState('');
-  const moreCount = [zoneF, localF, roleF, kurelCount, kurelF, statusFilter].filter(Boolean).length;
+  const moreCount = [zoneF, localF, roleF, kurelCount].filter(Boolean).length;
   const scopes = useCollection<{ role: string; countryIds?: string[]; zoneIds?: string[]; cityIds?: string[]; groupIds?: string[] }>('adminScopes', []);
   const adminRoles = useCollection<{ isSuperAdmin?: boolean }>('adminRoles', []);
   const [profile, setProfile] = useState('');
   const [appF, setAppF] = useState('');
   const [selectedId, setSelectedId] = useState('');
+  const [drawer, setDrawer] = useState(false);
+  const [fOpen, setFOpen] = useState(false);
+  const [gridView, setGridView] = useState(false);
   const [manageSignal, setManageSignal] = useState(0);
   const [manageView, setManageView] = useState<'add' | 'assign' | 'all'>('all');
   const [closeSignal, setCloseSignal] = useState(0);
@@ -104,6 +106,8 @@ export default function MembersPage() {
   const [addRequest, setAddRequest] = useState({ n: 0 });
   const [headcount, setHeadcount] = useState<Record<string, number>>({});
   const myScope = useMyScope();
+  const { can: canDo } = useAuth();
+  const canHardDelete = canDo('superAdmin');
   const [tagBusy, setTagBusy] = useState('');
   const canTag = (groupId: string) => (myScope.scope?.role === 'group_manager' ? (myScope.scope.groupIds ?? []).includes(groupId) : true);
   async function changeTag(userId: string, groupId: string, substitute: boolean) {
@@ -322,17 +326,22 @@ export default function MembersPage() {
     });
   }, []);
   const online = (m: MemberRow) => (presence[m.id] ?? 0) > 0 && now - presence[m.id] < ONLINE_MS;
-  const [sortBy, setSortBy] = useState<'az' | 'za' | 'id'>('az');
   const shown = useMemo(() => {
-    const blankLast = (x: string, y: string, dir: 1 | -1) => (!x && !y ? 0 : !x ? 1 : !y ? -1 : dir * x.localeCompare(y));
-    const base = [...rows].sort((a, b) => (sortBy === 'id' ? blankLast(a.memberId || '', b.memberId || '', 1) : sortBy === 'za' ? blankLast(a.displayName || '', b.displayName || '', -1) : blankLast(a.displayName || '', b.displayName || '', 1)));
-    if (!presenceF) return base;
-    return base.filter((m) => {
+    if (!presenceF) return rows;
+    return rows.filter((m) => {
       const age = now - (presence[m.id] ?? 0);
       return presenceF === 'online' ? (presence[m.id] ?? 0) > 0 && age < ONLINE_MS : presenceF === 'recent' ? (presence[m.id] ?? 0) > 0 && age < 30 * 60 * 1000 : !((presence[m.id] ?? 0) > 0 && age < ONLINE_MS);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, presence, presenceF, sortBy]);
+  }, [rows, presence, presenceF]);
+  // Order of the list on screen: the filtered members, A to Z by default.
+  const ordered = useMemo(() => {
+    const name = (m: MemberRow) => (m.displayName || '').toLowerCase();
+    const out = [...shown];
+    if (sortBy === 'za') out.sort((x, y) => name(y).localeCompare(name(x)));
+    else if (sortBy === 'id') out.sort((x, y) => (x.memberId || '').localeCompare(y.memberId || ''));
+    return out;
+  }, [shown, sortBy]);
   // The first member is opened by default, and again whenever the current one drops out of the filtered list.
   useEffect(() => {
     if (loading || shown.length === 0) return;
@@ -378,34 +387,43 @@ export default function MembersPage() {
     <>
       <div className="px px-gestion-membres">
         <div className="content">
-          <CxBanner kicker="Direction du Conservatoire" title={tx("Member Management")} />
+          <div className="section-head">
+            <div>
+              <h1>{tx("Member management")}</h1>
+              <p>{tx("Profiles, statuses, assignments, capacities and activities of members across their kurels.")}</p>
+            </div>
+            <div className="actions">
+              <button type="button" className="primary mm-add" onClick={() => { setManageView('add'); setEditRequest({ id: '', n: 0 }); setAddRequest((r) => ({ n: r.n + 1 })); setManageSignal((n) => n + 1); }}>{tx("+ Add a member")}</button>
+              <button type="button" className="secondary" onClick={exportList}>{tx("Export the list")}</button>
+              <button type="button" className="secondary" onClick={() => setAssignOpen({ id: selected?.id ?? '' })}>{tx("Assign to a kurel")}</button>
+              <button type="button" className="secondary mm-chipbtn" onClick={() => router.push('/dashboard/approvals')} title={tx("Review the registrations waiting for approval")}>{tx("Pending approvals")} <b>{fmt(pending)}</b></button>
+            </div>
+          </div>
 
+          <MemberCollective rows={shown.map((m) => ({ id: m.id, status: m.status, registered: m.registrationStatus === 'approved', hasPhoto: !!m.photoUrl, online: online(m), kurels: (memberships[m.id] ?? []).map((k) => k.groupId) }))} byId={byId} locationOf={locationOf} scoped={!!(appF || profile || presenceF || country || zoneF || cityF || localF || kurelF || roleF || statusFilter || kurelCount || search)} onCity={(id) => applyTile({ city: id })} onKurel={(id) => applyTile({ kurel: id })} onCountry={(id) => applyTile({ country: id })} onFilter={applyTile} />
 
-
-          <section className="card filters">
-            <input type="search" placeholder={tx("Search by name, ID, or phone number…")} value={search} onChange={(e) => setSearch(e.target.value)} />
+          <section className={`card filters${fOpen ? ' fo' : ''}`}>
+            <input type="search" placeholder={tx("Search by name or phone number")} value={search} onChange={(e) => setSearch(e.target.value)} />
             <Dropdown label={tx("Country")} value={country} onChange={(v) => { setCountry(v); setZoneF(''); setCityF(''); setLocalF(''); setKurelF(''); }} allLabel={tx("All countries")} options={countries.map((c) => ({ value: c.id, label: c.name }))} />
             <Dropdown label={tx("City")} value={cityF} onChange={(v) => { setCityF(v); setLocalF(''); setKurelF(''); }} allLabel={tx("All cities")} options={cities.filter((c) => (!country || c.parentGroupId === country) && (!zoneF || c.zoneId === zoneF)).map((c) => ({ value: c.id, label: c.name }))} />
-            {(moreOpen || moreCount > 0) && (<>
             <Dropdown label={tx("Kurel")} value={kurelF} onChange={setKurelF} allLabel={tx("All kurels")} options={activeLeafGroups.filter((g) => { const c = g.parentGroupId ? byId[g.parentGroupId] : undefined; return !!c && (!cityF || c.id === cityF) && (!zoneF || c.zoneId === zoneF) && (!country || c.parentGroupId === country) && (!localF || g.localZoneId === localF); }).map((g) => ({ value: g.id, label: `${g.name} (${byId[g.parentGroupId ?? '']?.name ?? ''})` }))} />
             <Dropdown label={tx("Status")} value={statusFilter} onChange={setStatusFilter} allLabel={tx("All statuses")} options={[{ value: 'active', label: tx("Active") }, { value: 'suspended', label: tx("Suspended") }]} />
+            <button type="button" className={`mm-more${moreOpen || moreCount > 0 ? ' on' : ''}`} onClick={() => setMoreOpen((v) => !v)} aria-expanded={moreOpen}>⚙ {tx("More filters")}{moreCount > 0 ? <em>{moreCount}</em> : null}</button>
+            {(moreOpen || moreCount > 0) && (<>
             <Dropdown label={tx("Zone")} value={zoneF} onChange={(v) => { setZoneF(v); setCityF(''); setLocalF(''); setKurelF(''); }} allLabel={tx("All zones")} options={(zoneRows ?? []).filter((z) => !country || z.countryId === country).map((z) => ({ value: z.id, label: z.name }))} />
             <Dropdown label={tx("Local zone")} value={localF} onChange={(v) => { setLocalF(v); setKurelF(''); }} allLabel={tx("All local zones")} options={(localZones ?? []).filter((z) => (cityF ? z.cityId === cityF : cities.some((c) => c.id === z.cityId && (!country || c.parentGroupId === country) && (!zoneF || c.zoneId === zoneF)))).map((z) => ({ value: (z as unknown as { id: string }).id, label: `${z.name}${cityF ? '' : ` · ${byId[z.cityId]?.name ?? ''}`}` }))} />
             <Dropdown label={tx("Role")} value={roleF} onChange={setRoleF} allLabel={tx("All roles")} options={Object.entries(ROLE_NAMES).map(([v, l]) => ({ value: v, label: l }))} />
             <Dropdown label={tx("Kurels per member")} value={kurelCount} onChange={setKurelCount} allLabel={tx("Any number of kurels")} options={[{ value: 'any', label: tx("In at least one kurel") }, { value: '0', label: tx("Without a kurel") }, { value: '1', label: tx("1 kurel") }, { value: 'multi', label: tx("2 kurels or more") }, { value: '2', label: tx("2 kurels") }, { value: '3', label: tx("3 kurels or more") }, { value: 'cross', label: tx("Kurels in different countries") }]} />
             </>)}
+            <div className="mq-tiles">
+              <div className="mq-t dark"><i className="mq-i ppl" /><span><b>{fmt(rows.length)}</b>{tx("Total Members")}</span></div>
+              <div className="mq-t"><i className="mq-d g" /><span><b>{fmt(rows.filter((m) => m.status !== 'disabled').length)}</b>{tx("Active")}</span></div>
+              <div className="mq-t"><i className="mq-d y" /><span><b>{fmt(rows.filter((m) => m.status === 'disabled').length)}</b>{tx("Inactive")}</span></div>
+              <div className="mq-t"><i className="mq-d r" /><span><b>{fmt(pending)}</b>{tx("Pending")}</span></div>
+              <button type="button" className="mq-add" onClick={() => { setManageView('add'); setEditRequest({ id: '', n: 0 }); setAddRequest((r) => ({ n: r.n + 1 })); setManageSignal((n) => n + 1); }}><i className="mq-i add" />{tx("Add Member")}</button>
+            </div>
             {(appF || profile || presenceF || search || country || zoneF || cityF || localF || kurelF || roleF || statusFilter || kurelCount) && <button type="button" className="secondary mm-clear" onClick={() => { setSearch(''); setCountry(''); setZoneF(''); setCityF(''); setLocalF(''); setKurelF(''); setRoleF(''); setStatusFilter(''); setKurelCount(''); setAlsoKurel(''); setSelectedId(''); setPresenceF(''); setProfile(''); setAppF(''); }}>{tx("Clear all ✕")}</button>}
           </section>
-
-          <div className="mm-stripe">
-            <button type="button" className="tot" onClick={() => showList({})}><Users size={30} /><span><b>{fmt(everyone)}</b><small>{tx("Total members")}</small></span></button>
-            <button type="button" onClick={() => showList({ status: 'active' })}><i className="dot g" /><span><b>{fmt(active)}</b><small>{tx("Active")}</small></span></button>
-            <button type="button" onClick={() => showList({ status: 'suspended' })}><i className="dot y" /><span><b>{everyone !== null && active !== null && pending !== null ? fmt(Math.max(0, everyone - active - pending)) : '—'}</b><small>{tx("Inactive")}</small></span></button>
-            <button type="button" onClick={() => router.push('/dashboard/approvals')}><i className="dot r" /><span><b>{fmt(pending)}</b><small>{tx("Pending")}</small></span></button>
-            <button type="button" className="cx-btn gold mm-add" onClick={() => { setManageView('add'); setEditRequest({ id: '', n: 0 }); setAddRequest((r) => ({ n: r.n + 1 })); setManageSignal((n) => n + 1); }}><UserPlus size={18} />{tx("Add Member")}</button>
-          </div>
-
-          <MemberCollective rows={shown.map((m) => ({ id: m.id, status: m.status, registered: m.registrationStatus === 'approved', hasPhoto: !!m.photoUrl, online: online(m), kurels: (memberships[m.id] ?? []).map((k) => k.groupId) }))} byId={byId} locationOf={locationOf} scoped={!!(appF || profile || presenceF || country || zoneF || cityF || localF || kurelF || roleF || statusFilter || kurelCount || search)} onCity={(id) => applyTile({ city: id })} onKurel={(id) => applyTile({ kurel: id })} onCountry={(id) => applyTile({ country: id })} onFilter={applyTile} />
 
 
           <div className="workspace" id="memberWorkspace">
@@ -424,24 +442,27 @@ export default function MembersPage() {
                   <button type="button" onClick={() => { setKurelCount(''); setAlsoKurel(''); setKurelF(''); setCountry(''); }}>{tx("Clear ✕")}</button>
                 </div>
               )}
-              <div className="panel-head">
+              <div className="panel-head mm-lh">
                 <div>
-                  <h2>{tx("Member List")}</h2>
+                  <h2>{tx("Member list")}</h2>
                   <p>{shown.length} {tx("member")}{shown.length === 1 ? '' : 's'} {tx("shown")}</p>
                 </div>
-                <div className="mm-ph"><span className="status">{tx("Live data")}</span><button type="button" className={`mm-fbtn${moreOpen || moreCount > 0 ? ' on' : ''}`} onClick={() => setMoreOpen((v) => !v)}><SlidersHorizontal size={15} />{tx("Filters")}</button><Dropdown label={tx("Sort")} value={sortBy} onChange={(v) => setSortBy((v || 'az') as 'az' | 'za' | 'id')} options={[{ value: 'az', label: tx("Name (A–Z)") }, { value: 'za', label: tx("Name (Z–A)") }, { value: 'id', label: tx("Member ID") }]} className="mm-sort" /><details className="mm-kb2"><summary aria-label={tx("More actions")}><MoreHorizontal size={17} /></summary><div className="mm-kbm"><button type="button" onClick={exportList}><Download size={15} />{tx("Export the list")}</button><button type="button" onClick={() => setAssignOpen({ id: selected?.id ?? '' })}><Layers size={15} />{tx("Assign to a kurel")}</button><button type="button" onClick={() => router.push('/dashboard/approvals')} title={tx("Review the registrations waiting for approval")}><UserPlus size={15} />{tx("Pending approvals")} <b>{fmt(pending)}</b></button></div></details><span className="mm-vt" role="group" aria-label={tx("View")}><button type="button" className={listView ? 'on' : ''} aria-pressed={listView} onClick={() => setListView(true)}><List size={17} /></button><button type="button" className={!listView ? 'on' : ''} aria-pressed={!listView} onClick={() => setListView(false)}><LayoutGrid size={17} /></button></span></div>
+                <div className="mm-sort"><Dropdown label={tx("Sort")} value={sortBy} onChange={setSortBy} allLabel={tx("Name (A–Z)")} options={[{ value: 'za', label: tx("Name (Z–A)") }, { value: 'id', label: tx("Member ID") }]} /></div>
+                <span className="status">{tx("Live data")}</span>
+                <button type="button" className={`mq-fb${fOpen ? ' on' : ''}`} onClick={() => setFOpen((v) => !v)}><i />{tx("Filters")}</button>
+                <span className="mq-vt"><button type="button" aria-label="List" className={!gridView ? 'on' : ''} onClick={() => setGridView(false)}><i className="l" /></button><button type="button" aria-label="Grid" className={gridView ? 'on' : ''} onClick={() => setGridView(true)}><i className="g" /></button></span>
               </div>
-              <div className={`members${listView ? '' : ' grid'}`}>
+              <div className={`members${gridView ? ' gv' : ''}`}>
                 {(loading || (!!areaGroups && areaIds === null)) && <div className="empty" style={{ display: 'block' }}>{tx("Loading…")}</div>}
-                {shown.slice(0, pageSize).map((m) => {
+                {ordered.slice(0, pageSize).map((m) => {
                   const ms = memberships[m.id] ?? [];
                   const city = ms[0] ? locationOf(ms[0].groupId).city?.name : undefined;
                   return (
-                    <div role="button" tabIndex={0} key={m.id} className={`member-row mr${selected?.id === m.id ? ' active' : ''}${m.status === 'disabled' ? ' off' : ''}`} onClick={() => setSelectedId(m.id)} onKeyDown={(e) => e.key === 'Enter' && setSelectedId(m.id)}>
+                    <div role="button" tabIndex={0} key={m.id} className={`member-row mr${selected?.id === m.id ? ' active' : ''}${m.status === 'disabled' ? ' off' : ''}`} onClick={() => { setSelectedId(m.id); setDrawer(true); }} onKeyDown={(e) => { if (e.key === 'Enter') { setSelectedId(m.id); setDrawer(true); } }}>
                       <span className="photo"><img alt="" src={m.photoUrl || DEFAULT_MEMBER_PHOTO} /><i className={`mr-dot${online(m) ? ' on' : ''}`} title={online(m) ? tx("Online") : tx("Offline")} /></span>
                       <div>
                         <strong>{m.displayName || tx("(no name)")}</strong>
-                        <span className="mr-sub"><IdCard size={15} />{m.memberId || '—'}{city ? <><i className="sep">|</i><MapPin size={14} />{city}</> : null}</span>
+                        <span className="mr-sub"><i className="mr-ic id" />{m.memberId || '—'}{city ? <><b>|</b><i className="mr-ic pin" />{city}</> : null}</span>
                         <span className="mr-chips">
                           {ms.slice(0, 2).map((k) => <em key={k.groupId} className={k.role === 'host' ? 'gm' : ''}>{byId[k.groupId]?.name ?? '—'}</em>)}
                           {ms.length > 2 && <em className="more">+{ms.length - 2}</em>}
@@ -449,9 +470,8 @@ export default function MembersPage() {
                         </span>
                       </div>
                       <div className="mr-side">
-                        <small className={m.status === 'disabled' ? 'bad' : 'ok'}><i />{statusLabel(m)}</small>
-                        {m.status !== 'disabled' && <button type="button" className="mr-chat" title={tx("Chat with this member")} onClick={(e) => { e.stopPropagation(); setChatFor({ id: m.id, name: m.displayName || '', photoUrl: m.photoUrl }); }}><MessageCircle size={18} /></button>}
-                        <button type="button" className="mr-chat mr-more" title={tx("Open the profile")} onClick={(e) => { e.stopPropagation(); setSelectedId(m.id); document.querySelector('.px-gestion-membres .detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}><MoreHorizontal size={18} /></button>
+                        <small className={m.status === 'disabled' ? 'bad' : 'ok'}>{statusLabel(m)}</small>
+                        {m.status !== 'disabled' && <button type="button" className="mr-chat" title={tx("Chat with this member")} onClick={(e) => { e.stopPropagation(); setChatFor({ id: m.id, name: m.displayName || '', photoUrl: m.photoUrl }); }}>💬</button>}
                       </div>
                     </div>
                   );
@@ -465,11 +485,11 @@ export default function MembersPage() {
               </div>
             </section>
 
-            <article className="card detail">
+            <article className={`card detail${drawer ? ' open' : ''}`}>
+              <button type="button" className="mq-close" onClick={() => setDrawer(false)} aria-label={tx("Close")}>✕</button>
               {selected ? (
                 <>
                   <div className="profile-hero mm-hero">
-                      <button type="button" className="mm-btn danger mm-del" onClick={() => { setDelFor({ id: selected.id, name: selected.displayName || 'this member', memberId: selected.memberId || '' }); setDelText(''); setDelErr(''); }}><Ic d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" />{tx("Delete permanently")}</button>
                     <div className="profile-main">
                       <div className="photo-large"><img alt="" src={selected.photoUrl || DEFAULT_MEMBER_PHOTO} /></div>
                       <i className="mm-vline" aria-hidden />
@@ -493,6 +513,7 @@ export default function MembersPage() {
                       <button type="button" className="mm-btn light" onClick={() => setAssignOpen({ id: selected.id })}><Ic d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M23 21v-2a4 4 0 00-3-3.9M16 3.1a4 4 0 010 7.8" />{tx("Assign to a kurel")}</button>
                       <button type="button" className="mm-btn light" onClick={() => setRoleFor(selected.id)}><Ic d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4" />{tx("Role and access")}</button>
                       {selected.status !== 'disabled' && <button type="button" className="mm-btn light" onClick={() => setChatFor({ id: selected.id, name: selected.displayName || '', photoUrl: selected.photoUrl })}><Ic d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />{tx("Chat")}</button>}
+                      {canHardDelete && <button type="button" className="mm-btn danger mm-delbtn" onClick={() => { setDelFor({ id: selected.id, name: selected.displayName || 'this member', memberId: selected.memberId || '' }); setDelText(''); setDelErr(''); }}><Ic d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" />{tx("Delete permanently")}</button>}
                     </div>
                   </div>
 
@@ -613,7 +634,7 @@ export default function MembersPage() {
       {chatFor && <ChatDialog userId={chatFor.id} name={chatFor.name} photoUrl={chatFor.photoUrl} onClose={() => setChatFor(null)} />}
       {assignOpen && <AssignKurel members={members.map((m) => ({ id: m.id, name: m.displayName, memberId: m.memberId, photoUrl: m.photoUrl, kurels: (memberships[m.id] ?? []).map((k) => k.groupId) }))} headcount={headcount} initialId={assignOpen.id} onClose={() => setAssignOpen(null)} />}
       <ManageToggle hideButton title={tx("Manage members — add, import, edit, assign")} openSignal={manageSignal} closeSignal={closeSignal}>
-        <MembersManage onAssign={() => setAssignOpen({ id: selected?.id ?? '' })} onExport={exportList} view={manageView} openEdit={editRequest} openAdd={addRequest} onEditDone={() => { setEditRequest({ id: '', n: 0 }); setCloseSignal((n) => n + 1); }} />
+        <MembersManage view={manageView} openEdit={editRequest} openAdd={addRequest} onEditDone={() => { setEditRequest({ id: '', n: 0 }); setCloseSignal((n) => n + 1); }} />
       </ManageToggle>
     </>
   );
